@@ -1,0 +1,78 @@
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-frontdesk}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
+      POSTGRES_DB: ${POSTGRES_DB:-frontdesk}
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-frontdesk} -d ${POSTGRES_DB:-frontdesk}"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+
+  # One-shot: create/update the DB schema (drizzle push) and seed the admin user.
+  # Runs to completion, then the api service starts.
+  migrate:
+    build:
+      context: .
+      dockerfile: Dockerfile.api
+      target: builder
+    command: sh -c "pnpm --filter @workspace/db run push && node scripts/src/seed-admin.mjs"
+    environment:
+      DATABASE_URL: postgres://${POSTGRES_USER:-frontdesk}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-frontdesk}
+      SEED_ADMIN_EMAIL: ${SEED_ADMIN_EMAIL:-admin@studiogms.com}
+      # Required — no default, so an install can never ship with a known password.
+      SEED_ADMIN_PASSWORD: ${SEED_ADMIN_PASSWORD:?set SEED_ADMIN_PASSWORD in .env}
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: "no"
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile.api
+      target: runtime
+    restart: unless-stopped
+    environment:
+      PORT: "8080"
+      NODE_ENV: production
+      DATABASE_URL: postgres://${POSTGRES_USER:-frontdesk}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-frontdesk}
+      SESSION_SECRET: ${SESSION_SECRET:?set SESSION_SECRET in .env}
+      # Set to "true" only when the app is served over HTTPS (TLS in front).
+      SESSION_COOKIE_SECURE: ${SESSION_COOKIE_SECURE:-false}
+      # Optional email alerts (leave blank to disable).
+      SENDGRID_API_KEY: ${SENDGRID_API_KEY:-}
+      SENDGRID_FROM_EMAIL: ${SENDGRID_FROM_EMAIL:-}
+      # Optional external bookings API for the "Productions Today" panel.
+      BOOKINGS_API_URL: ${BOOKINGS_API_URL:-https://plex.bookstud.io/api/public/bookings}
+    volumes:
+      - uploads:/app/artifacts/api-server/uploads
+    depends_on:
+      db:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile.web
+      args:
+        VITE_SITE_NAME: ${VITE_SITE_NAME:-Studio}
+        VITE_CLIENT_NAME: ${VITE_CLIENT_NAME:-}
+        VITE_CLIENT_LOGO: ${VITE_CLIENT_LOGO:-}
+    restart: unless-stopped
+    ports:
+      - "${HTTP_PORT:-80}:80"
+    depends_on:
+      api:
+        condition: service_healthy
+
+volumes:
+  db-data:
+  uploads:

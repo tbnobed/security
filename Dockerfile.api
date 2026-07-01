@@ -1,0 +1,38 @@
+# syntax=docker/dockerfile:1
+
+# ---- Builder: install the pnpm workspace and bundle the API server ----
+FROM node:24-bookworm-slim AS builder
+WORKDIR /app
+
+# Enable the exact pnpm version this repo was locked with.
+RUN corepack enable && corepack prepare pnpm@10.26.1 --activate
+
+# Install all workspace dependencies (needed to build the API bundle and, for
+# the `migrate` target, to run drizzle-kit + the seed script).
+COPY . .
+RUN pnpm install --frozen-lockfile
+
+# Produce the self-contained esbuild bundle at
+# artifacts/api-server/dist/index.mjs (deps are bundled in; no runtime
+# node_modules required).
+RUN pnpm --filter @workspace/api-server run build
+
+# ---- Runtime: minimal image that only carries the bundle ----
+FROM node:24-bookworm-slim AS runtime
+ENV NODE_ENV=production \
+    PORT=8080
+WORKDIR /app
+
+# Copy only the built bundle (and its pino worker files) from the builder.
+COPY --from=builder /app/artifacts/api-server/dist ./artifacts/api-server/dist
+
+# Runtime visitor photos (PII) live here; mount a volume to persist them.
+RUN mkdir -p /app/artifacts/api-server/uploads
+
+EXPOSE 8080
+
+# Simple health check hitting the app's own /api/healthz (Node 24 has global fetch).
+HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=5 \
+  CMD node -e "fetch('http://127.0.0.1:'+(process.env.PORT||8080)+'/api/healthz').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
+
+CMD ["node", "--enable-source-maps", "artifacts/api-server/dist/index.mjs"]

@@ -1,0 +1,32 @@
+# syntax=docker/dockerfile:1
+
+# ---- Builder: build the Vite SPA into static files ----
+FROM node:24-bookworm-slim AS builder
+WORKDIR /app
+
+RUN corepack enable && corepack prepare pnpm@10.26.1 --activate
+
+COPY . .
+RUN pnpm install --frozen-lockfile
+
+# Frontend env is baked in at build time. These VITE_* values are the ONLY way
+# to configure site/client branding for the built SPA — change them and rebuild
+# to rebrand. Written to .env so Vite picks them up deterministically.
+ARG VITE_SITE_NAME="Studio"
+ARG VITE_CLIENT_NAME=""
+ARG VITE_CLIENT_LOGO=""
+RUN printf 'VITE_SITE_NAME="%s"\nVITE_CLIENT_NAME="%s"\nVITE_CLIENT_LOGO="%s"\n' \
+      "$VITE_SITE_NAME" "$VITE_CLIENT_NAME" "$VITE_CLIENT_LOGO" \
+      > artifacts/studio-gms/.env
+
+# vite.config.ts requires PORT and BASE_PATH to be present at build time.
+ENV NODE_ENV=production \
+    BASE_PATH=/ \
+    PORT=19603
+RUN pnpm --filter @workspace/studio-gms run build
+
+# ---- Runtime: nginx serves the SPA and reverse-proxies /api to the API ----
+FROM nginx:1.27-alpine AS runtime
+COPY deploy/nginx.conf /etc/nginx/conf.d/default.conf
+COPY --from=builder /app/artifacts/studio-gms/dist/public /usr/share/nginx/html
+EXPOSE 80

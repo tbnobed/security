@@ -1,2 +1,3 @@
 - [Badge print isolation](badge-print-isolation.md) — print a fixed-size card from inside a Radix dialog by cloning it to body under an @media print block; runtime photo PII (uploads/) must stay gitignored.
 - [Dedup after confirmed send](dedup-after-confirmed-send.md) — scheduler/notifier dedup columns must be stamped after a successful send, never before, or transient failures drop alerts permanently.
+- [Session cookie Secure vs HTTP](session-cookie-secure-http.md) — cookie `secure` is env-driven (SESSION_COOKIE_SECURE), not NODE_ENV; a Secure cookie silently breaks login over plain-HTTP LAN self-hosts.

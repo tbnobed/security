@@ -53,7 +53,11 @@ app.use(
     cookie: {
       httpOnly: true,
       sameSite: "lax",
-      secure: process.env.NODE_ENV === "production",
+      // Only mark the cookie Secure when explicitly told the app is served over
+      // HTTPS. Self-hosted installs often run over plain HTTP on a LAN/IP first,
+      // where a Secure cookie would never be sent and login would silently fail.
+      // Set SESSION_COOKIE_SECURE=true once TLS is terminated in front of the app.
+      secure: process.env.SESSION_COOKIE_SECURE === "true",
       maxAge: 1000 * 60 * 60 * 24 * 7,
     },
   }),
