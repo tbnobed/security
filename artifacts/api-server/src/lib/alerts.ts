@@ -91,10 +91,14 @@ function escapeHtml(s: string): string {
  * Send an alert email for a visitor event to every recipient configured for
  * that event type. Fire-and-forget safe: never throws, and no-ops when email
  * is unconfigured or no recipients exist for the event type.
+ *
+ * Returns true only when a message was actually accepted for delivery. Callers
+ * that dedupe (e.g. the overdue scheduler) must only mark a send as done when
+ * this returns true, so transient failures are retried rather than lost.
  */
-export async function sendVisitorAlert(eventType: AlertEventType, ctx: AlertContext): Promise<void> {
+export async function sendVisitorAlert(eventType: AlertEventType, ctx: AlertContext): Promise<boolean> {
   try {
-    if (!isEmailConfigured()) return;
+    if (!isEmailConfigured()) return false;
 
     const recipients = await db
       .select()
@@ -102,14 +106,16 @@ export async function sendVisitorAlert(eventType: AlertEventType, ctx: AlertCont
       .where(eq(alertRecipientsTable.eventType, eventType));
 
     const to = recipients.map((r) => r.email);
-    if (to.length === 0) return;
+    if (to.length === 0) return false;
 
     const { subject, text, html } = buildBody(eventType, ctx);
     const ok = await sendMail({ to, subject, text, html });
     if (ok) {
       logger.info({ eventType, count: to.length }, "Sent visitor alert email");
     }
+    return ok;
   } catch (err) {
     logger.error({ err, eventType }, "sendVisitorAlert failed");
+    return false;
   }
 }

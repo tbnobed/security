@@ -1,5 +1,5 @@
 import { Link, useLocation } from "wouter";
-import { LayoutDashboard, UserPlus, LogOut, FileText, ClipboardList, ShieldAlert, Users, Building2, LogOut as LogOutIcon } from "lucide-react";
+import { LayoutDashboard, UserPlus, LogOut, FileText, ClipboardList, ShieldAlert, Users, Building2, Bell, LogOut as LogOutIcon } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 
 interface LayoutProps {
@@ -31,6 +31,7 @@ export function Layout({ children }: LayoutProps) {
     { href: "/audit", label: "Audit Log", icon: FileText },
     { href: "/users", label: "Users", icon: Users },
     { href: "/studios", label: "Studios", icon: Building2 },
+    { href: "/alerts", label: "Email Alerts", icon: Bell },
   ];
 
   return (

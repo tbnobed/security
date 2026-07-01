@@ -17,6 +17,7 @@ import { requireAuth } from "../lib/auth";
 import { generateBadgeId } from "../lib/badge";
 import { getSessionUserId } from "../lib/auth";
 import { usersTable } from "@workspace/db";
+import { sendVisitorAlert } from "../lib/alerts";
 
 const router = Router();
 
@@ -108,6 +109,18 @@ router.post("/preregistrations", requireAuth, async (req, res): Promise<void> =>
     metadata: JSON.stringify({ site: preg.site }),
   });
 
+  void sendVisitorAlert("preregistration", {
+    guestName: preg.guestName,
+    company: preg.company,
+    hostName: preg.hostName,
+    purposeOfVisit: preg.purposeOfVisit,
+    site: preg.site,
+    studios: preg.studios,
+    operatorName,
+    expectedArrival: preg.expectedArrival.toISOString(),
+    expectedDeparture: preg.expectedDeparture?.toISOString() ?? null,
+  });
+
   res.status(201).json(CreatePreregistrationResponse.parse(toPreregResponse(preg)));
 });
 
@@ -183,6 +196,19 @@ router.post("/preregistrations/:id/convert", requireAuth, async (req, res): Prom
     metadata: JSON.stringify({ site: guest.site, badgeId: guest.badgeId, fromPreregistration: true }),
   });
 
+  void sendVisitorAlert("checkin", {
+    guestName: guest.name,
+    company: guest.company,
+    hostName: guest.hostName,
+    purposeOfVisit: guest.purposeOfVisit,
+    site: guest.site,
+    studios: guest.studios,
+    badgeId: guest.badgeId,
+    operatorName,
+    expectedDeparture: guest.expectedDeparture?.toISOString() ?? null,
+    checkinAt: guest.checkinAt.toISOString(),
+  });
+
   const now = new Date();
   const timeOnSiteMinutes = Math.round((now.getTime() - guest.checkinAt.getTime()) / 60000);
   const isOverdue =
@@ -242,6 +268,18 @@ router.post("/public/preregistrations", async (req, res): Promise<void> => {
     operatorClerkId: "public",
     operatorName: "Self-registration",
     metadata: JSON.stringify({ site: preg.site, selfRegistered: true }),
+  });
+
+  void sendVisitorAlert("preregistration", {
+    guestName: preg.guestName,
+    company: preg.company,
+    hostName: preg.hostName,
+    purposeOfVisit: preg.purposeOfVisit,
+    site: preg.site,
+    studios: preg.studios,
+    operatorName: "Self-registration",
+    expectedArrival: preg.expectedArrival.toISOString(),
+    expectedDeparture: preg.expectedDeparture?.toISOString() ?? null,
   });
 
   res.status(201).json(CreatePublicPreregistrationResponse.parse(toPreregResponse(preg)));

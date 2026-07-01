@@ -21,6 +21,7 @@ import { requireAuth } from "../lib/auth";
 import { generateBadgeId } from "../lib/badge";
 import { getSessionUserId } from "../lib/auth";
 import { usersTable } from "@workspace/db";
+import { sendVisitorAlert } from "../lib/alerts";
 
 const router = Router();
 
@@ -177,6 +178,19 @@ router.post("/guests", requireAuth, async (req, res): Promise<void> => {
     });
   }
 
+  void sendVisitorAlert("checkin", {
+    guestName: guest.name,
+    company: guest.company,
+    hostName: guest.hostName,
+    purposeOfVisit: guest.purposeOfVisit,
+    site: guest.site,
+    studios: guest.studios,
+    badgeId: guest.badgeId,
+    operatorName,
+    expectedDeparture: guest.expectedDeparture?.toISOString() ?? null,
+    checkinAt: guest.checkinAt.toISOString(),
+  });
+
   res.status(201).json(CreateGuestResponse.parse(toGuestResponse(guest)));
 });
 
@@ -317,6 +331,19 @@ router.post("/guests/:id/checkout", requireAuth, async (req, res): Promise<void>
     operatorClerkId: clerkId,
     operatorName,
     metadata: JSON.stringify({ site: guest.site, badgeId: guest.badgeId }),
+  });
+
+  void sendVisitorAlert("checkout", {
+    guestName: guest.name,
+    company: guest.company,
+    hostName: guest.hostName,
+    purposeOfVisit: guest.purposeOfVisit,
+    site: guest.site,
+    studios: guest.studios,
+    badgeId: guest.badgeId,
+    operatorName,
+    checkinAt: guest.checkinAt.toISOString(),
+    checkoutAt: guest.checkoutAt?.toISOString() ?? null,
   });
 
   res.json(toGuestResponse(guest));
