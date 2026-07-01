@@ -13,6 +13,10 @@ A web-based guest management system for broadcast studio security desks — chec
 - Required env: `DATABASE_URL` — Postgres connection string (auto-provisioned)
 - Required env: `CLERK_PUBLISHABLE_KEY`, `CLERK_SECRET_KEY`, `VITE_CLERK_PUBLISHABLE_KEY` — auto-provisioned by Clerk setup
 
+## Deployment target
+
+- **Self-hosted**: must run as a Docker container on the user's own Ubuntu server (not Replit Deployments). Keep everything container-friendly: bind to `PORT`, no Replit-only runtime assumptions, all config via env vars. Clerk still works self-hosted as long as the container has outbound internet and the `CLERK_*` / `VITE_CLERK_PUBLISHABLE_KEY` env vars are provided.
+
 ## Stack
 
 - pnpm workspaces, Node.js 24, TypeScript 5.9

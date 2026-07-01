@@ -31,6 +31,13 @@ export default function SignInPage() {
       password,
     });
 
+    console.log("[signin] password() done", {
+      error,
+      status: signIn.status,
+      createdSessionId: signIn.createdSessionId,
+      firstFactor: signIn.firstFactorVerification?.status,
+    });
+
     if (error) {
       setLocalError((error as { message?: string; longMessage?: string }).longMessage
         ?? (error as { message?: string }).message
@@ -38,10 +45,12 @@ export default function SignInPage() {
       return;
     }
 
-    if (signIn.status === "complete") {
-      await signIn.finalize();
-    } else {
-      setLocalError("Sign-in could not be completed. Contact your administrator.");
+    const { error: finalizeError } = await signIn.finalize();
+
+    if (finalizeError) {
+      setLocalError((finalizeError as { message?: string; longMessage?: string }).longMessage
+        ?? (finalizeError as { message?: string }).message
+        ?? "Sign-in could not be completed. Contact your administrator.");
     }
   };
 
