@@ -38,11 +38,8 @@ export default function SignInPage() {
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-14 h-14 mb-4">
-            <img src={`${basePath}/logo.svg`} alt="FrontDesk" className="w-14 h-14" />
-          </div>
-          <h1 className="text-2xl font-bold tracking-tight text-foreground">FrontDesk</h1>
-          <p className="text-sm text-muted-foreground mt-1 uppercase tracking-widest">Operations Console</p>
+          <img src={`${basePath}/frontdesk-logo.png`} alt="FrontDesk — Guest Management" className="h-20 w-auto mx-auto mb-3" />
+          <p className="text-sm text-muted-foreground uppercase tracking-widest">Operations Console</p>
         </div>
 
         <div className="bg-card border border-border rounded-md p-6 shadow-lg">
