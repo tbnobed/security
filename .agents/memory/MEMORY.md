@@ -1,3 +1,4 @@
 - [Orval mutation call shape](orval-mutation-shape.md) — generated mutations expect `{ data: BodyType<InputType> }` wrapper; ID-only mutations expect `{ id: number }`.
 - [Orval query enabled option](orval-query-enabled.md) — passing `enabled` inside `options.query` requires `as any` cast because `UseQueryOptions` in RQ v5 mandates `queryKey`.
 - [DB lib stale declarations](db-lib-stale.md) — after new schema files are added, run `pnpm run typecheck:libs` to rebuild declarations before leaf artifact typechecks.
+- [Seeding Clerk users](clerk-managed-admin-seeding.md) — Replit-managed Clerk users CAN be created via Backend API + CLERK_SECRET_KEY; sandbox redacts secrets so run seed from bash Node script.
