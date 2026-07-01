@@ -17,4 +17,5 @@ export const AuditEntryEventType = {
   watchlist_block: 'watchlist_block',
   user_created: 'user_created',
   role_changed: 'role_changed',
+  password_reset: 'password_reset',
 } as const;

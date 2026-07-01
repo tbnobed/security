@@ -194,6 +194,7 @@ export const AuditEntryEventType = {
   watchlist_block: 'watchlist_block',
   user_created: 'user_created',
   role_changed: 'role_changed',
+  password_reset: 'password_reset',
 } as const;
 
 export interface AuditEntry {
@@ -246,10 +247,23 @@ export const AppUserInputRole = {
 } as const;
 
 export interface AppUserInput {
-  clerkId: string;
+  /**
+     * Login email; must be unique (case-insensitive)
+     * @minLength 3
+     */
+  email: string;
+  /**
+     * Initial password for the operator
+     * @minLength 8
+     */
+  password: string;
   displayName?: string;
-  email?: string;
   role: AppUserInputRole;
+}
+
+export interface ResetPasswordInput {
+  /** @minLength 8 */
+  password: string;
 }
 
 export interface AppUserUpdate {

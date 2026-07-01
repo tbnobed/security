@@ -1,9 +1,15 @@
 import { db, usersTable } from "@workspace/db";
 import { eq } from "drizzle-orm";
 import bcrypt from "bcryptjs";
+import { randomUUID } from "node:crypto";
 import type { Request, Response, NextFunction } from "express";
 
 const BCRYPT_ROUNDS = 12;
+
+/** Generate a fresh opaque internal user id (stored in the `clerk_id` column). */
+export function generateUserId(): string {
+  return `usr_${randomUUID()}`;
+}
 
 declare module "express-session" {
   interface SessionData {

@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { db, usersTable, auditTable } from "@workspace/db";
 import {
   ListUsersResponse,
@@ -11,8 +11,18 @@ import {
   UpdateUserRoleParams,
   UpdateUserRoleBody,
   UpdateUserRoleResponse,
+  ResetUserPasswordParams,
+  ResetUserPasswordBody,
+  ResetUserPasswordResponse,
 } from "@workspace/api-zod";
-import { requireAuth, requireAdmin, getSessionUserId, getUserById } from "../lib/auth";
+import {
+  requireAuth,
+  requireAdmin,
+  getSessionUserId,
+  getUserById,
+  generateUserId,
+  hashPassword,
+} from "../lib/auth";
 
 const router = Router();
 
@@ -38,40 +48,50 @@ router.post("/users", requireAdmin, async (req, res): Promise<void> => {
     return;
   }
 
+  const email = parsed.data.email.trim().toLowerCase();
+
   const [existing] = await db
     .select()
     .from(usersTable)
-    .where(eq(usersTable.clerkId, parsed.data.clerkId));
+    .where(eq(sql`lower(${usersTable.email})`, email));
 
   if (existing) {
-    const [updated] = await db
-      .update(usersTable)
-      .set({ role: parsed.data.role, displayName: parsed.data.displayName ?? null, email: parsed.data.email ?? null })
-      .where(eq(usersTable.clerkId, parsed.data.clerkId))
-      .returning();
-    res.status(201).json(CreateUserResponse.parse(toUserResponse(updated)));
+    res.status(409).json({ error: "A user with this email already exists" });
     return;
   }
 
-  const [user] = await db
-    .insert(usersTable)
-    .values({
-      clerkId: parsed.data.clerkId,
-      displayName: parsed.data.displayName ?? null,
-      email: parsed.data.email ?? null,
-      role: parsed.data.role,
-    })
-    .returning();
+  const passwordHash = await hashPassword(parsed.data.password);
+
+  let user: typeof usersTable.$inferSelect;
+  try {
+    [user] = await db
+      .insert(usersTable)
+      .values({
+        clerkId: generateUserId(),
+        displayName: parsed.data.displayName ?? null,
+        email,
+        passwordHash,
+        role: parsed.data.role,
+      })
+      .returning();
+  } catch (err) {
+    // Unique-violation on the case-insensitive email index (concurrent create).
+    if ((err as { code?: string } | null)?.code === "23505") {
+      res.status(409).json({ error: "A user with this email already exists" });
+      return;
+    }
+    throw err;
+  }
 
   const operatorId = getSessionUserId(req) ?? "unknown";
   const [operator] = await db.select().from(usersTable).where(eq(usersTable.clerkId, operatorId));
   await db.insert(auditTable).values({
     eventType: "user_created",
     guestId: null,
-    guestName: user.displayName ?? user.clerkId,
+    guestName: user.displayName ?? user.email ?? user.clerkId,
     operatorClerkId: operatorId,
     operatorName: operator?.displayName ?? operator?.email ?? operatorId,
-    metadata: JSON.stringify({ role: user.role }),
+    metadata: JSON.stringify({ role: user.role, email: user.email }),
   });
 
   res.status(201).json(CreateUserResponse.parse(toUserResponse(user)));
@@ -146,6 +166,46 @@ router.patch("/users/:clerkId/role", requireAdmin, async (req, res): Promise<voi
   });
 
   res.json(UpdateUserRoleResponse.parse(toUserResponse(user)));
+});
+
+router.patch("/users/:clerkId/password", requireAdmin, async (req, res): Promise<void> => {
+  const params = ResetUserPasswordParams.safeParse(req.params);
+  if (!params.success) {
+    res.status(400).json({ error: params.error.message });
+    return;
+  }
+
+  const parsed = ResetUserPasswordBody.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: parsed.error.message });
+    return;
+  }
+
+  const passwordHash = await hashPassword(parsed.data.password);
+
+  const [user] = await db
+    .update(usersTable)
+    .set({ passwordHash })
+    .where(eq(usersTable.clerkId, params.data.clerkId))
+    .returning();
+
+  if (!user) {
+    res.status(404).json({ error: "User not found" });
+    return;
+  }
+
+  const operatorId = getSessionUserId(req) ?? "unknown";
+  const [operator] = await db.select().from(usersTable).where(eq(usersTable.clerkId, operatorId));
+  await db.insert(auditTable).values({
+    eventType: "password_reset",
+    guestId: null,
+    guestName: user.displayName ?? user.email ?? user.clerkId,
+    operatorClerkId: operatorId,
+    operatorName: operator?.displayName ?? operator?.email ?? operatorId,
+    metadata: JSON.stringify({ targetUser: params.data.clerkId }),
+  });
+
+  res.json(ResetUserPasswordResponse.parse(toUserResponse(user)));
 });
 
 export default router;

@@ -464,7 +464,7 @@ export const ListAuditLogQueryParams = zod.object({
 
 export const ListAuditLogResponseItem = zod.object({
   "id": zod.number(),
-  "eventType": zod.enum(['checkin', 'checkout', 'preregistration', 'watchlist_flag', 'watchlist_block', 'user_created', 'role_changed']),
+  "eventType": zod.enum(['checkin', 'checkout', 'preregistration', 'watchlist_flag', 'watchlist_block', 'user_created', 'role_changed', 'password_reset']),
   "guestId": zod.number().nullable(),
   "guestName": zod.string(),
   "operatorClerkId": zod.string(),
@@ -529,10 +529,16 @@ export const ListUsersResponse = zod.array(ListUsersResponseItem)
 /**
  * @summary Create a new system user (admin only)
  */
+export const createUserBodyEmailMin = 3;
+
+export const createUserBodyPasswordMin = 8;
+
+
+
 export const CreateUserBody = zod.object({
-  "clerkId": zod.string(),
+  "email": zod.string().email().min(createUserBodyEmailMin).describe('Login email; must be unique (case-insensitive)'),
+  "password": zod.string().min(createUserBodyPasswordMin).describe('Initial password for the operator'),
   "displayName": zod.string().optional(),
-  "email": zod.string().optional(),
   "role": zod.enum(['security', 'admin'])
 })
 
@@ -585,6 +591,30 @@ export const UpdateUserRoleBody = zod.object({
 })
 
 export const UpdateUserRoleResponse = zod.object({
+  "clerkId": zod.string(),
+  "displayName": zod.string().nullish(),
+  "email": zod.string().nullish(),
+  "role": zod.enum(['security', 'admin']),
+  "createdAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary Reset a user's password (admin only)
+ */
+export const ResetUserPasswordParams = zod.object({
+  "clerkId": zod.coerce.string()
+})
+
+export const resetUserPasswordBodyPasswordMin = 8;
+
+
+
+export const ResetUserPasswordBody = zod.object({
+  "password": zod.string().min(resetUserPasswordBodyPasswordMin)
+})
+
+export const ResetUserPasswordResponse = zod.object({
   "clerkId": zod.string(),
   "displayName": zod.string().nullish(),
   "email": zod.string().nullish(),

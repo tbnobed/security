@@ -1,2 +1,4 @@
 - [connect-pg-simple + esbuild](connect-pg-simple-esbuild.md) — session store table must be Drizzle-managed with createTableIfMissing:false; esbuild bundle can't ship the lib's table.sql.
 - [React Query auth redirect race](rq-auth-redirect-race.md) — after login, redirect reactively from auth state, not imperative navigation; imperative nav races ahead of setQueryData commit.
+- [Watchlist RBAC exception](watchlist-rbac-exception.md) — watchlist/audit are admin-only EXCEPT /watchlist/check, which the check-in form calls for every operator; don't lock it to admin.
+- [Case-insensitive email uniqueness](email-uniqueness.md) — enforce at DB via unique index on lower(email); app pre-check alone races; map PG 23505 → 409.
