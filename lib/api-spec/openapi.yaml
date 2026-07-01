@@ -3,13 +3,26 @@ info:
   # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: Studio Guest Management System API
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: guests
+    description: Guest check-in/out operations
+  - name: preregistrations
+    description: Pre-registration operations
+  - name: watchlist
+    description: Watchlist management
+  - name: audit
+    description: Audit log operations
+  - name: users
+    description: User management
+  - name: dashboard
+    description: Dashboard summary data
+
 paths:
   /healthz:
     get:
@@ -24,6 +37,532 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  /guests:
+    get:
+      operationId: listGuests
+      tags: [guests]
+      summary: List active guests (currently on-site)
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [active, checked_out, all]
+          description: Filter by status
+        - name: host
+          in: query
+          schema:
+            type: string
+        - name: company
+          in: query
+          schema:
+            type: string
+        - name: site
+          in: query
+          schema:
+            type: string
+        - name: search
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: List of guests
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Guest"
+    post:
+      operationId: createGuest
+      tags: [guests]
+      summary: Check in a new guest
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GuestInput"
+      responses:
+        "201":
+          description: Guest checked in
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Guest"
+        "403":
+          description: Guest on watchlist
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WatchlistAlert"
+
+  /guests/{id}:
+    get:
+      operationId: getGuest
+      tags: [guests]
+      summary: Get a single guest record
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Guest record
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Guest"
+        "404":
+          description: Not found
+    patch:
+      operationId: updateGuest
+      tags: [guests]
+      summary: Update guest record
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GuestUpdate"
+      responses:
+        "200":
+          description: Updated guest
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Guest"
+
+  /guests/{id}/checkout:
+    post:
+      operationId: checkoutGuest
+      tags: [guests]
+      summary: Check out a guest
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Guest checked out
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Guest"
+        "404":
+          description: Not found
+
+  /guests/{id}/badge:
+    get:
+      operationId: getGuestBadge
+      tags: [guests]
+      summary: Get badge data for printing
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Badge data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BadgeData"
+
+  /guests/search:
+    get:
+      operationId: searchGuests
+      tags: [guests]
+      summary: Search guests by name or badge ID for checkout
+      parameters:
+        - name: q
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Matching guests
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Guest"
+
+  /guests/overdue:
+    get:
+      operationId: listOverdueGuests
+      tags: [guests]
+      summary: List guests past their expected departure time
+      responses:
+        "200":
+          description: Overdue guests
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Guest"
+
+  /preregistrations:
+    get:
+      operationId: listPreregistrations
+      tags: [preregistrations]
+      summary: List pre-registered guests
+      parameters:
+        - name: date
+          in: query
+          schema:
+            type: string
+            format: date
+          description: Filter by date (YYYY-MM-DD), defaults to today
+      responses:
+        "200":
+          description: Pre-registrations
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Preregistration"
+    post:
+      operationId: createPreregistration
+      tags: [preregistrations]
+      summary: Pre-register an expected guest
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PreregistrationInput"
+      responses:
+        "201":
+          description: Pre-registration created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Preregistration"
+
+  /preregistrations/{id}:
+    delete:
+      operationId: deletePreregistration
+      tags: [preregistrations]
+      summary: Delete a pre-registration
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  /preregistrations/{id}/convert:
+    post:
+      operationId: convertPreregistration
+      tags: [preregistrations]
+      summary: Convert a pre-registration to an active check-in
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "201":
+          description: Guest checked in from pre-registration
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Guest"
+
+  /watchlist:
+    get:
+      operationId: listWatchlist
+      tags: [watchlist]
+      summary: List all watchlist entries
+      responses:
+        "200":
+          description: Watchlist entries
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/WatchlistEntry"
+    post:
+      operationId: createWatchlistEntry
+      tags: [watchlist]
+      summary: Add a person to the watchlist
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/WatchlistEntryInput"
+      responses:
+        "201":
+          description: Watchlist entry created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WatchlistEntry"
+
+  /watchlist/{id}:
+    delete:
+      operationId: deleteWatchlistEntry
+      tags: [watchlist]
+      summary: Remove a person from the watchlist
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  /watchlist/check:
+    get:
+      operationId: checkWatchlist
+      tags: [watchlist]
+      summary: Check if a name matches the watchlist
+      parameters:
+        - name: name
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Watchlist check result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WatchlistCheckResult"
+
+  /audit:
+    get:
+      operationId: listAuditLog
+      tags: [audit]
+      summary: List audit log entries
+      parameters:
+        - name: startDate
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: endDate
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: guestId
+          in: query
+          schema:
+            type: integer
+        - name: operatorId
+          in: query
+          schema:
+            type: string
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 100
+      responses:
+        "200":
+          description: Audit log entries
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AuditEntry"
+
+  /audit/export:
+    get:
+      operationId: exportAuditLog
+      tags: [audit]
+      summary: Export audit log as CSV
+      parameters:
+        - name: startDate
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+        - name: endDate
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+      responses:
+        "200":
+          description: CSV export
+          content:
+            text/csv:
+              schema:
+                type: string
+
+  /users:
+    get:
+      operationId: listUsers
+      tags: [users]
+      summary: List all system users (admin only)
+      responses:
+        "200":
+          description: Users list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AppUser"
+    post:
+      operationId: createUser
+      tags: [users]
+      summary: Create a new system user (admin only)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AppUserInput"
+      responses:
+        "201":
+          description: User created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AppUser"
+
+  /users/me:
+    get:
+      operationId: getMe
+      tags: [users]
+      summary: Get current authenticated user profile and role
+      responses:
+        "200":
+          description: Current user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AppUser"
+    patch:
+      operationId: updateMe
+      tags: [users]
+      summary: Update current user's display name
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AppUserUpdate"
+      responses:
+        "200":
+          description: Updated user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AppUser"
+
+  /users/{clerkId}/role:
+    patch:
+      operationId: updateUserRole
+      tags: [users]
+      summary: Update a user's role (admin only)
+      parameters:
+        - name: clerkId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RoleUpdate"
+      responses:
+        "200":
+          description: Updated user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AppUser"
+
+  /dashboard/summary:
+    get:
+      operationId: getDashboardSummary
+      tags: [dashboard]
+      summary: Get live dashboard counts and stats
+      responses:
+        "200":
+          description: Dashboard summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DashboardSummary"
+
+  /dashboard/recent-activity:
+    get:
+      operationId: getRecentActivity
+      tags: [dashboard]
+      summary: Get recent check-in/out activity feed
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+      responses:
+        "200":
+          description: Recent activity
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ActivityEvent"
+
+  /photos:
+    post:
+      operationId: uploadPhoto
+      tags: [guests]
+      summary: Upload a guest photo (base64)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PhotoUpload"
+      responses:
+        "201":
+          description: Photo uploaded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PhotoResult"
+
 components:
   schemas:
     HealthStatus:
@@ -34,3 +573,445 @@ components:
       required:
         - status
 
+    Guest:
+      type: object
+      required:
+        - id
+        - name
+        - company
+        - hostName
+        - purposeOfVisit
+        - site
+        - status
+        - checkinAt
+        - badgeId
+      properties:
+        id:
+          type: integer
+        badgeId:
+          type: string
+        name:
+          type: string
+        company:
+          type: string
+        phone:
+          type: ["string", "null"]
+        email:
+          type: ["string", "null"]
+        hostName:
+          type: string
+        purposeOfVisit:
+          type: string
+        site:
+          type: string
+          description: "Dallas/The Plex, Tustin, Nashville"
+        status:
+          type: string
+          enum: [active, checked_out]
+        checkinAt:
+          type: string
+          format: date-time
+        checkoutAt:
+          type: ["string", "null"]
+          format: date-time
+        expectedDeparture:
+          type: ["string", "null"]
+          format: date-time
+        photoUrl:
+          type: ["string", "null"]
+        checkedInByClerkId:
+          type: ["string", "null"]
+        checkedOutByClerkId:
+          type: ["string", "null"]
+        preregistrationId:
+          type: ["integer", "null"]
+        timeOnSiteMinutes:
+          type: ["integer", "null"]
+        isOverdue:
+          type: boolean
+
+    GuestInput:
+      type: object
+      required:
+        - name
+        - company
+        - hostName
+        - purposeOfVisit
+        - site
+      properties:
+        name:
+          type: string
+          minLength: 1
+        company:
+          type: string
+          minLength: 1
+        phone:
+          type: string
+        email:
+          type: string
+        hostName:
+          type: string
+          minLength: 1
+        purposeOfVisit:
+          type: string
+          minLength: 1
+        site:
+          type: string
+          minLength: 1
+        expectedDeparture:
+          type: string
+          format: date-time
+        photoUrl:
+          type: string
+        preregistrationId:
+          type: integer
+
+    GuestUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+        company:
+          type: string
+        phone:
+          type: string
+        email:
+          type: string
+        hostName:
+          type: string
+        purposeOfVisit:
+          type: string
+        site:
+          type: string
+        expectedDeparture:
+          type: string
+          format: date-time
+        photoUrl:
+          type: string
+
+    BadgeData:
+      type: object
+      required:
+        - badgeId
+        - guestName
+        - hostName
+        - checkinAt
+        - site
+      properties:
+        badgeId:
+          type: string
+        guestName:
+          type: string
+        company:
+          type: string
+        hostName:
+          type: string
+        checkinAt:
+          type: string
+          format: date-time
+        site:
+          type: string
+        photoUrl:
+          type: ["string", "null"]
+
+    Preregistration:
+      type: object
+      required:
+        - id
+        - guestName
+        - company
+        - hostName
+        - expectedArrival
+        - site
+        - status
+      properties:
+        id:
+          type: integer
+        guestName:
+          type: string
+        company:
+          type: string
+        phone:
+          type: ["string", "null"]
+        email:
+          type: ["string", "null"]
+        hostName:
+          type: string
+        purposeOfVisit:
+          type: ["string", "null"]
+        site:
+          type: string
+        expectedArrival:
+          type: string
+          format: date-time
+        expectedDeparture:
+          type: ["string", "null"]
+          format: date-time
+        status:
+          type: string
+          enum: [pending, converted, cancelled]
+        createdByClerkId:
+          type: ["string", "null"]
+        convertedGuestId:
+          type: ["integer", "null"]
+
+    PreregistrationInput:
+      type: object
+      required:
+        - guestName
+        - company
+        - hostName
+        - expectedArrival
+        - site
+      properties:
+        guestName:
+          type: string
+          minLength: 1
+        company:
+          type: string
+        phone:
+          type: string
+        email:
+          type: string
+        hostName:
+          type: string
+          minLength: 1
+        purposeOfVisit:
+          type: string
+        site:
+          type: string
+          minLength: 1
+        expectedArrival:
+          type: string
+          format: date-time
+        expectedDeparture:
+          type: string
+          format: date-time
+
+    WatchlistEntry:
+      type: object
+      required:
+        - id
+        - name
+        - reason
+        - createdAt
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        company:
+          type: ["string", "null"]
+        reason:
+          type: string
+        action:
+          type: string
+          enum: [flag, block]
+        createdAt:
+          type: string
+          format: date-time
+        addedByClerkId:
+          type: ["string", "null"]
+
+    WatchlistEntryInput:
+      type: object
+      required:
+        - name
+        - reason
+      properties:
+        name:
+          type: string
+          minLength: 1
+        company:
+          type: string
+        reason:
+          type: string
+          minLength: 1
+        action:
+          type: string
+          enum: [flag, block]
+
+    WatchlistCheckResult:
+      type: object
+      required:
+        - matched
+      properties:
+        matched:
+          type: boolean
+        entries:
+          type: array
+          items:
+            $ref: "#/components/schemas/WatchlistEntry"
+
+    WatchlistAlert:
+      type: object
+      required:
+        - message
+        - entries
+      properties:
+        message:
+          type: string
+        entries:
+          type: array
+          items:
+            $ref: "#/components/schemas/WatchlistEntry"
+
+    AuditEntry:
+      type: object
+      required:
+        - id
+        - eventType
+        - guestId
+        - guestName
+        - operatorClerkId
+        - operatorName
+        - timestamp
+      properties:
+        id:
+          type: integer
+        eventType:
+          type: string
+          enum: [checkin, checkout, preregistration, watchlist_flag, watchlist_block, user_created, role_changed]
+        guestId:
+          type: ["integer", "null"]
+        guestName:
+          type: string
+        operatorClerkId:
+          type: string
+        operatorName:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+        metadata:
+          type: ["string", "null"]
+          description: JSON string of additional context
+
+    AppUser:
+      type: object
+      required:
+        - clerkId
+        - role
+        - createdAt
+      properties:
+        clerkId:
+          type: string
+        displayName:
+          type: ["string", "null"]
+        email:
+          type: ["string", "null"]
+        role:
+          type: string
+          enum: [security, admin]
+        createdAt:
+          type: string
+          format: date-time
+
+    AppUserInput:
+      type: object
+      required:
+        - clerkId
+        - role
+      properties:
+        clerkId:
+          type: string
+        displayName:
+          type: string
+        email:
+          type: string
+        role:
+          type: string
+          enum: [security, admin]
+
+    AppUserUpdate:
+      type: object
+      properties:
+        displayName:
+          type: string
+
+    RoleUpdate:
+      type: object
+      required:
+        - role
+      properties:
+        role:
+          type: string
+          enum: [security, admin]
+
+    DashboardSummary:
+      type: object
+      required:
+        - activeGuestCount
+        - todayCheckins
+        - todayCheckouts
+        - overdueCount
+        - siteBreakdown
+        - expectedTodayCount
+      properties:
+        activeGuestCount:
+          type: integer
+        todayCheckins:
+          type: integer
+        todayCheckouts:
+          type: integer
+        overdueCount:
+          type: integer
+        expectedTodayCount:
+          type: integer
+        siteBreakdown:
+          type: array
+          items:
+            $ref: "#/components/schemas/SiteCount"
+
+    SiteCount:
+      type: object
+      required:
+        - site
+        - count
+      properties:
+        site:
+          type: string
+        count:
+          type: integer
+
+    ActivityEvent:
+      type: object
+      required:
+        - id
+        - eventType
+        - guestName
+        - operatorName
+        - timestamp
+      properties:
+        id:
+          type: integer
+        eventType:
+          type: string
+        guestName:
+          type: string
+        company:
+          type: ["string", "null"]
+        operatorName:
+          type: string
+        site:
+          type: ["string", "null"]
+        timestamp:
+          type: string
+          format: date-time
+
+    PhotoUpload:
+      type: object
+      required:
+        - imageData
+      properties:
+        imageData:
+          type: string
+          description: Base64-encoded image data
+
+    PhotoResult:
+      type: object
+      required:
+        - photoUrl
+      properties:
+        photoUrl:
+          type: string

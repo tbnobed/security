@@ -1,0 +1,31 @@
+kind = "web"
+previewPath = "/"
+title = "Studio Guest Management"
+version = "1.0.0"
+id = "artifacts/studio-gms"
+router = "path"
+
+[[integratedSkills]]
+name = "react-vite"
+version = "1.0.0"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 19603
+
+[services.development]
+run = "pnpm --filter @workspace/studio-gms run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/studio-gms", "run", "build" ]
+publicDir = "artifacts/studio-gms/dist/public"
+serve = "static"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "19603"
+BASE_PATH = "/"
