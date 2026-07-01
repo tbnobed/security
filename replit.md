@@ -54,10 +54,10 @@ A web-based guest management system for broadcast studio security desks — chec
 
 ## Product
 
-- **Guest Check-In**: Form with name, company, contact info, host, purpose, studios (checkboxes), expected departure. Site is fixed per deployment. Optional webcam photo. Auto-generates badge. Live watchlist check on name entry — blocks entry for blocked guests, warns for flagged guests.
+- **Guest Check-In**: Form with name, company, contact info, host, purpose, studios (checkboxes), expected departure. Site is fixed per deployment. Optional webcam photo. Auto-generates badge. Live watchlist check on name entry — blocks entry for blocked guests, warns for flagged guests. On success, shows a printable **3in × 2in landscape visitor badge** (photo/initials, name, company, host, purpose, studios, badge ID, in/out times) via the shared `VisitorBadge` component; "Print Badge" triggers `printBadge()`.
 - **Guest Check-Out**: Quick search by name or badge ID, one-click checkout with auto-timestamp.
 - **Active Dashboard**: Live table of on-site guests with overdue highlights, stats bar (active/today counts/overdue/expected), auto-refresh every 30s. Filter by host/company/site.
-- **Pre-Registration**: Hosts pre-register expected guests; security sees "Expected Today" queue; one-click convert to check-in.
+- **Pre-Registration**: Hosts pre-register expected guests; security sees "Expected Today" queue. "Check In" opens a convert dialog with optional webcam photo capture, then converts the pre-reg to an active check-in (`POST /preregistrations/{id}/convert` accepts an optional `{ photoUrl }`) and shows the same printable `VisitorBadge` with a Print button.
 - **Public Pre-Registration**: Unauthenticated `/preregister` page — visitors self-register (name/company/contact/host/purpose/studios/expected arrival). Submissions land in the same "Expected Today" queue with `createdByClerkId=null`, operator recorded as "Self-registration". No Layout/auth wrapper. Client-brandable via `VITE_CLIENT_NAME` / `VITE_CLIENT_LOGO` (logo + label on both the form header and the success screen) so the visitor-facing page carries the client's brand, not FrontDesk's.
 - **Studios**: Admin-managed list of rooms/buildings (`/studios` page). Multi-selectable via checkboxes on check-in and both pre-reg forms (internal + public). Stored as a `text[]` on guests and preregistrations; copied through on convert. `GET /studios` is public (needed by the public form); `POST`/`DELETE` are admin-only. Displayed in dashboard + prereg tables (replacing the now-static Site column).
 - **Watchlist**: Admin-managed blocklist/flaglist. Name-match check on every check-in.
@@ -76,6 +76,8 @@ _Populate as you build — explicit user instructions worth remembering across s
 - `express-session` (with `connect-pg-simple`) must be mounted BEFORE the routes in app.ts so `req.session` is populated; the session store reuses the shared pg `pool`.
 - `requireAdmin` makes a DB query; don't call it in hot paths.
 - Photo uploads have a 10MB body limit set in express.json({ limit: '10mb' }).
+- `artifacts/api-server/uploads/` holds runtime visitor photos (PII) and is gitignored — never commit its contents. The dir is auto-created at runtime by `src/lib/badge.ts`.
+- Badge printing: the badge card carries `id="print-badge"`; `printBadge()` (in `src/lib/print-badge.ts`) clones it into a `#print-root` child of `<body>` and toggles `body.printing-badge`, which the `@media print` block in `index.css` isolates and sizes to 3in × 2in. Do NOT rely on plain `window.print()` for badges inside a Radix dialog — the portal/transform breaks positioning.
 
 ## Pointers
 

@@ -6,6 +6,7 @@ import {
   CreatePreregistrationBody,
   DeletePreregistrationParams,
   ConvertPreregistrationParams,
+  ConvertPreregistrationBody,
   CreatePublicPreregistrationBody,
   ListPreregistrationsResponse,
   CreatePreregistrationResponse,
@@ -138,6 +139,12 @@ router.post("/preregistrations/:id/convert", requireAuth, async (req, res): Prom
     return;
   }
 
+  const body = ConvertPreregistrationBody.safeParse(req.body ?? {});
+  if (!body.success) {
+    res.status(400).json({ error: body.error.message });
+    return;
+  }
+
   const clerkId = getSessionUserId(req) ?? "unknown";
   const badgeId = generateBadgeId();
 
@@ -154,6 +161,7 @@ router.post("/preregistrations/:id/convert", requireAuth, async (req, res): Prom
       site: preg.site,
       studios: preg.studios,
       expectedDeparture: preg.expectedDeparture ?? null,
+      photoUrl: body.data.photoUrl ?? null,
       checkedInByClerkId: clerkId,
       preregistrationId: preg.id,
       status: "active",

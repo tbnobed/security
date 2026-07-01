@@ -27,6 +27,7 @@ import type {
   AuditEntry,
   BadgeData,
   CheckWatchlistParams,
+  ConvertPreregistrationInput,
   DashboardSummary,
   ExportAuditLogParams,
   GetRecentActivityParams,
@@ -1004,14 +1005,15 @@ export const getConvertPreregistrationUrl = (id: number,) => {
 /**
  * @summary Convert a pre-registration to an active check-in
  */
-export const convertPreregistration = async (id: number, options?: RequestInit): Promise<Guest> => {
+export const convertPreregistration = async (id: number,
+    convertPreregistrationInput?: ConvertPreregistrationInput, options?: RequestInit): Promise<Guest> => {
 
   return customFetch<Guest>(getConvertPreregistrationUrl(id),
   {
     ...options,
-    method: 'POST'
-
-
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(convertPreregistrationInput)
   }
 );}
 
@@ -1019,8 +1021,8 @@ export const convertPreregistration = async (id: number, options?: RequestInit):
 
 
 export const getConvertPreregistrationMutationOptions = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof convertPreregistration>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof convertPreregistration>>, TError,{id: number}, TContext> => {
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof convertPreregistration>>, TError,{id: number;data?: BodyType<ConvertPreregistrationInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof convertPreregistration>>, TError,{id: number;data?: BodyType<ConvertPreregistrationInput>}, TContext> => {
 
 const mutationKey = ['convertPreregistration'];
 const {mutation: mutationOptions, request: requestOptions} = options ?
@@ -1032,10 +1034,10 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof convertPreregistration>>, {id: number}> = (props) => {
-          const {id} = props ?? {};
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof convertPreregistration>>, {id: number;data?: BodyType<ConvertPreregistrationInput>}> = (props) => {
+          const {id,data} = props ?? {};
 
-          return  convertPreregistration(id,requestOptions)
+          return  convertPreregistration(id,data,requestOptions)
         }
 
 
@@ -1046,18 +1048,18 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
   return  { mutationFn, ...mutationOptions }}
 
     export type ConvertPreregistrationMutationResult = NonNullable<Awaited<ReturnType<typeof convertPreregistration>>>
-
+    export type ConvertPreregistrationMutationBody = BodyType<ConvertPreregistrationInput> | undefined
     export type ConvertPreregistrationMutationError = ErrorType<unknown>
 
     /**
  * @summary Convert a pre-registration to an active check-in
  */
 export const useConvertPreregistration = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof convertPreregistration>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof convertPreregistration>>, TError,{id: number;data?: BodyType<ConvertPreregistrationInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
  ): UseMutationResult<
         Awaited<ReturnType<typeof convertPreregistration>>,
         TError,
-        {id: number},
+        {id: number;data?: BodyType<ConvertPreregistrationInput>},
         TContext
       > => {
       return useMutation(getConvertPreregistrationMutationOptions(options));

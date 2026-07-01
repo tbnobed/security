@@ -141,6 +141,10 @@ export interface PreregistrationInput {
   studios?: string[];
 }
 
+export interface ConvertPreregistrationInput {
+  photoUrl?: string;
+}
+
 export type WatchlistEntryAction = typeof WatchlistEntryAction[keyof typeof WatchlistEntryAction];
 
 

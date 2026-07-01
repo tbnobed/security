@@ -1,0 +1,3 @@
+# Runtime visitor photo uploads — contains PII, must never be committed.
+# The directory is auto-created at runtime (see src/lib/badge.ts).
+uploads/

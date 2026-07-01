@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback, useEffect } from "react";
+import { useState } from "react";
 import { Layout } from "@/components/layout";
 import { useCreateGuest, useCheckWatchlist, useUploadPhoto } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
@@ -10,7 +10,10 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { useListStudios } from "@workspace/api-client-react";
 import { SITE_NAME } from "@/lib/site";
-import { AlertTriangle, Camera, CameraOff, RefreshCw, UserPlus, XCircle } from "lucide-react";
+import { PhotoCapture } from "@/components/photo-capture";
+import { VisitorBadge, type VisitorBadgeData } from "@/components/visitor-badge";
+import { printBadge } from "@/lib/print-badge";
+import { AlertTriangle, Printer, UserPlus } from "lucide-react";
 
 const PURPOSES = [
   "Production meeting",
@@ -22,22 +25,9 @@ const PURPOSES = [
   "Other",
 ];
 
-interface BadgePreview {
-  badgeId: string;
-  name: string;
-  company: string;
-  host: string;
-  site: string;
-  studios: string[];
-  checkinAt: string;
-}
-
 export default function CheckIn() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const streamRef = useRef<MediaStream | null>(null);
 
   const [form, setForm] = useState({
     name: "", company: "", phone: "", email: "",
@@ -48,8 +38,7 @@ export default function CheckIn() {
   const { data: studioList } = useListStudios();
   const [photo, setPhoto] = useState<string | null>(null);
   const [photoUrl, setPhotoUrl] = useState<string | null>(null);
-  const [cameraOn, setCameraOn] = useState(false);
-  const [badge, setBadge] = useState<BadgePreview | null>(null);
+  const [badge, setBadge] = useState<VisitorBadgeData | null>(null);
   const [watchlistWarning, setWatchlistWarning] = useState<string | null>(null);
   const [nameCheckTimeout, setNameCheckTimeout] = useState<ReturnType<typeof setTimeout> | null>(null);
 
@@ -60,38 +49,6 @@ export default function CheckIn() {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     { query: { enabled: false, retry: false } as any }
   );
-
-  const stopCamera = useCallback(() => {
-    if (streamRef.current) {
-      streamRef.current.getTracks().forEach((t) => t.stop());
-      streamRef.current = null;
-    }
-    setCameraOn(false);
-  }, []);
-
-  const startCamera = async () => {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } });
-      streamRef.current = stream;
-      if (videoRef.current) videoRef.current.srcObject = stream;
-      setCameraOn(true);
-    } catch {
-      toast({ title: "Camera unavailable", description: "Could not access webcam.", variant: "destructive" });
-    }
-  };
-
-  const capturePhoto = () => {
-    if (!videoRef.current || !canvasRef.current) return;
-    const ctx = canvasRef.current.getContext("2d")!;
-    canvasRef.current.width = videoRef.current.videoWidth;
-    canvasRef.current.height = videoRef.current.videoHeight;
-    ctx.drawImage(videoRef.current, 0, 0);
-    const dataUrl = canvasRef.current.toDataURL("image/jpeg", 0.8);
-    setPhoto(dataUrl);
-    stopCamera();
-  };
-
-  useEffect(() => () => stopCamera(), [stopCamera]);
 
   const handleNameChange = (value: string) => {
     setForm((f) => ({ ...f, name: value }));
@@ -141,6 +98,7 @@ export default function CheckIn() {
     }
 
     try {
+      const purpose = form.purposeOfVisit || "Other";
       const guest = await createGuest({
         data: {
           name: form.name,
@@ -148,7 +106,7 @@ export default function CheckIn() {
           phone: form.phone || undefined,
           email: form.email || undefined,
           hostName: form.hostName,
-          purposeOfVisit: form.purposeOfVisit || "Other",
+          purposeOfVisit: purpose,
           site: SITE_NAME,
           studios,
           expectedDeparture: form.expectedDeparture || undefined,
@@ -164,7 +122,10 @@ export default function CheckIn() {
         host: guest.hostName,
         site: guest.site,
         studios: guest.studios ?? [],
+        purpose: guest.purposeOfVisit,
         checkinAt: guest.checkinAt,
+        expectedDeparture: guest.expectedDeparture ?? null,
+        photo: photo ?? finalPhotoUrl ?? null,
       });
       setForm({ name: "", company: "", phone: "", email: "", hostName: "", purposeOfVisit: "", expectedDeparture: "" });
       setStudios([]);
@@ -179,7 +140,7 @@ export default function CheckIn() {
     }
   };
 
-  const handlePrint = () => window.print();
+  const handlePrint = () => printBadge();
 
   return (
     <Layout>
@@ -190,25 +151,12 @@ export default function CheckIn() {
         </div>
 
         {badge ? (
-          <div className="space-y-4">
-            <div className="bg-card border border-border rounded-md p-6 max-w-md mx-auto print:border-gray-800 print:bg-white print:text-black">
-              <div className="text-center mb-4">
-                <div className="text-xs uppercase tracking-widest text-muted-foreground print:text-gray-500 mb-1">VISITOR BADGE</div>
-                <div className="text-4xl font-mono font-bold text-primary print:text-blue-700">{badge.badgeId}</div>
-              </div>
-              <div className="space-y-2 text-sm">
-                <div><span className="text-muted-foreground">Name:</span> <span className="font-semibold">{badge.name}</span></div>
-                <div><span className="text-muted-foreground">Company:</span> {badge.company}</div>
-                <div><span className="text-muted-foreground">Host:</span> {badge.host}</div>
-                <div><span className="text-muted-foreground">Site:</span> {badge.site}</div>
-                {badge.studios.length > 0 && (
-                  <div><span className="text-muted-foreground">Studios:</span> {badge.studios.join(", ")}</div>
-                )}
-                <div><span className="text-muted-foreground">Check-in:</span> {new Date(badge.checkinAt).toLocaleString()}</div>
-              </div>
-            </div>
+          <div className="space-y-6">
+            <VisitorBadge data={badge} />
             <div className="flex gap-3 justify-center print:hidden">
-              <Button onClick={handlePrint} variant="outline">Print Badge</Button>
+              <Button onClick={handlePrint} variant="outline">
+                <Printer className="w-4 h-4 mr-2" /> Print Badge
+              </Button>
               <Button onClick={() => setBadge(null)}>
                 <UserPlus className="w-4 h-4 mr-2" /> Check In Another
               </Button>
@@ -292,47 +240,7 @@ export default function CheckIn() {
             <div className="space-y-4">
               <div className="bg-card border border-border rounded-md p-4">
                 <h3 className="text-sm font-medium mb-3">Photo Capture</h3>
-                <div className="aspect-square bg-muted rounded-md overflow-hidden mb-3 flex items-center justify-center relative">
-                  {photo ? (
-                    <img src={photo} alt="Captured" className="w-full h-full object-cover" />
-                  ) : (
-                    <video ref={videoRef} autoPlay muted className={`w-full h-full object-cover ${cameraOn ? "" : "hidden"}`} />
-                  )}
-                  {!photo && !cameraOn && (
-                    <div className="text-center text-muted-foreground p-4">
-                      <CameraOff className="w-8 h-8 mx-auto mb-2" />
-                      <p className="text-xs">No photo</p>
-                    </div>
-                  )}
-                  {photo && (
-                    <button type="button" onClick={() => setPhoto(null)} className="absolute top-2 right-2 bg-background/80 rounded-full p-1 hover:bg-background transition-colors">
-                      <XCircle className="w-4 h-4 text-destructive" />
-                    </button>
-                  )}
-                </div>
-                <canvas ref={canvasRef} className="hidden" />
-                <div className="flex gap-2">
-                  {!cameraOn && !photo && (
-                    <Button type="button" variant="outline" size="sm" className="flex-1" onClick={startCamera}>
-                      <Camera className="w-4 h-4 mr-1" /> Start Camera
-                    </Button>
-                  )}
-                  {cameraOn && (
-                    <>
-                      <Button type="button" size="sm" className="flex-1" onClick={capturePhoto}>
-                        <Camera className="w-4 h-4 mr-1" /> Capture
-                      </Button>
-                      <Button type="button" variant="outline" size="sm" onClick={stopCamera}>
-                        <XCircle className="w-4 h-4" />
-                      </Button>
-                    </>
-                  )}
-                  {photo && (
-                    <Button type="button" variant="outline" size="sm" className="flex-1" onClick={() => { setPhoto(null); setPhotoUrl(null); startCamera(); }}>
-                      <RefreshCw className="w-4 h-4 mr-1" /> Retake
-                    </Button>
-                  )}
-                </div>
+                <PhotoCapture photo={photo} onChange={(p) => { setPhoto(p); setPhotoUrl(null); }} />
               </div>
             </div>
           </form>

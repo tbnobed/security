@@ -16,6 +16,7 @@ export * from './auditEntry';
 export * from './auditEntryEventType';
 export * from './badgeData';
 export * from './checkWatchlistParams';
+export * from './convertPreregistrationInput';
 export * from './dashboardSummary';
 export * from './exportAuditLogParams';
 export * from './getRecentActivityParams';

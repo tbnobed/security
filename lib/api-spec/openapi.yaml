@@ -286,6 +286,12 @@ paths:
           required: true
           schema:
             type: integer
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ConvertPreregistrationInput"
       responses:
         "201":
           description: Guest checked in from pre-registration
@@ -930,6 +936,12 @@ components:
           type: array
           items:
             type: string
+
+    ConvertPreregistrationInput:
+      type: object
+      properties:
+        photoUrl:
+          type: string
 
     WatchlistEntry:
       type: object

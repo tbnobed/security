@@ -370,6 +370,10 @@ export const ConvertPreregistrationParams = zod.object({
   "id": zod.coerce.number()
 })
 
+export const ConvertPreregistrationBody = zod.object({
+  "photoUrl": zod.string().optional()
+})
+
 export const ConvertPreregistrationResponse = zod.object({
   "id": zod.number(),
   "badgeId": zod.string(),

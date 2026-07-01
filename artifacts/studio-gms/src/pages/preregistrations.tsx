@@ -5,6 +5,8 @@ import {
   useCreatePreregistration,
   useDeletePreregistration,
   useConvertPreregistration,
+  useUploadPhoto,
+  type Preregistration,
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -15,8 +17,13 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { useToast } from "@/hooks/use-toast";
 import { useListStudios } from "@workspace/api-client-react";
 import { SITE_NAME } from "@/lib/site";
-import { CalendarClock, LogIn, Plus, Trash2 } from "lucide-react";
+import { PhotoCapture } from "@/components/photo-capture";
+import { VisitorBadge, type VisitorBadgeData } from "@/components/visitor-badge";
+import { printBadge } from "@/lib/print-badge";
+import { CalendarClock, LogIn, Plus, Printer, Trash2, UserPlus } from "lucide-react";
 import { format } from "date-fns";
+
+type Preg = Preregistration;
 
 const todayStr = () => new Date().toISOString().slice(0, 10);
 
@@ -25,8 +32,13 @@ export default function Preregistrations() {
   const queryClient = useQueryClient();
   const [date, setDate] = useState(todayStr());
   const [open, setOpen] = useState(false);
-  const [converting, setConverting] = useState<number | null>(null);
   const [deleting, setDeleting] = useState<number | null>(null);
+
+  // Convert-to-check-in dialog (photo capture + badge)
+  const [convertTarget, setConvertTarget] = useState<Preg | null>(null);
+  const [convertPhoto, setConvertPhoto] = useState<string | null>(null);
+  const [convertBadge, setConvertBadge] = useState<VisitorBadgeData | null>(null);
+  const [convertPending, setConvertPending] = useState(false);
 
   const [form, setForm] = useState({
     guestName: "", company: "", phone: "", email: "",
@@ -44,6 +56,7 @@ export default function Preregistrations() {
   const { mutateAsync: createPreg, isPending: creating } = useCreatePreregistration();
   const { mutateAsync: deletePreg } = useDeletePreregistration();
   const { mutateAsync: convertPreg } = useConvertPreregistration();
+  const { mutateAsync: uploadPhoto } = useUploadPhoto();
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -77,20 +90,58 @@ export default function Preregistrations() {
     }
   };
 
-  const handleConvert = async (id: number, name: string) => {
-    setConverting(id);
+  const openConvert = (p: Preg) => {
+    setConvertTarget(p);
+    setConvertPhoto(null);
+    setConvertBadge(null);
+  };
+
+  const closeConvert = () => {
+    setConvertTarget(null);
+    setConvertPhoto(null);
+    setConvertBadge(null);
+    setConvertPending(false);
+  };
+
+  const handleConvert = async () => {
+    if (!convertTarget) return;
+    setConvertPending(true);
     try {
-      await convertPreg({ id });
+      let photoUrl: string | undefined;
+      if (convertPhoto) {
+        try {
+          const base64 = convertPhoto.split(",")[1];
+          const result = await uploadPhoto({ data: { imageData: base64 } });
+          photoUrl = result.photoUrl;
+        } catch {
+          toast({ title: "Photo upload failed", description: "Continuing without photo.", variant: "destructive" });
+        }
+      }
+      const guest = await convertPreg({ id: convertTarget.id, data: { photoUrl } });
       queryClient.invalidateQueries({ queryKey: ["/api/preregistrations"] });
       queryClient.invalidateQueries({ queryKey: ["/api/guests"] });
       queryClient.invalidateQueries({ queryKey: ["/api/dashboard/summary"] });
-      toast({ title: "Guest checked in", description: `${name} converted from pre-registration.` });
+      setConvertBadge({
+        badgeId: guest.badgeId,
+        name: guest.name,
+        company: guest.company,
+        host: guest.hostName,
+        site: guest.site,
+        studios: guest.studios ?? [],
+        purpose: guest.purposeOfVisit,
+        checkinAt: guest.checkinAt,
+        expectedDeparture: guest.expectedDeparture ?? null,
+        photo: convertPhoto ?? guest.photoUrl ?? null,
+      });
+      toast({ title: "Guest checked in", description: `Badge ${guest.badgeId} issued.` });
     } catch {
       toast({ title: "Conversion failed", variant: "destructive" });
     } finally {
-      setConverting(null);
+      setConvertPending(false);
     }
   };
+
+  const handlePrint = () => printBadge();
 
   const handleDelete = async (id: number) => {
     setDeleting(id);
@@ -223,9 +274,9 @@ export default function Preregistrations() {
                       <td className="px-4 py-3 text-muted-foreground">{p.studios?.length ? p.studios.join(", ") : "—"}</td>
                       <td className="px-4 py-3 text-muted-foreground">{format(new Date(p.expectedArrival), "HH:mm")}</td>
                       <td className="px-4 py-3 text-right flex items-center justify-end gap-2">
-                        <Button size="sm" onClick={() => handleConvert(p.id, p.guestName)} disabled={converting === p.id}>
+                        <Button size="sm" onClick={() => openConvert(p)}>
                           <LogIn className="w-3 h-3 mr-1" />
-                          {converting === p.id ? "..." : "Check In"}
+                          Check In
                         </Button>
                         <Button size="sm" variant="ghost" className="text-destructive hover:text-destructive" onClick={() => handleDelete(p.id)} disabled={deleting === p.id}>
                           <Trash2 className="w-3 h-3" />
@@ -262,6 +313,48 @@ export default function Preregistrations() {
           )}
         </div>
       </div>
+
+      <Dialog open={convertTarget !== null} onOpenChange={(o) => { if (!o) closeConvert(); }}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>{convertBadge ? "Badge Issued" : "Check In Guest"}</DialogTitle>
+          </DialogHeader>
+
+          {convertBadge ? (
+            <div className="space-y-6">
+              <VisitorBadge data={convertBadge} />
+              <div className="flex gap-3 justify-center print:hidden">
+                <Button onClick={handlePrint} variant="outline">
+                  <Printer className="w-4 h-4 mr-2" /> Print Badge
+                </Button>
+                <Button onClick={closeConvert}>Done</Button>
+              </div>
+            </div>
+          ) : convertTarget ? (
+            <div className="space-y-4">
+              <div className="rounded-md border border-border bg-muted/30 p-3 text-sm">
+                <div className="font-semibold">{convertTarget.guestName}</div>
+                <div className="text-muted-foreground">{convertTarget.company || "—"}</div>
+                <div className="mt-1 text-xs text-muted-foreground">Host: {convertTarget.hostName}</div>
+                {convertTarget.studios?.length ? (
+                  <div className="text-xs text-muted-foreground">Studios: {convertTarget.studios.join(", ")}</div>
+                ) : null}
+              </div>
+              <div>
+                <Label className="mb-2 block">Photo (optional)</Label>
+                <PhotoCapture photo={convertPhoto} onChange={setConvertPhoto} />
+              </div>
+              <div className="flex gap-3 justify-end">
+                <Button variant="outline" onClick={closeConvert} disabled={convertPending}>Cancel</Button>
+                <Button onClick={handleConvert} disabled={convertPending}>
+                  <UserPlus className="w-4 h-4 mr-2" />
+                  {convertPending ? "Checking in..." : "Check In & Issue Badge"}
+                </Button>
+              </div>
+            </div>
+          ) : null}
+        </DialogContent>
+      </Dialog>
     </Layout>
   );
 }

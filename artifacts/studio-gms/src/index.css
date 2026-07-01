@@ -150,3 +150,44 @@
     @apply font-sans antialiased bg-background text-foreground;
   }
 }
+
+/* ── Printable visitor badge (3in x 2in landscape) ──────────────── */
+.visitor-badge {
+  width: 3in;
+  height: 2in;
+  background: #ffffff;
+  color: #0b0e1a;
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+.visitor-badge * {
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+
+@media print {
+  @page {
+    size: 3in 2in;
+    margin: 0;
+  }
+  html,
+  body {
+    background: #ffffff !important;
+  }
+  /* While printing a badge we clone it into #print-root (a direct child of
+     body) so it is free of any dialog/portal transforms, then hide the rest
+     of the app. See printBadge() in src/lib/print-badge.ts. */
+  body.printing-badge > *:not(#print-root) {
+    display: none !important;
+  }
+  #print-root {
+    position: absolute;
+    inset: 0;
+    margin: 0 !important;
+  }
+  #print-root .visitor-badge {
+    border: none !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+  }
+}
