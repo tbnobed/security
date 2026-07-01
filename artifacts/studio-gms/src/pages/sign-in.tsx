@@ -38,7 +38,7 @@ export default function SignInPage() {
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         <div className="flex justify-center mb-8">
-          <img src={`${basePath}/frontdesk-logo.png`} alt="FrontDesk — Guest Management" className="w-full max-w-md h-auto" />
+          <img src={`${basePath}/frontdesk-wordmark.png`} alt="FrontDesk — Guest Management" className="w-full max-w-md h-auto" />
         </div>
 
         <div className="bg-card border border-border rounded-md p-6 shadow-lg">

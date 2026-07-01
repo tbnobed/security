@@ -92,7 +92,7 @@ export function Layout({ children }: LayoutProps) {
       {/* Main Content */}
       <main className="flex-1 overflow-y-auto bg-background">
         <header className="flex items-center justify-end px-6 py-3 border-b border-border">
-          <img src={`${basePath}/frontdesk-logo.png`} alt="FrontDesk — Guest Management" className="h-8 w-auto" />
+          <img src={`${basePath}/frontdesk-wordmark.png`} alt="FrontDesk — Guest Management" className="h-8 w-auto" />
         </header>
         {children}
       </main>
