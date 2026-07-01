@@ -22,6 +22,8 @@ tags:
     description: User management
   - name: dashboard
     description: Dashboard summary data
+  - name: studios
+    description: Studio location management
 
 paths:
   /healthz:
@@ -291,6 +293,72 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Guest"
+
+  /public/preregistrations:
+    post:
+      operationId: createPublicPreregistration
+      tags: [preregistrations]
+      summary: Submit a visitor self-service pre-registration (no authentication)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PublicPreregistrationInput"
+      responses:
+        "201":
+          description: Pre-registration submitted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Preregistration"
+
+  /studios:
+    get:
+      operationId: listStudios
+      tags: [studios]
+      summary: List studio locations (public, used by the pre-registration form)
+      responses:
+        "200":
+          description: Studios
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Studio"
+    post:
+      operationId: createStudio
+      tags: [studios]
+      summary: Create a studio location (admin only)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/StudioInput"
+      responses:
+        "201":
+          description: Studio created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Studio"
+
+  /studios/{id}:
+    delete:
+      operationId: deleteStudio
+      tags: [studios]
+      summary: Delete a studio location (admin only)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
 
   /watchlist:
     get:
@@ -680,6 +748,10 @@ components:
           type: ["string", "null"]
         preregistrationId:
           type: ["integer", "null"]
+        studios:
+          type: array
+          items:
+            type: string
         timeOnSiteMinutes:
           type: ["integer", "null"]
         isOverdue:
@@ -720,6 +792,10 @@ components:
           type: string
         preregistrationId:
           type: integer
+        studios:
+          type: array
+          items:
+            type: string
 
     GuestUpdate:
       type: object
@@ -766,6 +842,10 @@ components:
           format: date-time
         site:
           type: string
+        studios:
+          type: array
+          items:
+            type: string
         photoUrl:
           type: ["string", "null"]
 
@@ -809,6 +889,10 @@ components:
           type: ["string", "null"]
         convertedGuestId:
           type: ["integer", "null"]
+        studios:
+          type: array
+          items:
+            type: string
 
     PreregistrationInput:
       type: object
@@ -842,6 +926,10 @@ components:
         expectedDeparture:
           type: string
           format: date-time
+        studios:
+          type: array
+          items:
+            type: string
 
     WatchlistEntry:
       type: object
@@ -1098,3 +1186,63 @@ components:
       properties:
         photoUrl:
           type: string
+
+    Studio:
+      type: object
+      required:
+        - id
+        - name
+        - createdAt
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+
+    StudioInput:
+      type: object
+      required:
+        - name
+      properties:
+        name:
+          type: string
+          minLength: 1
+
+    PublicPreregistrationInput:
+      type: object
+      required:
+        - guestName
+        - hostName
+        - site
+        - expectedArrival
+      properties:
+        guestName:
+          type: string
+          minLength: 1
+        company:
+          type: string
+        phone:
+          type: string
+        email:
+          type: string
+        hostName:
+          type: string
+          minLength: 1
+        purposeOfVisit:
+          type: string
+        site:
+          type: string
+          minLength: 1
+        expectedArrival:
+          type: string
+          format: date-time
+        expectedDeparture:
+          type: string
+          format: date-time
+        studios:
+          type: array
+          items:
+            type: string

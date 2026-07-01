@@ -87,7 +87,7 @@ export default function Dashboard() {
                   <th className="px-4 py-3 font-medium">Company</th>
                   <th className="px-4 py-3 font-medium">Host</th>
                   <th className="px-4 py-3 font-medium">Check In</th>
-                  <th className="px-4 py-3 font-medium">Site</th>
+                  <th className="px-4 py-3 font-medium">Studios</th>
                   <th className="px-4 py-3 font-medium">Time On-Site</th>
                   <th className="px-4 py-3 font-medium text-right">Status</th>
                 </tr>
@@ -108,7 +108,7 @@ export default function Dashboard() {
                       <td className="px-4 py-3 text-muted-foreground">{guest.company}</td>
                       <td className="px-4 py-3">{guest.hostName}</td>
                       <td className="px-4 py-3 text-muted-foreground">{format(new Date(guest.checkinAt), "HH:mm")}</td>
-                      <td className="px-4 py-3 text-muted-foreground">{guest.site}</td>
+                      <td className="px-4 py-3 text-muted-foreground">{guest.studios?.length ? guest.studios.join(", ") : "—"}</td>
                       <td className="px-4 py-3 font-mono text-xs">{guest.timeOnSiteMinutes}m</td>
                       <td className="px-4 py-3 text-right">
                         {guest.isOverdue ? (

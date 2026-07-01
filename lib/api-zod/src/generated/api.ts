@@ -46,6 +46,7 @@ export const ListGuestsResponseItem = zod.object({
   "checkedInByClerkId": zod.string().nullish(),
   "checkedOutByClerkId": zod.string().nullish(),
   "preregistrationId": zod.number().nullish(),
+  "studios": zod.array(zod.string()).optional(),
   "timeOnSiteMinutes": zod.number().nullish(),
   "isOverdue": zod.boolean().optional()
 })
@@ -72,7 +73,8 @@ export const CreateGuestBody = zod.object({
   "site": zod.string().min(1),
   "expectedDeparture": zod.coerce.date().optional(),
   "photoUrl": zod.string().optional(),
-  "preregistrationId": zod.number().optional()
+  "preregistrationId": zod.number().optional(),
+  "studios": zod.array(zod.string()).optional()
 })
 
 export const CreateGuestResponse = zod.object({
@@ -93,6 +95,7 @@ export const CreateGuestResponse = zod.object({
   "checkedInByClerkId": zod.string().nullish(),
   "checkedOutByClerkId": zod.string().nullish(),
   "preregistrationId": zod.number().nullish(),
+  "studios": zod.array(zod.string()).optional(),
   "timeOnSiteMinutes": zod.number().nullish(),
   "isOverdue": zod.boolean().optional()
 })
@@ -123,6 +126,7 @@ export const GetGuestResponse = zod.object({
   "checkedInByClerkId": zod.string().nullish(),
   "checkedOutByClerkId": zod.string().nullish(),
   "preregistrationId": zod.number().nullish(),
+  "studios": zod.array(zod.string()).optional(),
   "timeOnSiteMinutes": zod.number().nullish(),
   "isOverdue": zod.boolean().optional()
 })
@@ -165,6 +169,7 @@ export const UpdateGuestResponse = zod.object({
   "checkedInByClerkId": zod.string().nullish(),
   "checkedOutByClerkId": zod.string().nullish(),
   "preregistrationId": zod.number().nullish(),
+  "studios": zod.array(zod.string()).optional(),
   "timeOnSiteMinutes": zod.number().nullish(),
   "isOverdue": zod.boolean().optional()
 })
@@ -195,6 +200,7 @@ export const CheckoutGuestResponse = zod.object({
   "checkedInByClerkId": zod.string().nullish(),
   "checkedOutByClerkId": zod.string().nullish(),
   "preregistrationId": zod.number().nullish(),
+  "studios": zod.array(zod.string()).optional(),
   "timeOnSiteMinutes": zod.number().nullish(),
   "isOverdue": zod.boolean().optional()
 })
@@ -214,6 +220,7 @@ export const GetGuestBadgeResponse = zod.object({
   "hostName": zod.string(),
   "checkinAt": zod.coerce.date(),
   "site": zod.string(),
+  "studios": zod.array(zod.string()).optional(),
   "photoUrl": zod.string().nullish()
 })
 
@@ -243,6 +250,7 @@ export const SearchGuestsResponseItem = zod.object({
   "checkedInByClerkId": zod.string().nullish(),
   "checkedOutByClerkId": zod.string().nullish(),
   "preregistrationId": zod.number().nullish(),
+  "studios": zod.array(zod.string()).optional(),
   "timeOnSiteMinutes": zod.number().nullish(),
   "isOverdue": zod.boolean().optional()
 })
@@ -270,6 +278,7 @@ export const ListOverdueGuestsResponseItem = zod.object({
   "checkedInByClerkId": zod.string().nullish(),
   "checkedOutByClerkId": zod.string().nullish(),
   "preregistrationId": zod.number().nullish(),
+  "studios": zod.array(zod.string()).optional(),
   "timeOnSiteMinutes": zod.number().nullish(),
   "isOverdue": zod.boolean().optional()
 })
@@ -296,7 +305,8 @@ export const ListPreregistrationsResponseItem = zod.object({
   "expectedDeparture": zod.coerce.date().nullish(),
   "status": zod.enum(['pending', 'converted', 'cancelled']),
   "createdByClerkId": zod.string().nullish(),
-  "convertedGuestId": zod.number().nullish()
+  "convertedGuestId": zod.number().nullish(),
+  "studios": zod.array(zod.string()).optional()
 })
 export const ListPreregistrationsResponse = zod.array(ListPreregistrationsResponseItem)
 
@@ -318,7 +328,8 @@ export const CreatePreregistrationBody = zod.object({
   "purposeOfVisit": zod.string().optional(),
   "site": zod.string().min(1),
   "expectedArrival": zod.coerce.date(),
-  "expectedDeparture": zod.coerce.date().optional()
+  "expectedDeparture": zod.coerce.date().optional(),
+  "studios": zod.array(zod.string()).optional()
 })
 
 export const CreatePreregistrationResponse = zod.object({
@@ -334,7 +345,8 @@ export const CreatePreregistrationResponse = zod.object({
   "expectedDeparture": zod.coerce.date().nullish(),
   "status": zod.enum(['pending', 'converted', 'cancelled']),
   "createdByClerkId": zod.string().nullish(),
-  "convertedGuestId": zod.number().nullish()
+  "convertedGuestId": zod.number().nullish(),
+  "studios": zod.array(zod.string()).optional()
 })
 
 
@@ -373,9 +385,87 @@ export const ConvertPreregistrationResponse = zod.object({
   "checkedInByClerkId": zod.string().nullish(),
   "checkedOutByClerkId": zod.string().nullish(),
   "preregistrationId": zod.number().nullish(),
+  "studios": zod.array(zod.string()).optional(),
   "timeOnSiteMinutes": zod.number().nullish(),
   "isOverdue": zod.boolean().optional()
 })
+
+
+/**
+ * @summary Submit a visitor self-service pre-registration (no authentication)
+ */
+
+
+
+
+
+export const CreatePublicPreregistrationBody = zod.object({
+  "guestName": zod.string().min(1),
+  "company": zod.string().optional(),
+  "phone": zod.string().optional(),
+  "email": zod.string().optional(),
+  "hostName": zod.string().min(1),
+  "purposeOfVisit": zod.string().optional(),
+  "site": zod.string().min(1),
+  "expectedArrival": zod.coerce.date(),
+  "expectedDeparture": zod.coerce.date().optional(),
+  "studios": zod.array(zod.string()).optional()
+})
+
+export const CreatePublicPreregistrationResponse = zod.object({
+  "id": zod.number(),
+  "guestName": zod.string(),
+  "company": zod.string(),
+  "phone": zod.string().nullish(),
+  "email": zod.string().nullish(),
+  "hostName": zod.string(),
+  "purposeOfVisit": zod.string().nullish(),
+  "site": zod.string(),
+  "expectedArrival": zod.coerce.date(),
+  "expectedDeparture": zod.coerce.date().nullish(),
+  "status": zod.enum(['pending', 'converted', 'cancelled']),
+  "createdByClerkId": zod.string().nullish(),
+  "convertedGuestId": zod.number().nullish(),
+  "studios": zod.array(zod.string()).optional()
+})
+
+
+/**
+ * @summary List studio locations (public, used by the pre-registration form)
+ */
+export const ListStudiosResponseItem = zod.object({
+  "id": zod.number(),
+  "name": zod.string(),
+  "createdAt": zod.coerce.date()
+})
+export const ListStudiosResponse = zod.array(ListStudiosResponseItem)
+
+
+/**
+ * @summary Create a studio location (admin only)
+ */
+
+
+
+export const CreateStudioBody = zod.object({
+  "name": zod.string().min(1)
+})
+
+export const CreateStudioResponse = zod.object({
+  "id": zod.number(),
+  "name": zod.string(),
+  "createdAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary Delete a studio location (admin only)
+ */
+export const DeleteStudioParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const DeleteStudioResponse = zod.void()
 
 
 /**

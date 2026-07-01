@@ -6,9 +6,11 @@ import {
   CreatePreregistrationBody,
   DeletePreregistrationParams,
   ConvertPreregistrationParams,
+  CreatePublicPreregistrationBody,
   ListPreregistrationsResponse,
   CreatePreregistrationResponse,
   ConvertPreregistrationResponse,
+  CreatePublicPreregistrationResponse,
 } from "@workspace/api-zod";
 import { requireAuth } from "../lib/auth";
 import { generateBadgeId } from "../lib/badge";
@@ -89,6 +91,7 @@ router.post("/preregistrations", requireAuth, async (req, res): Promise<void> =>
       expectedDeparture: parsed.data.expectedDeparture
         ? new Date(parsed.data.expectedDeparture)
         : null,
+      studios: parsed.data.studios ?? [],
       createdByClerkId: clerkId,
       status: "pending",
     })
@@ -149,6 +152,7 @@ router.post("/preregistrations/:id/convert", requireAuth, async (req, res): Prom
       hostName: preg.hostName,
       purposeOfVisit: preg.purposeOfVisit ?? "Pre-registered visit",
       site: preg.site,
+      studios: preg.studios,
       expectedDeparture: preg.expectedDeparture ?? null,
       checkedInByClerkId: clerkId,
       preregistrationId: preg.id,
@@ -194,6 +198,45 @@ router.post("/preregistrations/:id/convert", requireAuth, async (req, res): Prom
       isOverdue,
     }),
   );
+});
+
+router.post("/public/preregistrations", async (req, res): Promise<void> => {
+  const parsed = CreatePublicPreregistrationBody.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: parsed.error.message });
+    return;
+  }
+
+  const [preg] = await db
+    .insert(preregistrationsTable)
+    .values({
+      guestName: parsed.data.guestName,
+      company: parsed.data.company ?? "",
+      phone: parsed.data.phone ?? null,
+      email: parsed.data.email ?? null,
+      hostName: parsed.data.hostName,
+      purposeOfVisit: parsed.data.purposeOfVisit ?? null,
+      site: parsed.data.site,
+      expectedArrival: new Date(parsed.data.expectedArrival),
+      expectedDeparture: parsed.data.expectedDeparture
+        ? new Date(parsed.data.expectedDeparture)
+        : null,
+      studios: parsed.data.studios ?? [],
+      createdByClerkId: null,
+      status: "pending",
+    })
+    .returning();
+
+  await db.insert(auditTable).values({
+    eventType: "preregistration",
+    guestId: null,
+    guestName: preg.guestName,
+    operatorClerkId: "public",
+    operatorName: "Self-registration",
+    metadata: JSON.stringify({ site: preg.site, selfRegistered: true }),
+  });
+
+  res.status(201).json(CreatePublicPreregistrationResponse.parse(toPreregResponse(preg)));
 });
 
 export default router;

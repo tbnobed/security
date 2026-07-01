@@ -6,14 +6,18 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export interface BadgeData {
-  badgeId: string;
+export interface PublicPreregistrationInput {
+  /** @minLength 1 */
   guestName: string;
   company?: string;
+  phone?: string;
+  email?: string;
+  /** @minLength 1 */
   hostName: string;
-  checkinAt: Date;
+  purposeOfVisit?: string;
+  /** @minLength 1 */
   site: string;
+  expectedArrival: Date;
+  expectedDeparture?: Date;
   studios?: string[];
-  /** @nullable */
-  photoUrl?: string | null;
 }

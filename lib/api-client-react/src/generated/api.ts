@@ -42,9 +42,12 @@ import type {
   PhotoUpload,
   Preregistration,
   PreregistrationInput,
+  PublicPreregistrationInput,
   ResetPasswordInput,
   RoleUpdate,
   SearchGuestsParams,
+  Studio,
+  StudioInput,
   WatchlistAlert,
   WatchlistCheckResult,
   WatchlistEntry,
@@ -1058,6 +1061,293 @@ export const useConvertPreregistration = <TError = ErrorType<unknown>,
         TContext
       > => {
       return useMutation(getConvertPreregistrationMutationOptions(options));
+    }
+
+export const getCreatePublicPreregistrationUrl = () => {
+
+
+
+
+  return `/api/public/preregistrations`
+}
+
+/**
+ * @summary Submit a visitor self-service pre-registration (no authentication)
+ */
+export const createPublicPreregistration = async (publicPreregistrationInput: PublicPreregistrationInput, options?: RequestInit): Promise<Preregistration> => {
+
+  return customFetch<Preregistration>(getCreatePublicPreregistrationUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(publicPreregistrationInput)
+  }
+);}
+
+
+
+
+export const getCreatePublicPreregistrationMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createPublicPreregistration>>, TError,{data: BodyType<PublicPreregistrationInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createPublicPreregistration>>, TError,{data: BodyType<PublicPreregistrationInput>}, TContext> => {
+
+const mutationKey = ['createPublicPreregistration'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createPublicPreregistration>>, {data: BodyType<PublicPreregistrationInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  createPublicPreregistration(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreatePublicPreregistrationMutationResult = NonNullable<Awaited<ReturnType<typeof createPublicPreregistration>>>
+    export type CreatePublicPreregistrationMutationBody = BodyType<PublicPreregistrationInput>
+    export type CreatePublicPreregistrationMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Submit a visitor self-service pre-registration (no authentication)
+ */
+export const useCreatePublicPreregistration = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createPublicPreregistration>>, TError,{data: BodyType<PublicPreregistrationInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createPublicPreregistration>>,
+        TError,
+        {data: BodyType<PublicPreregistrationInput>},
+        TContext
+      > => {
+      return useMutation(getCreatePublicPreregistrationMutationOptions(options));
+    }
+
+export const getListStudiosUrl = () => {
+
+
+
+
+  return `/api/studios`
+}
+
+/**
+ * @summary List studio locations (public, used by the pre-registration form)
+ */
+export const listStudios = async ( options?: RequestInit): Promise<Studio[]> => {
+
+  return customFetch<Studio[]>(getListStudiosUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListStudiosQueryKey = () => {
+    return [
+    `/api/studios`
+    ] as const;
+    }
+
+
+export const getListStudiosQueryOptions = <TData = Awaited<ReturnType<typeof listStudios>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listStudios>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListStudiosQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listStudios>>> = ({ signal }) => listStudios({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listStudios>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListStudiosQueryResult = NonNullable<Awaited<ReturnType<typeof listStudios>>>
+export type ListStudiosQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary List studio locations (public, used by the pre-registration form)
+ */
+
+export function useListStudios<TData = Awaited<ReturnType<typeof listStudios>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listStudios>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListStudiosQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getCreateStudioUrl = () => {
+
+
+
+
+  return `/api/studios`
+}
+
+/**
+ * @summary Create a studio location (admin only)
+ */
+export const createStudio = async (studioInput: StudioInput, options?: RequestInit): Promise<Studio> => {
+
+  return customFetch<Studio>(getCreateStudioUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(studioInput)
+  }
+);}
+
+
+
+
+export const getCreateStudioMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createStudio>>, TError,{data: BodyType<StudioInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createStudio>>, TError,{data: BodyType<StudioInput>}, TContext> => {
+
+const mutationKey = ['createStudio'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createStudio>>, {data: BodyType<StudioInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  createStudio(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateStudioMutationResult = NonNullable<Awaited<ReturnType<typeof createStudio>>>
+    export type CreateStudioMutationBody = BodyType<StudioInput>
+    export type CreateStudioMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Create a studio location (admin only)
+ */
+export const useCreateStudio = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createStudio>>, TError,{data: BodyType<StudioInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createStudio>>,
+        TError,
+        {data: BodyType<StudioInput>},
+        TContext
+      > => {
+      return useMutation(getCreateStudioMutationOptions(options));
+    }
+
+export const getDeleteStudioUrl = (id: number,) => {
+
+
+
+
+  return `/api/studios/${id}`
+}
+
+/**
+ * @summary Delete a studio location (admin only)
+ */
+export const deleteStudio = async (id: number, options?: RequestInit): Promise<void> => {
+
+  return customFetch<void>(getDeleteStudioUrl(id),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+export const getDeleteStudioMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteStudio>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteStudio>>, TError,{id: number}, TContext> => {
+
+const mutationKey = ['deleteStudio'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteStudio>>, {id: number}> = (props) => {
+          const {id} = props ?? {};
+
+          return  deleteStudio(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteStudioMutationResult = NonNullable<Awaited<ReturnType<typeof deleteStudio>>>
+
+    export type DeleteStudioMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Delete a studio location (admin only)
+ */
+export const useDeleteStudio = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteStudio>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof deleteStudio>>,
+        TError,
+        {id: number},
+        TContext
+      > => {
+      return useMutation(getDeleteStudioMutationOptions(options));
     }
 
 export const getListWatchlistUrl = () => {

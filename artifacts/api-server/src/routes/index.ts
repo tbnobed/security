@@ -8,6 +8,7 @@ import auditRouter from "./audit";
 import usersRouter from "./users";
 import dashboardRouter from "./dashboard";
 import photosRouter from "./photos";
+import studiosRouter from "./studios";
 
 const router: IRouter = Router();
 
@@ -20,5 +21,6 @@ router.use(auditRouter);
 router.use(usersRouter);
 router.use(dashboardRouter);
 router.use(photosRouter);
+router.use(studiosRouter);
 
 export default router;

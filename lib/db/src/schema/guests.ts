@@ -1,4 +1,5 @@
 import { pgTable, text, serial, timestamp, integer, boolean } from "drizzle-orm/pg-core";
+import { sql } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 
@@ -20,6 +21,7 @@ export const guestsTable = pgTable("guests", {
   checkedInByClerkId: text("checked_in_by_clerk_id"),
   checkedOutByClerkId: text("checked_out_by_clerk_id"),
   preregistrationId: integer("preregistration_id"),
+  studios: text("studios").array().notNull().default(sql`'{}'::text[]`),
 });
 
 export const insertGuestSchema = createInsertSchema(guestsTable).omit({

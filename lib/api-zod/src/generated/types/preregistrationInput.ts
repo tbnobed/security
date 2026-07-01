@@ -19,4 +19,5 @@ export interface PreregistrationInput {
   site: string;
   expectedArrival: Date;
   expectedDeparture?: Date;
+  studios?: string[];
 }

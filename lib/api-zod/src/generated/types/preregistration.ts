@@ -27,4 +27,5 @@ export interface Preregistration {
   createdByClerkId?: string | null;
   /** @nullable */
   convertedGuestId?: number | null;
+  studios?: string[];
 }

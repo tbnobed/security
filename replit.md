@@ -12,6 +12,7 @@ A web-based guest management system for broadcast studio security desks — chec
 - `pnpm --filter @workspace/db run push` — push DB schema changes (dev only)
 - Required env: `DATABASE_URL` — Postgres connection string (auto-provisioned)
 - Required env: `SESSION_SECRET` — secret used to sign session cookies (must be set; server refuses to start without it)
+- Frontend env: `VITE_SITE_NAME` (in `artifacts/studio-gms/.env`) — the single static site/location name shown across the app. There is no in-app site selector; change this env var + rebuild to deploy for a different location. Must restart the `web` workflow after changing it.
 - Seed the fixed admin: `node scripts/src/seed-admin.mjs` (defaults to `admin@studiogms.com` / `StudioAdmin!2026`; override with `SEED_ADMIN_EMAIL` / `SEED_ADMIN_PASSWORD`)
 
 ## Deployment target
@@ -37,6 +38,9 @@ A web-based guest management system for broadcast studio security desks — chec
 - `artifacts/api-server/src/lib/auth.ts` — requireAuth / requireAdmin middleware, bcrypt hash/verify helpers, session helpers
 - `artifacts/api-server/src/routes/auth.ts` — login / logout route handlers
 - `artifacts/studio-gms/src/` — React frontend (pages, components, auth context in `src/lib/auth.tsx`)
+- `artifacts/studio-gms/src/lib/site.ts` — reads `VITE_SITE_NAME` and exports the static `SITE_NAME`
+- `artifacts/studio-gms/src/pages/studios.tsx` — admin studios CRUD; `preregister.tsx` — public self-registration page
+- `lib/db/src/schema/studios.ts` — studios table (id/name/createdAt, uniqueIndex on `lower(name)`)
 
 ## Architecture decisions
 
@@ -49,14 +53,16 @@ A web-based guest management system for broadcast studio security desks — chec
 
 ## Product
 
-- **Guest Check-In**: Form with name, company, contact info, host, purpose, site, expected departure. Optional webcam photo. Auto-generates badge. Live watchlist check on name entry — blocks entry for blocked guests, warns for flagged guests.
+- **Guest Check-In**: Form with name, company, contact info, host, purpose, studios (checkboxes), expected departure. Site is fixed per deployment. Optional webcam photo. Auto-generates badge. Live watchlist check on name entry — blocks entry for blocked guests, warns for flagged guests.
 - **Guest Check-Out**: Quick search by name or badge ID, one-click checkout with auto-timestamp.
 - **Active Dashboard**: Live table of on-site guests with overdue highlights, stats bar (active/today counts/overdue/expected), auto-refresh every 30s. Filter by host/company/site.
 - **Pre-Registration**: Hosts pre-register expected guests; security sees "Expected Today" queue; one-click convert to check-in.
+- **Public Pre-Registration**: Unauthenticated `/preregister` page — visitors self-register (name/company/contact/host/purpose/studios/expected arrival). Submissions land in the same "Expected Today" queue with `createdByClerkId=null`, operator recorded as "Self-registration". No Layout/auth wrapper.
+- **Studios**: Admin-managed list of rooms/buildings (`/studios` page). Multi-selectable via checkboxes on check-in and both pre-reg forms (internal + public). Stored as a `text[]` on guests and preregistrations; copied through on convert. `GET /studios` is public (needed by the public form); `POST`/`DELETE` are admin-only. Displayed in dashboard + prereg tables (replacing the now-static Site column).
 - **Watchlist**: Admin-managed blocklist/flaglist. Name-match check on every check-in.
 - **Audit Log**: Immutable record of all events with CSV export for date ranges.
 - **Roles**: security (check in/out, dashboard) and admin (watchlist, audit, user management). Admins create operators (security or admin) from the Users page with an email + initial password, and can reset any operator's password. Watchlist and audit API endpoints are admin-only; `/watchlist/check` stays open to any authenticated operator because the check-in form uses it.
-- **Sites**: Dallas/The Plex, Tustin, Nashville.
+- **Site**: single static location per deployment via `VITE_SITE_NAME` (no in-app selector).
 
 ## User preferences
 

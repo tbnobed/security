@@ -1,4 +1,5 @@
 import { pgTable, text, serial, timestamp, integer } from "drizzle-orm/pg-core";
+import { sql } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 
@@ -16,6 +17,7 @@ export const preregistrationsTable = pgTable("preregistrations", {
   status: text("status").notNull().default("pending"),
   createdByClerkId: text("created_by_clerk_id"),
   convertedGuestId: integer("converted_guest_id"),
+  studios: text("studios").array().notNull().default(sql`'{}'::text[]`),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 

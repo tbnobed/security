@@ -22,4 +22,5 @@ export interface GuestInput {
   expectedDeparture?: Date;
   photoUrl?: string;
   preregistrationId?: number;
+  studios?: string[];
 }

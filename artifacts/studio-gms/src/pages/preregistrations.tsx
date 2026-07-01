@@ -10,13 +10,13 @@ import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
+import { useListStudios } from "@workspace/api-client-react";
+import { SITE_NAME } from "@/lib/site";
 import { CalendarClock, LogIn, Plus, Trash2 } from "lucide-react";
 import { format } from "date-fns";
-
-const SITES = ["Dallas/The Plex", "Tustin", "Nashville"];
 
 const todayStr = () => new Date().toISOString().slice(0, 10);
 
@@ -30,9 +30,15 @@ export default function Preregistrations() {
 
   const [form, setForm] = useState({
     guestName: "", company: "", phone: "", email: "",
-    hostName: "", purposeOfVisit: "", site: "",
+    hostName: "", purposeOfVisit: "",
     expectedArrival: "", expectedDeparture: "",
   });
+  const [studios, setStudios] = useState<string[]>([]);
+  const { data: studioList } = useListStudios();
+
+  const toggleStudio = (name: string, checked: boolean) => {
+    setStudios((prev) => (checked ? [...prev, name] : prev.filter((s) => s !== name)));
+  };
 
   const { data: pregs, isLoading } = useListPreregistrations({ date });
   const { mutateAsync: createPreg, isPending: creating } = useCreatePreregistration();
@@ -41,7 +47,7 @@ export default function Preregistrations() {
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.guestName || !form.hostName || !form.site || !form.expectedArrival) {
+    if (!form.guestName || !form.hostName || !form.expectedArrival) {
       toast({ title: "Missing required fields", variant: "destructive" });
       return;
     }
@@ -54,16 +60,18 @@ export default function Preregistrations() {
           email: form.email || undefined,
           hostName: form.hostName,
           purposeOfVisit: form.purposeOfVisit || undefined,
-          site: form.site || "",
+          site: SITE_NAME,
           expectedArrival: form.expectedArrival,
           expectedDeparture: form.expectedDeparture || undefined,
+          studios,
         },
       });
       queryClient.invalidateQueries({ queryKey: ["/api/preregistrations"] });
       queryClient.invalidateQueries({ queryKey: ["/api/dashboard/summary"] });
       toast({ title: "Pre-registration created" });
       setOpen(false);
-      setForm({ guestName: "", company: "", phone: "", email: "", hostName: "", purposeOfVisit: "", site: "", expectedArrival: "", expectedDeparture: "" });
+      setForm({ guestName: "", company: "", phone: "", email: "", hostName: "", purposeOfVisit: "", expectedArrival: "", expectedDeparture: "" });
+      setStudios([]);
     } catch {
       toast({ title: "Failed to create pre-registration", variant: "destructive" });
     }
@@ -139,11 +147,10 @@ export default function Preregistrations() {
                     <Input className="mt-1" type="email" value={form.email} onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))} />
                   </div>
                   <div>
-                    <Label>Site *</Label>
-                    <Select value={form.site} onValueChange={(v) => setForm((f) => ({ ...f, site: v }))}>
-                      <SelectTrigger className="mt-1"><SelectValue placeholder="Select site" /></SelectTrigger>
-                      <SelectContent>{SITES.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
-                    </Select>
+                    <Label>Site</Label>
+                    <div className="mt-1 flex h-9 items-center rounded-md border border-border bg-muted/40 px-3 text-sm text-muted-foreground">
+                      {SITE_NAME}
+                    </div>
                   </div>
                   <div>
                     <Label>Purpose</Label>
@@ -157,6 +164,19 @@ export default function Preregistrations() {
                     <Label>Expected Departure</Label>
                     <Input className="mt-1" type="datetime-local" value={form.expectedDeparture} onChange={(e) => setForm((f) => ({ ...f, expectedDeparture: e.target.value }))} />
                   </div>
+                  {(studioList?.length ?? 0) > 0 && (
+                    <div className="col-span-2">
+                      <Label>Studios</Label>
+                      <div className="mt-2 grid grid-cols-2 gap-2">
+                        {studioList?.map((s) => (
+                          <label key={s.id} className="flex items-center gap-2 text-sm cursor-pointer rounded-md border border-border px-3 py-2 hover:bg-muted/50">
+                            <Checkbox checked={studios.includes(s.name)} onCheckedChange={(c) => toggleStudio(s.name, c === true)} />
+                            {s.name}
+                          </label>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
                 <div className="flex gap-3 justify-end">
                   <Button type="button" variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
@@ -189,7 +209,7 @@ export default function Preregistrations() {
                     <th className="px-4 py-3 text-left font-medium">Name</th>
                     <th className="px-4 py-3 text-left font-medium">Company</th>
                     <th className="px-4 py-3 text-left font-medium">Host</th>
-                    <th className="px-4 py-3 text-left font-medium">Site</th>
+                    <th className="px-4 py-3 text-left font-medium">Studios</th>
                     <th className="px-4 py-3 text-left font-medium">Arrival</th>
                     <th className="px-4 py-3 text-right font-medium">Actions</th>
                   </tr>
@@ -200,7 +220,7 @@ export default function Preregistrations() {
                       <td className="px-4 py-3 font-medium">{p.guestName}</td>
                       <td className="px-4 py-3 text-muted-foreground">{p.company}</td>
                       <td className="px-4 py-3">{p.hostName}</td>
-                      <td className="px-4 py-3 text-muted-foreground">{p.site}</td>
+                      <td className="px-4 py-3 text-muted-foreground">{p.studios?.length ? p.studios.join(", ") : "—"}</td>
                       <td className="px-4 py-3 text-muted-foreground">{format(new Date(p.expectedArrival), "HH:mm")}</td>
                       <td className="px-4 py-3 text-right flex items-center justify-end gap-2">
                         <Button size="sm" onClick={() => handleConvert(p.id, p.guestName)} disabled={converting === p.id}>
@@ -230,7 +250,7 @@ export default function Preregistrations() {
                       <td className="px-4 py-3 font-medium line-through text-muted-foreground">{p.guestName}</td>
                       <td className="px-4 py-3 text-muted-foreground">{p.company}</td>
                       <td className="px-4 py-3 text-muted-foreground">{p.hostName}</td>
-                      <td className="px-4 py-3 text-muted-foreground">{p.site}</td>
+                      <td className="px-4 py-3 text-muted-foreground">{p.studios?.length ? p.studios.join(", ") : "—"}</td>
                       <td className="px-4 py-3 text-right">
                         <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-muted text-muted-foreground">Checked In</span>
                       </td>

@@ -13,6 +13,8 @@ import Preregistrations from "@/pages/preregistrations";
 import Watchlist from "@/pages/watchlist";
 import Audit from "@/pages/audit";
 import UsersPage from "@/pages/users";
+import StudiosPage from "@/pages/studios";
+import Preregister from "@/pages/preregister";
 
 const queryClient = new QueryClient();
 
@@ -44,6 +46,7 @@ function AppRoutes() {
     <TooltipProvider>
       <Switch>
         <Route path="/" component={HomeRedirect} />
+        <Route path="/preregister" component={Preregister} />
         <Route path="/sign-in" component={SignInPage} />
         <Route path="/sign-up">
           <Redirect to="/sign-in" />
@@ -68,6 +71,9 @@ function AppRoutes() {
         </Route>
         <Route path="/users">
           <ProtectedRoute component={UsersPage} />
+        </Route>
+        <Route path="/studios">
+          <ProtectedRoute component={StudiosPage} />
         </Route>
         <Route component={NotFound} />
       </Switch>

@@ -143,6 +143,7 @@ router.post("/guests", requireAuth, async (req, res): Promise<void> => {
       hostName: parsed.data.hostName,
       purposeOfVisit: parsed.data.purposeOfVisit,
       site: parsed.data.site,
+      studios: parsed.data.studios ?? [],
       expectedDeparture: parsed.data.expectedDeparture
         ? new Date(parsed.data.expectedDeparture)
         : null,
@@ -342,6 +343,7 @@ router.get("/guests/:id/badge", requireAuth, async (req, res): Promise<void> => 
       hostName: guest.hostName,
       checkinAt: guest.checkinAt.toISOString(),
       site: guest.site,
+      studios: guest.studios,
       photoUrl: guest.photoUrl ?? null,
     }),
   );

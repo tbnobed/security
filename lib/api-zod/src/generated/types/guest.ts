@@ -34,6 +34,7 @@ export interface Guest {
   checkedOutByClerkId?: string | null;
   /** @nullable */
   preregistrationId?: number | null;
+  studios?: string[];
   /** @nullable */
   timeOnSiteMinutes?: number | null;
   isOverdue?: boolean;

@@ -44,6 +44,7 @@ export interface Guest {
   checkedOutByClerkId?: string | null;
   /** @nullable */
   preregistrationId?: number | null;
+  studios?: string[];
   /** @nullable */
   timeOnSiteMinutes?: number | null;
   isOverdue?: boolean;
@@ -65,6 +66,7 @@ export interface GuestInput {
   expectedDeparture?: string;
   photoUrl?: string;
   preregistrationId?: number;
+  studios?: string[];
 }
 
 export interface GuestUpdate {
@@ -86,6 +88,7 @@ export interface BadgeData {
   hostName: string;
   checkinAt: string;
   site: string;
+  studios?: string[];
   /** @nullable */
   photoUrl?: string | null;
 }
@@ -119,6 +122,7 @@ export interface Preregistration {
   createdByClerkId?: string | null;
   /** @nullable */
   convertedGuestId?: number | null;
+  studios?: string[];
 }
 
 export interface PreregistrationInput {
@@ -134,6 +138,7 @@ export interface PreregistrationInput {
   site: string;
   expectedArrival: string;
   expectedDeparture?: string;
+  studios?: string[];
 }
 
 export type WatchlistEntryAction = typeof WatchlistEntryAction[keyof typeof WatchlistEntryAction];
@@ -315,6 +320,33 @@ export interface PhotoUpload {
 
 export interface PhotoResult {
   photoUrl: string;
+}
+
+export interface Studio {
+  id: number;
+  name: string;
+  createdAt: string;
+}
+
+export interface StudioInput {
+  /** @minLength 1 */
+  name: string;
+}
+
+export interface PublicPreregistrationInput {
+  /** @minLength 1 */
+  guestName: string;
+  company?: string;
+  phone?: string;
+  email?: string;
+  /** @minLength 1 */
+  hostName: string;
+  purposeOfVisit?: string;
+  /** @minLength 1 */
+  site: string;
+  expectedArrival: string;
+  expectedDeparture?: string;
+  studios?: string[];
 }
 
 export type ListGuestsParams = {

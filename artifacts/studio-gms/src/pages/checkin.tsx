@@ -6,10 +6,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
+import { useListStudios } from "@workspace/api-client-react";
+import { SITE_NAME } from "@/lib/site";
 import { AlertTriangle, Camera, CameraOff, RefreshCw, UserPlus, XCircle } from "lucide-react";
 
-const SITES = ["Dallas/The Plex", "Tustin", "Nashville"];
 const PURPOSES = [
   "Production meeting",
   "Vendor demo",
@@ -26,6 +28,7 @@ interface BadgePreview {
   company: string;
   host: string;
   site: string;
+  studios: string[];
   checkinAt: string;
 }
 
@@ -38,9 +41,11 @@ export default function CheckIn() {
 
   const [form, setForm] = useState({
     name: "", company: "", phone: "", email: "",
-    hostName: "", purposeOfVisit: "", site: "",
+    hostName: "", purposeOfVisit: "",
     expectedDeparture: "",
   });
+  const [studios, setStudios] = useState<string[]>([]);
+  const { data: studioList } = useListStudios();
   const [photo, setPhoto] = useState<string | null>(null);
   const [photoUrl, setPhotoUrl] = useState<string | null>(null);
   const [cameraOn, setCameraOn] = useState(false);
@@ -112,9 +117,13 @@ export default function CheckIn() {
     }
   };
 
+  const toggleStudio = (name: string, checked: boolean) => {
+    setStudios((prev) => (checked ? [...prev, name] : prev.filter((s) => s !== name)));
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.name || !form.company || !form.hostName || !form.site) {
+    if (!form.name || !form.company || !form.hostName) {
       toast({ title: "Missing required fields", variant: "destructive" });
       return;
     }
@@ -140,7 +149,8 @@ export default function CheckIn() {
           email: form.email || undefined,
           hostName: form.hostName,
           purposeOfVisit: form.purposeOfVisit || "Other",
-          site: form.site,
+          site: SITE_NAME,
+          studios,
           expectedDeparture: form.expectedDeparture || undefined,
           photoUrl: finalPhotoUrl ?? undefined,
         },
@@ -153,9 +163,11 @@ export default function CheckIn() {
         company: guest.company,
         host: guest.hostName,
         site: guest.site,
+        studios: guest.studios ?? [],
         checkinAt: guest.checkinAt,
       });
-      setForm({ name: "", company: "", phone: "", email: "", hostName: "", purposeOfVisit: "", site: "", expectedDeparture: "" });
+      setForm({ name: "", company: "", phone: "", email: "", hostName: "", purposeOfVisit: "", expectedDeparture: "" });
+      setStudios([]);
       setPhoto(null);
       setPhotoUrl(null);
       setWatchlistWarning(null);
@@ -189,6 +201,9 @@ export default function CheckIn() {
                 <div><span className="text-muted-foreground">Company:</span> {badge.company}</div>
                 <div><span className="text-muted-foreground">Host:</span> {badge.host}</div>
                 <div><span className="text-muted-foreground">Site:</span> {badge.site}</div>
+                {badge.studios.length > 0 && (
+                  <div><span className="text-muted-foreground">Studios:</span> {badge.studios.join(", ")}</div>
+                )}
                 <div><span className="text-muted-foreground">Check-in:</span> {new Date(badge.checkinAt).toLocaleString()}</div>
               </div>
             </div>
@@ -231,15 +246,10 @@ export default function CheckIn() {
                   <Input id="host" value={form.hostName} onChange={(e) => setForm((f) => ({ ...f, hostName: e.target.value }))} placeholder="Employee name" required className="mt-1" />
                 </div>
                 <div>
-                  <Label htmlFor="site">Site *</Label>
-                  <Select value={form.site} onValueChange={(v) => setForm((f) => ({ ...f, site: v }))}>
-                    <SelectTrigger id="site" className="mt-1">
-                      <SelectValue placeholder="Select site" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {SITES.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
+                  <Label htmlFor="site">Site</Label>
+                  <div id="site" className="mt-1 flex h-9 items-center rounded-md border border-border bg-muted/40 px-3 text-sm text-muted-foreground">
+                    {SITE_NAME}
+                  </div>
                 </div>
                 <div>
                   <Label htmlFor="purpose">Purpose of Visit</Label>
@@ -256,6 +266,19 @@ export default function CheckIn() {
                   <Label htmlFor="departure">Expected Departure</Label>
                   <Input id="departure" type="datetime-local" value={form.expectedDeparture} onChange={(e) => setForm((f) => ({ ...f, expectedDeparture: e.target.value }))} className="mt-1" />
                 </div>
+                {(studioList?.length ?? 0) > 0 && (
+                  <div className="col-span-2">
+                    <Label>Studios</Label>
+                    <div className="mt-2 grid grid-cols-2 gap-2">
+                      {studioList?.map((s) => (
+                        <label key={s.id} className="flex items-center gap-2 text-sm cursor-pointer rounded-md border border-border px-3 py-2 hover:bg-muted/50">
+                          <Checkbox checked={studios.includes(s.name)} onCheckedChange={(c) => toggleStudio(s.name, c === true)} />
+                          {s.name}
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
 
               <div className="flex gap-3 pt-2">
