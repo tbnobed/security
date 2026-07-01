@@ -231,7 +231,7 @@ paths:
           in: query
           schema:
             type: string
-            format: date
+            pattern: '^\d{4}-\d{2}-\d{2}$'
           description: Filter by date (YYYY-MM-DD), defaults to today
       responses:
         "200":
@@ -436,12 +436,12 @@ paths:
           in: query
           schema:
             type: string
-            format: date
+            pattern: '^\d{4}-\d{2}-\d{2}$'
         - name: endDate
           in: query
           schema:
             type: string
-            format: date
+            pattern: '^\d{4}-\d{2}-\d{2}$'
         - name: guestId
           in: query
           schema:
@@ -476,13 +476,13 @@ paths:
           required: true
           schema:
             type: string
-            format: date
+            pattern: '^\d{4}-\d{2}-\d{2}$'
         - name: endDate
           in: query
           required: true
           schema:
             type: string
-            format: date
+            pattern: '^\d{4}-\d{2}-\d{2}$'
       responses:
         "200":
           description: CSV export

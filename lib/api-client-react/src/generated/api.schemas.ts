@@ -376,6 +376,7 @@ q: string;
 export type ListPreregistrationsParams = {
 /**
  * Filter by date (YYYY-MM-DD), defaults to today
+ * @pattern ^\d{4}-\d{2}-\d{2}$
  */
 date?: string;
 };
@@ -385,7 +386,13 @@ name: string;
 };
 
 export type ListAuditLogParams = {
+/**
+ * @pattern ^\d{4}-\d{2}-\d{2}$
+ */
 startDate?: string;
+/**
+ * @pattern ^\d{4}-\d{2}-\d{2}$
+ */
 endDate?: string;
 guestId?: number;
 operatorId?: string;
@@ -393,7 +400,13 @@ limit?: number;
 };
 
 export type ExportAuditLogParams = {
+/**
+ * @pattern ^\d{4}-\d{2}-\d{2}$
+ */
 startDate: string;
+/**
+ * @pattern ^\d{4}-\d{2}-\d{2}$
+ */
 endDate: string;
 };
 

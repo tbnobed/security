@@ -288,8 +288,11 @@ export const ListOverdueGuestsResponse = zod.array(ListOverdueGuestsResponseItem
 /**
  * @summary List pre-registered guests
  */
+export const listPreregistrationsQueryDateRegExp = new RegExp('^\\d{4}-\\d{2}-\\d{2}$');
+
+
 export const ListPreregistrationsQueryParams = zod.object({
-  "date": zod.date().optional().describe('Filter by date (YYYY-MM-DD), defaults to today')
+  "date": zod.coerce.string().regex(listPreregistrationsQueryDateRegExp).optional().describe('Filter by date (YYYY-MM-DD), defaults to today')
 })
 
 export const ListPreregistrationsResponseItem = zod.object({
@@ -542,11 +545,13 @@ export const CheckWatchlistResponse = zod.object({
 /**
  * @summary List audit log entries
  */
+export const listAuditLogQueryStartDateRegExp = new RegExp('^\\d{4}-\\d{2}-\\d{2}$');
+export const listAuditLogQueryEndDateRegExp = new RegExp('^\\d{4}-\\d{2}-\\d{2}$');
 export const listAuditLogQueryLimitDefault = 100;
 
 export const ListAuditLogQueryParams = zod.object({
-  "startDate": zod.date().optional(),
-  "endDate": zod.date().optional(),
+  "startDate": zod.coerce.string().regex(listAuditLogQueryStartDateRegExp).optional(),
+  "endDate": zod.coerce.string().regex(listAuditLogQueryEndDateRegExp).optional(),
   "guestId": zod.coerce.number().optional(),
   "operatorId": zod.coerce.string().optional(),
   "limit": zod.coerce.number().default(listAuditLogQueryLimitDefault)
@@ -568,9 +573,13 @@ export const ListAuditLogResponse = zod.array(ListAuditLogResponseItem)
 /**
  * @summary Export audit log as CSV
  */
+export const exportAuditLogQueryStartDateRegExp = new RegExp('^\\d{4}-\\d{2}-\\d{2}$');
+export const exportAuditLogQueryEndDateRegExp = new RegExp('^\\d{4}-\\d{2}-\\d{2}$');
+
+
 export const ExportAuditLogQueryParams = zod.object({
-  "startDate": zod.date(),
-  "endDate": zod.date()
+  "startDate": zod.coerce.string().regex(exportAuditLogQueryStartDateRegExp),
+  "endDate": zod.coerce.string().regex(exportAuditLogQueryEndDateRegExp)
 })
 
 export const ExportAuditLogResponse = zod.unknown()

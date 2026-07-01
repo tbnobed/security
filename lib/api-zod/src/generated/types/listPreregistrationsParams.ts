@@ -9,6 +9,7 @@
 export type ListPreregistrationsParams = {
 /**
  * Filter by date (YYYY-MM-DD), defaults to today
+ * @pattern ^\d{4}-\d{2}-\d{2}$
  */
-date?: Date;
+date?: string;
 };

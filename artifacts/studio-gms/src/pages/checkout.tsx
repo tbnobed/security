@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Layout } from "@/components/layout";
-import { useSearchGuests, useCheckoutGuest } from "@workspace/api-client-react";
+import { useSearchGuests, useListGuests, useCheckoutGuest } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,11 +14,18 @@ export default function CheckOut() {
   const [query, setQuery] = useState("");
   const [checkingOut, setCheckingOut] = useState<number | null>(null);
 
+  const searching = query.length >= 2;
+
   const { data: results, isLoading } = useSearchGuests(
     { q: query },
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    { query: { enabled: query.length >= 2 } as any }
+    { query: { enabled: searching } as any }
   );
+
+  const { data: activeGuests, isLoading: loadingActive } = useListGuests({ status: "active" });
+
+  const guests = searching ? results : activeGuests;
+  const listLoading = searching ? isLoading : loadingActive;
 
   const { mutateAsync: checkoutGuest } = useCheckoutGuest();
 
@@ -57,24 +64,28 @@ export default function CheckOut() {
             />
           </div>
 
-          {query.length < 2 && (
-            <div className="text-center py-12 text-muted-foreground">
-              <LogOut className="w-12 h-12 mx-auto mb-3 opacity-20" />
-              <p>Enter at least 2 characters to search</p>
+          {!searching && (
+            <p className="text-xs uppercase tracking-wide text-muted-foreground">
+              Currently checked in{guests ? ` (${guests.length})` : ""}
+            </p>
+          )}
+
+          {listLoading && (
+            <div className="text-center py-8 text-muted-foreground">
+              {searching ? "Searching..." : "Loading..."}
             </div>
           )}
 
-          {isLoading && query.length >= 2 && (
-            <div className="text-center py-8 text-muted-foreground">Searching...</div>
+          {guests && guests.length === 0 && !listLoading && (
+            <div className="text-center py-12 text-muted-foreground">
+              <LogOut className="w-12 h-12 mx-auto mb-3 opacity-20" />
+              <p>{searching ? `No active guests matching "${query}"` : "No guests are currently checked in"}</p>
+            </div>
           )}
 
-          {results && results.length === 0 && query.length >= 2 && (
-            <div className="text-center py-8 text-muted-foreground">No active guests matching "{query}"</div>
-          )}
-
-          {results && results.length > 0 && (
+          {guests && guests.length > 0 && (
             <div className="divide-y divide-border">
-              {results.map((guest) => (
+              {guests.map((guest) => (
                 <div key={guest.id} className="py-4 flex items-center justify-between gap-4">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">

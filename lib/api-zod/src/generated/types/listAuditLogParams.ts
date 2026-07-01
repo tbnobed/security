@@ -7,8 +7,14 @@
  */
 
 export type ListAuditLogParams = {
-startDate?: Date;
-endDate?: Date;
+/**
+ * @pattern ^\d{4}-\d{2}-\d{2}$
+ */
+startDate?: string;
+/**
+ * @pattern ^\d{4}-\d{2}-\d{2}$
+ */
+endDate?: string;
 guestId?: number;
 operatorId?: string;
 limit?: number;
