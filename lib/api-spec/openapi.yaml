@@ -673,6 +673,21 @@ paths:
                 items:
                   $ref: "#/components/schemas/ActivityEvent"
 
+  /productions/today:
+    get:
+      operationId: getProductionsToday
+      tags: [dashboard]
+      summary: List studio productions/bookings scheduled for today (proxied from the external bookings API)
+      responses:
+        "200":
+          description: Today's productions
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ProductionBooking"
+
   /photos:
     post:
       operationId: uploadPhoto
@@ -1156,6 +1171,40 @@ components:
           type: string
         count:
           type: integer
+
+    ProductionBooking:
+      type: object
+      required:
+        - id
+        - title
+        - start
+        - end
+        - type
+        - status
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        description:
+          type: string
+          nullable: true
+        start:
+          type: string
+          format: date-time
+        end:
+          type: string
+          format: date-time
+        studioId:
+          type: integer
+          nullable: true
+        type:
+          type: string
+        status:
+          type: string
+        color:
+          type: string
+          nullable: true
 
     ActivityEvent:
       type: object

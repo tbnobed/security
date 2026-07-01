@@ -35,6 +35,7 @@ export * from './photoUpload';
 export * from './preregistration';
 export * from './preregistrationInput';
 export * from './preregistrationStatus';
+export * from './productionBooking';
 export * from './publicPreregistrationInput';
 export * from './resetPasswordInput';
 export * from './roleUpdate';

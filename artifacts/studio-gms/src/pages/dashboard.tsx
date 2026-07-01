@@ -1,20 +1,30 @@
 import { useEffect } from "react";
 import { Layout } from "@/components/layout";
-import { useListGuests, useGetDashboardSummary } from "@workspace/api-client-react";
+import {
+  useListGuests,
+  useGetDashboardSummary,
+  useGetProductionsToday,
+} from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Users, LogIn, LogOut, AlertTriangle, CalendarClock } from "lucide-react";
+import { Users, LogIn, LogOut, AlertTriangle, CalendarClock, Clapperboard } from "lucide-react";
 import { format } from "date-fns";
 
 export default function Dashboard() {
   const queryClient = useQueryClient();
   const { data: guests, isLoading: loadingGuests } = useListGuests({ status: "active" });
   const { data: summary } = useGetDashboardSummary();
+  const {
+    data: productions,
+    isLoading: loadingProductions,
+    isError: productionsError,
+  } = useGetProductionsToday();
 
   useEffect(() => {
     const interval = setInterval(() => {
       queryClient.invalidateQueries({ queryKey: ["/api/guests"] });
       queryClient.invalidateQueries({ queryKey: ["/api/dashboard/summary"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/productions/today"] });
     }, 30000);
     return () => clearInterval(interval);
   }, [queryClient]);
@@ -73,6 +83,72 @@ export default function Dashboard() {
               <div className="text-2xl font-bold">{summary?.expectedTodayCount || 0}</div>
             </CardContent>
           </Card>
+        </div>
+
+        <div className="bg-card border border-border rounded-md shadow-sm">
+          <div className="p-4 border-b border-border flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Clapperboard className="w-4 h-4 text-primary" />
+              <h3 className="font-medium">Productions Today</h3>
+            </div>
+            <span className="text-xs text-muted-foreground">
+              {productions?.length ? `${productions.length} scheduled` : ""}
+            </span>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm text-left">
+              <thead className="bg-muted/50 text-muted-foreground text-xs uppercase border-b border-border">
+                <tr>
+                  <th className="px-4 py-3 font-medium">Production</th>
+                  <th className="px-4 py-3 font-medium">Studio</th>
+                  <th className="px-4 py-3 font-medium">Start</th>
+                  <th className="px-4 py-3 font-medium">End</th>
+                  <th className="px-4 py-3 font-medium">Type</th>
+                  <th className="px-4 py-3 font-medium text-right">Status</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border">
+                {loadingProductions ? (
+                  <tr>
+                    <td colSpan={6} className="px-4 py-8 text-center text-muted-foreground">Loading productions...</td>
+                  </tr>
+                ) : productionsError ? (
+                  <tr>
+                    <td colSpan={6} className="px-4 py-8 text-center text-destructive">Unable to load productions from the bookings service.</td>
+                  </tr>
+                ) : productions?.length === 0 ? (
+                  <tr>
+                    <td colSpan={6} className="px-4 py-8 text-center text-muted-foreground">No productions scheduled today.</td>
+                  </tr>
+                ) : (
+                  productions?.map((p) => (
+                    <tr key={p.id} className="hover:bg-muted/30 transition-colors">
+                      <td className="px-4 py-3 font-medium">
+                        <div className="flex items-center gap-2">
+                          {p.color ? (
+                            <span
+                              className="inline-block w-2.5 h-2.5 rounded-full shrink-0"
+                              style={{ backgroundColor: p.color }}
+                            />
+                          ) : null}
+                          {p.title}
+                        </div>
+                      </td>
+                      <td className="px-4 py-3 text-muted-foreground">{p.studioId ?? "—"}</td>
+                      <td className="px-4 py-3 text-muted-foreground">{format(new Date(p.start), "HH:mm")}</td>
+                      <td className="px-4 py-3 text-muted-foreground">{format(new Date(p.end), "HH:mm")}</td>
+                      <td className="px-4 py-3 text-muted-foreground capitalize">{p.type}</td>
+                      <td className="px-4 py-3 text-right">
+                        <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-muted text-muted-foreground border border-border capitalize">
+                          {p.status}
+                        </span>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
 
         <div className="bg-card border border-border rounded-md shadow-sm">

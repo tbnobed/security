@@ -764,6 +764,23 @@ export const GetRecentActivityResponse = zod.array(GetRecentActivityResponseItem
 
 
 /**
+ * @summary List studio productions/bookings scheduled for today (proxied from the external bookings API)
+ */
+export const GetProductionsTodayResponseItem = zod.object({
+  "id": zod.number(),
+  "title": zod.string(),
+  "description": zod.string().nullish(),
+  "start": zod.coerce.date(),
+  "end": zod.coerce.date(),
+  "studioId": zod.number().nullish(),
+  "type": zod.string(),
+  "status": zod.string(),
+  "color": zod.string().nullish()
+})
+export const GetProductionsTodayResponse = zod.array(GetProductionsTodayResponseItem)
+
+
+/**
  * @summary Upload a guest photo (base64)
  */
 export const UploadPhotoBody = zod.object({

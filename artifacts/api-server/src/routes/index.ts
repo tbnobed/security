@@ -7,6 +7,7 @@ import watchlistRouter from "./watchlist";
 import auditRouter from "./audit";
 import usersRouter from "./users";
 import dashboardRouter from "./dashboard";
+import productionsRouter from "./productions";
 import photosRouter from "./photos";
 import studiosRouter from "./studios";
 
@@ -20,6 +21,7 @@ router.use(watchlistRouter);
 router.use(auditRouter);
 router.use(usersRouter);
 router.use(dashboardRouter);
+router.use(productionsRouter);
 router.use(photosRouter);
 router.use(studiosRouter);
 

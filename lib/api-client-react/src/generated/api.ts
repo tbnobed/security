@@ -43,6 +43,7 @@ import type {
   PhotoUpload,
   Preregistration,
   PreregistrationInput,
+  ProductionBooking,
   PublicPreregistrationInput,
   ResetPasswordInput,
   RoleUpdate,
@@ -2546,6 +2547,83 @@ export function useGetRecentActivity<TData = Awaited<ReturnType<typeof getRecent
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
   const queryOptions = getGetRecentActivityQueryOptions(params,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getGetProductionsTodayUrl = () => {
+
+
+
+
+  return `/api/productions/today`
+}
+
+/**
+ * @summary List studio productions/bookings scheduled for today (proxied from the external bookings API)
+ */
+export const getProductionsToday = async ( options?: RequestInit): Promise<ProductionBooking[]> => {
+
+  return customFetch<ProductionBooking[]>(getGetProductionsTodayUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetProductionsTodayQueryKey = () => {
+    return [
+    `/api/productions/today`
+    ] as const;
+    }
+
+
+export const getGetProductionsTodayQueryOptions = <TData = Awaited<ReturnType<typeof getProductionsToday>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getProductionsToday>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetProductionsTodayQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getProductionsToday>>> = ({ signal }) => getProductionsToday({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getProductionsToday>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetProductionsTodayQueryResult = NonNullable<Awaited<ReturnType<typeof getProductionsToday>>>
+export type GetProductionsTodayQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary List studio productions/bookings scheduled for today (proxied from the external bookings API)
+ */
+
+export function useGetProductionsToday<TData = Awaited<ReturnType<typeof getProductionsToday>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getProductionsToday>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetProductionsTodayQueryOptions(options)
 
   const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
 

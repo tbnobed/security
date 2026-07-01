@@ -305,6 +305,18 @@ export interface DashboardSummary {
   siteBreakdown: SiteCount[];
 }
 
+export interface ProductionBooking {
+  id: number;
+  title: string;
+  description?: string | null;
+  start: string;
+  end: string;
+  studioId?: number | null;
+  type: string;
+  status: string;
+  color?: string | null;
+}
+
 export interface ActivityEvent {
   id: number;
   eventType: string;
