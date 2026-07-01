@@ -4,10 +4,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
-import { SITE_NAME } from "@/lib/site";
+import { SITE_NAME, CLIENT_NAME, CLIENT_LOGO_URL } from "@/lib/site";
 import { CheckCircle2, ClipboardCheck } from "lucide-react";
 
 const basePath = import.meta.env.BASE_URL.replace(/\/$/, "");
+const clientLogoSrc = CLIENT_LOGO_URL || `${basePath}/logo.svg`;
+const clientLabel = CLIENT_NAME || SITE_NAME;
 
 export default function Preregister() {
   const [submitted, setSubmitted] = useState(false);
@@ -60,6 +62,7 @@ export default function Preregister() {
     return (
       <div className="dark min-h-screen bg-background text-foreground flex items-center justify-center p-6">
         <div className="max-w-md w-full text-center bg-card border border-border rounded-md p-8">
+          <img src={clientLogoSrc} alt={clientLabel} className="max-h-12 w-auto max-w-[60%] mx-auto mb-6" />
           <CheckCircle2 className="w-14 h-14 text-primary mx-auto mb-4" />
           <h1 className="text-2xl font-bold mb-2">You're pre-registered</h1>
           <p className="text-muted-foreground mb-6">
@@ -83,11 +86,11 @@ export default function Preregister() {
   return (
     <div className="dark min-h-screen bg-background text-foreground flex items-center justify-center p-6">
       <div className="max-w-lg w-full">
-        <div className="flex items-center gap-3 mb-6">
-          <img src={`${basePath}/logo.svg`} alt="Logo" className="w-10 h-10" />
+        <div className="flex flex-col items-center text-center gap-4 mb-8">
+          <img src={clientLogoSrc} alt={clientLabel} className="max-h-16 w-auto max-w-[70%]" />
           <div>
             <h1 className="text-xl font-bold tracking-wide text-primary">Visitor Pre-Registration</h1>
-            <p className="text-sm text-muted-foreground">{SITE_NAME}</p>
+            <p className="text-sm text-muted-foreground">{clientLabel}</p>
           </div>
         </div>
 

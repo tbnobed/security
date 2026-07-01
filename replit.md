@@ -13,6 +13,7 @@ A web-based guest management system for broadcast studio security desks — chec
 - Required env: `DATABASE_URL` — Postgres connection string (auto-provisioned)
 - Required env: `SESSION_SECRET` — secret used to sign session cookies (must be set; server refuses to start without it)
 - Frontend env: `VITE_SITE_NAME` (in `artifacts/studio-gms/.env`) — the single static site/location name shown across the app. There is no in-app site selector; change this env var + rebuild to deploy for a different location. Must restart the `web` workflow after changing it.
+- Frontend env (client branding for the PUBLIC `/preregister` page): `VITE_CLIENT_NAME` (shown under the logo; blank falls back to `VITE_SITE_NAME`) and `VITE_CLIENT_LOGO` (a filename in `artifacts/studio-gms/public/` such as `client-logo.png`, or a full URL; blank falls back to the default FrontDesk mark). Resolved in `src/lib/site.ts` as `CLIENT_NAME` / `CLIENT_LOGO_URL`. To rebrand for a new client: drop their logo in `public/`, update these two env vars, and restart the `web` workflow.
 - Seed the fixed admin: `node scripts/src/seed-admin.mjs` (defaults to `admin@studiogms.com` / `StudioAdmin!2026`; override with `SEED_ADMIN_EMAIL` / `SEED_ADMIN_PASSWORD`)
 
 ## Deployment target
@@ -57,7 +58,7 @@ A web-based guest management system for broadcast studio security desks — chec
 - **Guest Check-Out**: Quick search by name or badge ID, one-click checkout with auto-timestamp.
 - **Active Dashboard**: Live table of on-site guests with overdue highlights, stats bar (active/today counts/overdue/expected), auto-refresh every 30s. Filter by host/company/site.
 - **Pre-Registration**: Hosts pre-register expected guests; security sees "Expected Today" queue; one-click convert to check-in.
-- **Public Pre-Registration**: Unauthenticated `/preregister` page — visitors self-register (name/company/contact/host/purpose/studios/expected arrival). Submissions land in the same "Expected Today" queue with `createdByClerkId=null`, operator recorded as "Self-registration". No Layout/auth wrapper.
+- **Public Pre-Registration**: Unauthenticated `/preregister` page — visitors self-register (name/company/contact/host/purpose/studios/expected arrival). Submissions land in the same "Expected Today" queue with `createdByClerkId=null`, operator recorded as "Self-registration". No Layout/auth wrapper. Client-brandable via `VITE_CLIENT_NAME` / `VITE_CLIENT_LOGO` (logo + label on both the form header and the success screen) so the visitor-facing page carries the client's brand, not FrontDesk's.
 - **Studios**: Admin-managed list of rooms/buildings (`/studios` page). Multi-selectable via checkboxes on check-in and both pre-reg forms (internal + public). Stored as a `text[]` on guests and preregistrations; copied through on convert. `GET /studios` is public (needed by the public form); `POST`/`DELETE` are admin-only. Displayed in dashboard + prereg tables (replacing the now-static Site column).
 - **Watchlist**: Admin-managed blocklist/flaglist. Name-match check on every check-in.
 - **Audit Log**: Immutable record of all events with CSV export for date ranges.
