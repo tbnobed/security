@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { Layout } from "@/components/layout";
+import { GuestAvatar } from "@/components/guest-avatar";
 import {
   useListGuests,
   useGetDashboardSummary,
@@ -180,7 +181,12 @@ export default function Dashboard() {
                 ) : (
                   guests?.map((guest) => (
                     <tr key={guest.id} className="hover:bg-muted/30 transition-colors">
-                      <td className="px-4 py-3 font-medium">{guest.name}</td>
+                      <td className="px-4 py-3 font-medium">
+                        <div className="flex items-center gap-3">
+                          <GuestAvatar name={guest.name} photoUrl={guest.photoUrl} />
+                          <span>{guest.name}</span>
+                        </div>
+                      </td>
                       <td className="px-4 py-3 text-muted-foreground">{guest.company}</td>
                       <td className="px-4 py-3">{guest.hostName}</td>
                       <td className="px-4 py-3 text-muted-foreground">{format(new Date(guest.checkinAt), "HH:mm")}</td>

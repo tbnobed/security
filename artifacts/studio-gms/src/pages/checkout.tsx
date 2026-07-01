@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Layout } from "@/components/layout";
+import { GuestAvatar } from "@/components/guest-avatar";
 import { useSearchGuests, useListGuests, useCheckoutGuest } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -87,6 +88,7 @@ export default function CheckOut() {
             <div className="divide-y divide-border">
               {guests.map((guest) => (
                 <div key={guest.id} className="py-4 flex items-center justify-between gap-4">
+                  <GuestAvatar name={guest.name} photoUrl={guest.photoUrl} className="h-11 w-11" />
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
                       <span className="font-semibold">{guest.name}</span>
