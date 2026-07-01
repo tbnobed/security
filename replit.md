@@ -1,6 +1,6 @@
-# Studio Guest Management System
+# FrontDesk — Studio Guest Management System
 
-A web-based guest management system for broadcast studio security desks — check guests in/out, manage pre-registrations, watchlists, and audit logs.
+A web-based guest management system for broadcast studio security desks — check guests in/out, manage pre-registrations, watchlists, and audit logs. Branded as **FrontDesk** (OBTV Studio Security). Brand assets live in `artifacts/studio-gms/public/` (favicon.ico/.svg, `frontdesk-icon-*.png` including the 180px apple-touch icon, `frontdesk-logo-*.svg`); the in-app mark is `public/logo.svg`. The mark is a security counter with a signal-teal presence dot (= on-site status).
 
 ## Run & Operate
 

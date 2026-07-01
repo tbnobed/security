@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Redirect } from "wouter";
-import { Shield, Eye, EyeOff, Loader2 } from "lucide-react";
+import { Eye, EyeOff, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -8,6 +8,7 @@ import { useAuth } from "@/lib/auth";
 
 export default function SignInPage() {
   const { login, isSignedIn } = useAuth();
+  const basePath = import.meta.env.BASE_URL.replace(/\/$/, "");
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -37,10 +38,10 @@ export default function SignInPage() {
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-primary/10 border border-primary/20 mb-4">
-            <Shield className="w-7 h-7 text-primary" />
+          <div className="inline-flex items-center justify-center w-14 h-14 mb-4">
+            <img src={`${basePath}/logo.svg`} alt="FrontDesk" className="w-14 h-14" />
           </div>
-          <h1 className="text-2xl font-bold tracking-tight text-foreground">Studio Security</h1>
+          <h1 className="text-2xl font-bold tracking-tight text-foreground">FrontDesk</h1>
           <p className="text-sm text-muted-foreground mt-1 uppercase tracking-widest">Operations Console</p>
         </div>
 
