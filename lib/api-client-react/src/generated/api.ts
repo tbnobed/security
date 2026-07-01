@@ -21,6 +21,9 @@ import type {
 
 import type {
   ActivityEvent,
+  AlertRecipient,
+  AlertRecipientInput,
+  AlertStatus,
   AppUser,
   AppUserInput,
   AppUserUpdate,
@@ -1352,6 +1355,300 @@ export const useDeleteStudio = <TError = ErrorType<unknown>,
       > => {
       return useMutation(getDeleteStudioMutationOptions(options));
     }
+
+export const getListAlertRecipientsUrl = () => {
+
+
+
+
+  return `/api/alert-recipients`
+}
+
+/**
+ * @summary List configured alert recipients (admin only)
+ */
+export const listAlertRecipients = async ( options?: RequestInit): Promise<AlertRecipient[]> => {
+
+  return customFetch<AlertRecipient[]>(getListAlertRecipientsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListAlertRecipientsQueryKey = () => {
+    return [
+    `/api/alert-recipients`
+    ] as const;
+    }
+
+
+export const getListAlertRecipientsQueryOptions = <TData = Awaited<ReturnType<typeof listAlertRecipients>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listAlertRecipients>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListAlertRecipientsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listAlertRecipients>>> = ({ signal }) => listAlertRecipients({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listAlertRecipients>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListAlertRecipientsQueryResult = NonNullable<Awaited<ReturnType<typeof listAlertRecipients>>>
+export type ListAlertRecipientsQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary List configured alert recipients (admin only)
+ */
+
+export function useListAlertRecipients<TData = Awaited<ReturnType<typeof listAlertRecipients>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listAlertRecipients>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListAlertRecipientsQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getCreateAlertRecipientUrl = () => {
+
+
+
+
+  return `/api/alert-recipients`
+}
+
+/**
+ * @summary Add an alert recipient for an event type (admin only)
+ */
+export const createAlertRecipient = async (alertRecipientInput: AlertRecipientInput, options?: RequestInit): Promise<AlertRecipient> => {
+
+  return customFetch<AlertRecipient>(getCreateAlertRecipientUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(alertRecipientInput)
+  }
+);}
+
+
+
+
+export const getCreateAlertRecipientMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createAlertRecipient>>, TError,{data: BodyType<AlertRecipientInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createAlertRecipient>>, TError,{data: BodyType<AlertRecipientInput>}, TContext> => {
+
+const mutationKey = ['createAlertRecipient'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createAlertRecipient>>, {data: BodyType<AlertRecipientInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  createAlertRecipient(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateAlertRecipientMutationResult = NonNullable<Awaited<ReturnType<typeof createAlertRecipient>>>
+    export type CreateAlertRecipientMutationBody = BodyType<AlertRecipientInput>
+    export type CreateAlertRecipientMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Add an alert recipient for an event type (admin only)
+ */
+export const useCreateAlertRecipient = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createAlertRecipient>>, TError,{data: BodyType<AlertRecipientInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createAlertRecipient>>,
+        TError,
+        {data: BodyType<AlertRecipientInput>},
+        TContext
+      > => {
+      return useMutation(getCreateAlertRecipientMutationOptions(options));
+    }
+
+export const getDeleteAlertRecipientUrl = (id: number,) => {
+
+
+
+
+  return `/api/alert-recipients/${id}`
+}
+
+/**
+ * @summary Remove an alert recipient (admin only)
+ */
+export const deleteAlertRecipient = async (id: number, options?: RequestInit): Promise<void> => {
+
+  return customFetch<void>(getDeleteAlertRecipientUrl(id),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+export const getDeleteAlertRecipientMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteAlertRecipient>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteAlertRecipient>>, TError,{id: number}, TContext> => {
+
+const mutationKey = ['deleteAlertRecipient'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteAlertRecipient>>, {id: number}> = (props) => {
+          const {id} = props ?? {};
+
+          return  deleteAlertRecipient(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteAlertRecipientMutationResult = NonNullable<Awaited<ReturnType<typeof deleteAlertRecipient>>>
+
+    export type DeleteAlertRecipientMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Remove an alert recipient (admin only)
+ */
+export const useDeleteAlertRecipient = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteAlertRecipient>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof deleteAlertRecipient>>,
+        TError,
+        {id: number},
+        TContext
+      > => {
+      return useMutation(getDeleteAlertRecipientMutationOptions(options));
+    }
+
+export const getGetAlertStatusUrl = () => {
+
+
+
+
+  return `/api/alert-status`
+}
+
+/**
+ * @summary Whether outbound email is configured on the server (admin only)
+ */
+export const getAlertStatus = async ( options?: RequestInit): Promise<AlertStatus> => {
+
+  return customFetch<AlertStatus>(getGetAlertStatusUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetAlertStatusQueryKey = () => {
+    return [
+    `/api/alert-status`
+    ] as const;
+    }
+
+
+export const getGetAlertStatusQueryOptions = <TData = Awaited<ReturnType<typeof getAlertStatus>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getAlertStatus>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetAlertStatusQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getAlertStatus>>> = ({ signal }) => getAlertStatus({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getAlertStatus>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetAlertStatusQueryResult = NonNullable<Awaited<ReturnType<typeof getAlertStatus>>>
+export type GetAlertStatusQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Whether outbound email is configured on the server (admin only)
+ */
+
+export function useGetAlertStatus<TData = Awaited<ReturnType<typeof getAlertStatus>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getAlertStatus>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetAlertStatusQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
 
 export const getListWatchlistUrl = () => {
 

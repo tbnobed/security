@@ -10,6 +10,7 @@ import dashboardRouter from "./dashboard";
 import productionsRouter from "./productions";
 import photosRouter from "./photos";
 import studiosRouter from "./studios";
+import alertsRouter from "./alerts";
 
 const router: IRouter = Router();
 
@@ -24,5 +25,6 @@ router.use(dashboardRouter);
 router.use(productionsRouter);
 router.use(photosRouter);
 router.use(studiosRouter);
+router.use(alertsRouter);
 
 export default router;

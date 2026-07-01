@@ -349,6 +349,34 @@ export interface StudioInput {
   name: string;
 }
 
+export type AlertEventType = typeof AlertEventType[keyof typeof AlertEventType];
+
+
+export const AlertEventType = {
+  preregistration: 'preregistration',
+  checkin: 'checkin',
+  checkout: 'checkout',
+  overdue: 'overdue',
+} as const;
+
+export interface AlertRecipient {
+  id: number;
+  eventType: AlertEventType;
+  email: string;
+  createdAt: string;
+}
+
+export interface AlertRecipientInput {
+  eventType: AlertEventType;
+  /** @minLength 3 */
+  email: string;
+}
+
+export interface AlertStatus {
+  emailConfigured: boolean;
+  fromEmail?: string | null;
+}
+
 export interface PublicPreregistrationInput {
   /** @minLength 1 */
   guestName: string;

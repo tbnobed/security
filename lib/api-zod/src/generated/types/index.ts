@@ -7,6 +7,10 @@
  */
 
 export * from './activityEvent';
+export * from './alertEventType';
+export * from './alertRecipient';
+export * from './alertRecipientInput';
+export * from './alertStatus';
 export * from './appUser';
 export * from './appUserInput';
 export * from './appUserInputRole';

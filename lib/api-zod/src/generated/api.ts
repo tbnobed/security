@@ -476,6 +476,57 @@ export const DeleteStudioResponse = zod.void()
 
 
 /**
+ * @summary List configured alert recipients (admin only)
+ */
+export const ListAlertRecipientsResponseItem = zod.object({
+  "id": zod.number(),
+  "eventType": zod.enum(['preregistration', 'checkin', 'checkout', 'overdue']),
+  "email": zod.string(),
+  "createdAt": zod.coerce.date()
+})
+export const ListAlertRecipientsResponse = zod.array(ListAlertRecipientsResponseItem)
+
+
+/**
+ * @summary Add an alert recipient for an event type (admin only)
+ */
+export const createAlertRecipientBodyEmailMin = 3;
+
+
+
+export const CreateAlertRecipientBody = zod.object({
+  "eventType": zod.enum(['preregistration', 'checkin', 'checkout', 'overdue']),
+  "email": zod.string().email().min(createAlertRecipientBodyEmailMin)
+})
+
+export const CreateAlertRecipientResponse = zod.object({
+  "id": zod.number(),
+  "eventType": zod.enum(['preregistration', 'checkin', 'checkout', 'overdue']),
+  "email": zod.string(),
+  "createdAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary Remove an alert recipient (admin only)
+ */
+export const DeleteAlertRecipientParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const DeleteAlertRecipientResponse = zod.void()
+
+
+/**
+ * @summary Whether outbound email is configured on the server (admin only)
+ */
+export const GetAlertStatusResponse = zod.object({
+  "emailConfigured": zod.boolean(),
+  "fromEmail": zod.string().nullish()
+})
+
+
+/**
  * @summary List all watchlist entries
  */
 export const ListWatchlistResponseItem = zod.object({

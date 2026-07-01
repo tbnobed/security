@@ -24,6 +24,8 @@ tags:
     description: Dashboard summary data
   - name: studios
     description: Studio location management
+  - name: alerts
+    description: Email alert recipient configuration
 
 paths:
   /healthz:
@@ -365,6 +367,66 @@ paths:
       responses:
         "204":
           description: Deleted
+
+  /alert-recipients:
+    get:
+      operationId: listAlertRecipients
+      tags: [alerts]
+      summary: List configured alert recipients (admin only)
+      responses:
+        "200":
+          description: Alert recipients
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AlertRecipient"
+    post:
+      operationId: createAlertRecipient
+      tags: [alerts]
+      summary: Add an alert recipient for an event type (admin only)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AlertRecipientInput"
+      responses:
+        "201":
+          description: Recipient created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AlertRecipient"
+
+  /alert-recipients/{id}:
+    delete:
+      operationId: deleteAlertRecipient
+      tags: [alerts]
+      summary: Remove an alert recipient (admin only)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  /alert-status:
+    get:
+      operationId: getAlertStatus
+      tags: [alerts]
+      summary: Whether outbound email is configured on the server (admin only)
+      responses:
+        "200":
+          description: Alert delivery status
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AlertStatus"
 
   /watchlist:
     get:
@@ -1271,6 +1333,56 @@ components:
         name:
           type: string
           minLength: 1
+
+    AlertEventType:
+      type: string
+      enum:
+        - preregistration
+        - checkin
+        - checkout
+        - overdue
+
+    AlertRecipient:
+      type: object
+      required:
+        - id
+        - eventType
+        - email
+        - createdAt
+      properties:
+        id:
+          type: integer
+        eventType:
+          $ref: "#/components/schemas/AlertEventType"
+        email:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+
+    AlertRecipientInput:
+      type: object
+      required:
+        - eventType
+        - email
+      properties:
+        eventType:
+          $ref: "#/components/schemas/AlertEventType"
+        email:
+          type: string
+          format: email
+          minLength: 3
+
+    AlertStatus:
+      type: object
+      required:
+        - emailConfigured
+      properties:
+        emailConfigured:
+          type: boolean
+        fromEmail:
+          type: string
+          nullable: true
 
     PublicPreregistrationInput:
       type: object
