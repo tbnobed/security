@@ -3,3 +3,4 @@ export * from "./guests";
 export * from "./preregistrations";
 export * from "./watchlist";
 export * from "./audit";
+export * from "./session";

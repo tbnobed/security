@@ -1,25 +1,22 @@
-import { useEffect } from "react";
 import { Link, useLocation } from "wouter";
-import { useClerk, useUser } from "@clerk/react";
 import { LayoutDashboard, UserPlus, LogOut, FileText, ClipboardList, ShieldAlert, Users, LogOut as LogOutIcon } from "lucide-react";
-import { useGetMe } from "@workspace/api-client-react";
+import { useAuth } from "@/lib/auth";
 
 interface LayoutProps {
   children: React.ReactNode;
 }
 
 export function Layout({ children }: LayoutProps) {
-  const [location] = useLocation();
-  const { signOut } = useClerk();
-  const { user } = useUser();
-  const { data: me } = useGetMe();
+  const [location, setLocation] = useLocation();
+  const { user: me, logout } = useAuth();
 
   const isAdmin = me?.role === "admin";
 
-  const basePath = import.meta.env.BASE_URL.replace(/\/$/, '');
+  const basePath = import.meta.env.BASE_URL.replace(/\/$/, "");
 
-  const handleSignOut = () => {
-    signOut({ redirectUrl: basePath || "/" });
+  const handleSignOut = async () => {
+    await logout();
+    setLocation("/sign-in");
   };
 
   const navItems = [
@@ -49,10 +46,10 @@ export function Layout({ children }: LayoutProps) {
 
         <div className="p-4 border-b border-border flex items-center gap-3">
           <div className="w-8 h-8 rounded bg-primary/20 flex items-center justify-center text-primary font-bold">
-            {user?.firstName?.charAt(0) || "U"}
+            {(me?.displayName || me?.email || "U").charAt(0).toUpperCase()}
           </div>
           <div className="flex-1 overflow-hidden">
-            <p className="text-sm font-medium truncate">{user?.fullName || "Operator"}</p>
+            <p className="text-sm font-medium truncate">{me?.displayName || me?.email || "Operator"}</p>
             <p className="text-xs text-muted-foreground uppercase">{me?.role || "SECURITY"}</p>
           </div>
         </div>

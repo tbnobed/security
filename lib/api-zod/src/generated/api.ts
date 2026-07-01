@@ -487,6 +487,33 @@ export const ExportAuditLogResponse = zod.unknown()
 
 
 /**
+ * @summary Authenticate with email and password; establishes a session cookie
+ */
+
+
+
+
+export const LoginBody = zod.object({
+  "email": zod.string().min(1),
+  "password": zod.string().min(1)
+})
+
+export const LoginResponse = zod.object({
+  "clerkId": zod.string(),
+  "displayName": zod.string().nullish(),
+  "email": zod.string().nullish(),
+  "role": zod.enum(['security', 'admin']),
+  "createdAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary Destroy the current session
+ */
+export const LogoutResponse = zod.void()
+
+
+/**
  * @summary List all system users (admin only)
  */
 export const ListUsersResponseItem = zod.object({

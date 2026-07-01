@@ -1,60 +1,37 @@
 import { useState } from "react";
-import { useSignIn } from "@clerk/react";
+import { Redirect } from "wouter";
 import { Shield, Eye, EyeOff, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useAuth } from "@/lib/auth";
 
 export default function SignInPage() {
-  const { signIn, errors, fetchStatus } = useSignIn();
+  const { login, isSignedIn } = useAuth();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [localError, setLocalError] = useState<string | null>(null);
-
-  const loading = fetchStatus === "fetching";
-
-  const getErrorMessage = (): string | null => {
-    if (localError) return localError;
-    const fieldError = errors?.fields?.password ?? errors?.fields?.identifier;
-    if (!fieldError) return null;
-    return fieldError.longMessage ?? fieldError.message ?? "Authentication failed.";
-  };
+  const [loading, setLoading] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLocalError(null);
+    setErrorMsg(null);
+    setLoading(true);
 
-    const { error } = await signIn.password({
-      identifier: email.trim(),
-      password,
-    });
-
-    console.log("[signin] password() done", {
-      error,
-      status: signIn.status,
-      createdSessionId: signIn.createdSessionId,
-      firstFactor: signIn.firstFactorVerification?.status,
-    });
-
-    if (error) {
-      setLocalError((error as { message?: string; longMessage?: string }).longMessage
-        ?? (error as { message?: string }).message
-        ?? "Invalid email or password.");
-      return;
-    }
-
-    const { error: finalizeError } = await signIn.finalize();
-
-    if (finalizeError) {
-      setLocalError((finalizeError as { message?: string; longMessage?: string }).longMessage
-        ?? (finalizeError as { message?: string }).message
-        ?? "Sign-in could not be completed. Contact your administrator.");
+    try {
+      await login({ email: email.trim(), password });
+      // Redirect is handled reactively once auth state updates.
+    } catch {
+      setErrorMsg("Invalid email or password.");
+      setLoading(false);
     }
   };
 
-  const errorMsg = getErrorMessage();
+  if (isSignedIn) {
+    return <Redirect to="/dashboard" />;
+  }
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4">

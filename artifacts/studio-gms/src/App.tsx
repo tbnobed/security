@@ -1,10 +1,9 @@
-import { useEffect, useRef } from "react";
-import { Switch, Route, useLocation, Router as WouterRouter, Redirect } from "wouter";
-import { QueryClient, QueryClientProvider, useQueryClient } from "@tanstack/react-query";
+import { Switch, Route, Redirect, Router as WouterRouter } from "wouter";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { Loader2 } from "lucide-react";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { publishableKeyFromHost } from '@clerk/react/internal';
-import { ClerkProvider, Show, useClerk } from '@clerk/react';
+import { AuthProvider, useAuth } from "@/lib/auth";
 import NotFound from "@/pages/not-found";
 import SignInPage from "@/pages/sign-in";
 import Dashboard from "@/pages/dashboard";
@@ -17,113 +16,63 @@ import UsersPage from "@/pages/users";
 
 const queryClient = new QueryClient();
 
-const clerkPubKey = publishableKeyFromHost(window.location.hostname, import.meta.env.VITE_CLERK_PUBLISHABLE_KEY);
-const clerkProxyUrl = import.meta.env.VITE_CLERK_PROXY_URL;
-const basePath = import.meta.env.BASE_URL.replace(/\/$/, '');
+const basePath = import.meta.env.BASE_URL.replace(/\/$/, "");
 
-function stripBase(path: string) {
-  return basePath && path.startsWith(basePath) ? path.slice(basePath.length) || '/' : path;
-}
-
-if (!clerkPubKey) {
-  throw new Error('Missing VITE_CLERK_PUBLISHABLE_KEY in .env file');
-}
-
-function ClerkQueryClientCacheInvalidator() {
-  const { addListener } = useClerk();
-  const queryClient = useQueryClient();
-  const prevUserIdRef = useRef<string | null | undefined>(undefined);
-
-  useEffect(() => {
-    const unsubscribe = addListener(({ user }) => {
-      const userId = user?.id ?? null;
-      if (
-        prevUserIdRef.current !== undefined &&
-        prevUserIdRef.current !== userId
-      ) {
-        queryClient.clear();
-      }
-      prevUserIdRef.current = userId;
-    });
-    return unsubscribe;
-  }, [addListener, queryClient]);
-
-  return null;
+function AuthLoading() {
+  return (
+    <div className="min-h-screen bg-background flex items-center justify-center">
+      <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+    </div>
+  );
 }
 
 function HomeRedirect() {
-  return (
-    <>
-      <Show when="signed-in">
-        <Redirect to="/dashboard" />
-      </Show>
-      <Show when="signed-out">
-        <Redirect to="/sign-in" />
-      </Show>
-    </>
-  );
+  const { isLoading, isSignedIn } = useAuth();
+  if (isLoading) return <AuthLoading />;
+  return <Redirect to={isSignedIn ? "/dashboard" : "/sign-in"} />;
 }
 
 function ProtectedRoute({ component: Component }: { component: React.ComponentType<any> }) {
-  return (
-    <>
-      <Show when="signed-in">
-        <Component />
-      </Show>
-      <Show when="signed-out">
-        <Redirect to="/sign-in" />
-      </Show>
-    </>
-  );
+  const { isLoading, isSignedIn } = useAuth();
+  if (isLoading) return <AuthLoading />;
+  if (!isSignedIn) return <Redirect to="/sign-in" />;
+  return <Component />;
 }
 
-function ClerkProviderWithRoutes() {
-  const [, setLocation] = useLocation();
-
+function AppRoutes() {
   return (
-    <ClerkProvider
-      publishableKey={clerkPubKey}
-      proxyUrl={clerkProxyUrl}
-      signInUrl={`${basePath}/sign-in`}
-      routerPush={(to) => setLocation(stripBase(to))}
-      routerReplace={(to) => setLocation(stripBase(to), { replace: true })}
-    >
-      <QueryClientProvider client={queryClient}>
-        <ClerkQueryClientCacheInvalidator />
-        <TooltipProvider>
-          <Switch>
-            <Route path="/" component={HomeRedirect} />
-            <Route path="/sign-in/*?" component={SignInPage} />
-            <Route path="/sign-up/*?">
-              <Redirect to="/sign-in" />
-            </Route>
-            <Route path="/dashboard">
-              <ProtectedRoute component={Dashboard} />
-            </Route>
-            <Route path="/checkin">
-              <ProtectedRoute component={CheckIn} />
-            </Route>
-            <Route path="/checkout">
-              <ProtectedRoute component={CheckOut} />
-            </Route>
-            <Route path="/preregistrations">
-              <ProtectedRoute component={Preregistrations} />
-            </Route>
-            <Route path="/watchlist">
-              <ProtectedRoute component={Watchlist} />
-            </Route>
-            <Route path="/audit">
-              <ProtectedRoute component={Audit} />
-            </Route>
-            <Route path="/users">
-              <ProtectedRoute component={UsersPage} />
-            </Route>
-            <Route component={NotFound} />
-          </Switch>
-          <Toaster />
-        </TooltipProvider>
-      </QueryClientProvider>
-    </ClerkProvider>
+    <TooltipProvider>
+      <Switch>
+        <Route path="/" component={HomeRedirect} />
+        <Route path="/sign-in" component={SignInPage} />
+        <Route path="/sign-up">
+          <Redirect to="/sign-in" />
+        </Route>
+        <Route path="/dashboard">
+          <ProtectedRoute component={Dashboard} />
+        </Route>
+        <Route path="/checkin">
+          <ProtectedRoute component={CheckIn} />
+        </Route>
+        <Route path="/checkout">
+          <ProtectedRoute component={CheckOut} />
+        </Route>
+        <Route path="/preregistrations">
+          <ProtectedRoute component={Preregistrations} />
+        </Route>
+        <Route path="/watchlist">
+          <ProtectedRoute component={Watchlist} />
+        </Route>
+        <Route path="/audit">
+          <ProtectedRoute component={Audit} />
+        </Route>
+        <Route path="/users">
+          <ProtectedRoute component={UsersPage} />
+        </Route>
+        <Route component={NotFound} />
+      </Switch>
+      <Toaster />
+    </TooltipProvider>
   );
 }
 
@@ -131,7 +80,11 @@ function App() {
   return (
     <div className="dark">
       <WouterRouter base={basePath}>
-        <ClerkProviderWithRoutes />
+        <QueryClientProvider client={queryClient}>
+          <AuthProvider>
+            <AppRoutes />
+          </AuthProvider>
+        </QueryClientProvider>
       </WouterRouter>
     </div>
   );

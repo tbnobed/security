@@ -212,6 +212,13 @@ export interface AuditEntry {
   metadata?: string | null;
 }
 
+export interface LoginInput {
+  /** @minLength 1 */
+  email: string;
+  /** @minLength 1 */
+  password: string;
+}
+
 export type AppUserRole = typeof AppUserRole[keyof typeof AppUserRole];
 
 

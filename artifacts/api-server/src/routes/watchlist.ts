@@ -10,7 +10,7 @@ import {
   CheckWatchlistResponse,
 } from "@workspace/api-zod";
 import { requireAuth } from "../lib/auth";
-import { getAuth } from "@clerk/express";
+import { getSessionUserId } from "../lib/auth";
 import { usersTable } from "@workspace/db";
 
 const router = Router();
@@ -45,8 +45,7 @@ router.post("/watchlist", requireAuth, async (req, res): Promise<void> => {
     return;
   }
 
-  const auth = getAuth(req);
-  const clerkId = auth?.userId ?? "unknown";
+  const clerkId = getSessionUserId(req) ?? "unknown";
 
   const [entry] = await db
     .insert(watchlistTable)

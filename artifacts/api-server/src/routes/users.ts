@@ -12,8 +12,7 @@ import {
   UpdateUserRoleBody,
   UpdateUserRoleResponse,
 } from "@workspace/api-zod";
-import { requireAuth, requireAdmin, getOrCreateUser } from "../lib/auth";
-import { getAuth } from "@clerk/express";
+import { requireAuth, requireAdmin, getSessionUserId, getUserById } from "../lib/auth";
 
 const router = Router();
 
@@ -64,8 +63,7 @@ router.post("/users", requireAdmin, async (req, res): Promise<void> => {
     })
     .returning();
 
-  const auth = getAuth(req);
-  const operatorId = auth?.userId ?? "unknown";
+  const operatorId = getSessionUserId(req) ?? "unknown";
   const [operator] = await db.select().from(usersTable).where(eq(usersTable.clerkId, operatorId));
   await db.insert(auditTable).values({
     eventType: "user_created",
@@ -80,9 +78,12 @@ router.post("/users", requireAdmin, async (req, res): Promise<void> => {
 });
 
 router.get("/users/me", requireAuth, async (req, res): Promise<void> => {
-  const auth = getAuth(req);
-  const clerkId = auth?.userId!;
-  const user = await getOrCreateUser(clerkId);
+  const userId = getSessionUserId(req)!;
+  const user = await getUserById(userId);
+  if (!user) {
+    res.status(404).json({ error: "User not found" });
+    return;
+  }
   res.json(GetMeResponse.parse(toUserResponse(user)));
 });
 
@@ -93,8 +94,7 @@ router.patch("/users/me", requireAuth, async (req, res): Promise<void> => {
     return;
   }
 
-  const auth = getAuth(req);
-  const clerkId = auth?.userId!;
+  const clerkId = getSessionUserId(req)!;
 
   const [user] = await db
     .update(usersTable)
@@ -134,8 +134,7 @@ router.patch("/users/:clerkId/role", requireAdmin, async (req, res): Promise<voi
     return;
   }
 
-  const auth = getAuth(req);
-  const operatorId = auth?.userId ?? "unknown";
+  const operatorId = getSessionUserId(req) ?? "unknown";
   const [operator] = await db.select().from(usersTable).where(eq(usersTable.clerkId, operatorId));
   await db.insert(auditTable).values({
     eventType: "role_changed",

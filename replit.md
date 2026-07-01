@@ -11,19 +11,20 @@ A web-based guest management system for broadcast studio security desks — chec
 - `pnpm --filter @workspace/api-spec run codegen` — regenerate API hooks and Zod schemas from the OpenAPI spec
 - `pnpm --filter @workspace/db run push` — push DB schema changes (dev only)
 - Required env: `DATABASE_URL` — Postgres connection string (auto-provisioned)
-- Required env: `CLERK_PUBLISHABLE_KEY`, `CLERK_SECRET_KEY`, `VITE_CLERK_PUBLISHABLE_KEY` — auto-provisioned by Clerk setup
+- Required env: `SESSION_SECRET` — secret used to sign session cookies (must be set; server refuses to start without it)
+- Seed the fixed admin: `node scripts/src/seed-admin.mjs` (defaults to `admin@studiogms.com` / `StudioAdmin!2026`; override with `SEED_ADMIN_EMAIL` / `SEED_ADMIN_PASSWORD`)
 
 ## Deployment target
 
-- **Self-hosted**: must run as a Docker container on the user's own Ubuntu server (not Replit Deployments). Keep everything container-friendly: bind to `PORT`, no Replit-only runtime assumptions, all config via env vars. Clerk still works self-hosted as long as the container has outbound internet and the `CLERK_*` / `VITE_CLERK_PUBLISHABLE_KEY` env vars are provided.
+- **Self-hosted**: must run as a Docker container on the user's own Ubuntu server (not Replit Deployments). Keep everything container-friendly: bind to `PORT`, no Replit-only runtime assumptions, all config via env vars. Auth is fully self-contained (username/password + Postgres-backed sessions) — no outbound internet or third-party auth service required. Only `DATABASE_URL` and `SESSION_SECRET` are needed.
 
 ## Stack
 
 - pnpm workspaces, Node.js 24, TypeScript 5.9
 - Frontend: React + Vite + Tailwind v4 + shadcn/ui, Wouter routing
-- API: Express 5 + Clerk auth
+- API: Express 5 + express-session
 - DB: PostgreSQL + Drizzle ORM
-- Auth: Clerk (Replit-managed)
+- Auth: self-contained username/password — bcryptjs hashing + `express-session` with `connect-pg-simple` (Postgres-backed sessions)
 - Validation: Zod (zod/v4), drizzle-zod
 - API codegen: Orval (from OpenAPI spec)
 - Build: esbuild (CJS bundle)
@@ -33,13 +34,15 @@ A web-based guest management system for broadcast studio security desks — chec
 - `lib/api-spec/openapi.yaml` — OpenAPI contract (source of truth)
 - `lib/db/src/schema/` — Drizzle table definitions (guests, users, preregistrations, watchlist, audit)
 - `artifacts/api-server/src/routes/` — Express route handlers (guests, checkout, watchlist, audit, users, dashboard, photos)
-- `artifacts/api-server/src/lib/auth.ts` — requireAuth / requireAdmin middleware
-- `artifacts/studio-gms/src/` — React frontend (pages, components, Clerk wiring)
+- `artifacts/api-server/src/lib/auth.ts` — requireAuth / requireAdmin middleware, bcrypt hash/verify helpers, session helpers
+- `artifacts/api-server/src/routes/auth.ts` — login / logout route handlers
+- `artifacts/studio-gms/src/` — React frontend (pages, components, auth context in `src/lib/auth.tsx`)
 
 ## Architecture decisions
 
 - Contract-first: OpenAPI spec → codegen → React Query hooks + Zod validators. Never hand-write types that codegen produces.
-- Auth is Clerk-managed: session cookies on web (no Bearer token needed). `requireAuth` middleware checks Clerk session; `requireAdmin` additionally checks role in `app_users` table.
+- Auth is self-contained: `POST /api/auth/login` verifies the bcrypt hash and establishes an httpOnly session cookie (`sid`); `POST /api/auth/logout` destroys it. `requireAuth` middleware checks `req.session.userId`; `requireAdmin` additionally checks role in `app_users` table. The session store table (`session`) is managed via the Drizzle schema (`createTableIfMissing: false`) so it survives the esbuild Docker bundle.
+- `app_users.clerk_id` is the primary key, repurposed as an opaque internal user id (kept its name to avoid contract/codegen churn). `password_hash` is nullable — users without a hash cannot log in.
 - Photo uploads stored on disk under `artifacts/api-server/uploads/` as base64-decoded JPEGs. Served via `/api/photos/:filename`.
 - Badge IDs are generated server-side as `GMS-XXXXXX` hex strings on check-in.
 - Audit log is append-only; every check-in, checkout, pre-registration, watchlist change, and role change is recorded.
@@ -63,11 +66,11 @@ _Populate as you build — explicit user instructions worth remembering across s
 
 - Always run `pnpm --filter @workspace/api-spec run codegen` after changing `lib/api-spec/openapi.yaml` before writing route handlers or frontend hooks.
 - `pnpm --filter @workspace/db run push` may need `push-force` if there are column conflicts.
-- The Clerk proxy middleware must be mounted BEFORE body parsers in app.ts (it streams raw bytes).
+- `express-session` (with `connect-pg-simple`) must be mounted BEFORE the routes in app.ts so `req.session` is populated; the session store reuses the shared pg `pool`.
 - `requireAdmin` makes a DB query; don't call it in hot paths.
 - Photo uploads have a 10MB body limit set in express.json({ limit: '10mb' }).
 
 ## Pointers
 
 - See the `pnpm-workspace` skill for workspace structure, TypeScript setup, and package details
-- See the `clerk-auth` skill for auth setup, troubleshooting, and customization
+- Auth is fully self-contained in this repo (`src/lib/auth.ts`, `src/routes/auth.ts`, `src/lib/auth.tsx`); no external auth-provider skill applies

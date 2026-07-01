@@ -28,6 +28,7 @@ export * from './listAuditLogParams';
 export * from './listGuestsParams';
 export * from './listGuestsStatus';
 export * from './listPreregistrationsParams';
+export * from './loginInput';
 export * from './photoResult';
 export * from './photoUpload';
 export * from './preregistration';

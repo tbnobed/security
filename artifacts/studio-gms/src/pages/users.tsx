@@ -44,7 +44,7 @@ export default function UsersPage() {
             <span className="font-medium text-foreground">Roles: </span>
             <strong>Security</strong> — can check guests in/out and view the dashboard.
             {" "}<strong>Admin</strong> — all security permissions plus watchlist, audit log, and user management.
-            Users are provisioned automatically on first sign-in.
+            Accounts are provisioned by a system administrator.
           </div>
         </div>
 

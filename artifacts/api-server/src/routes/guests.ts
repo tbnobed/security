@@ -19,7 +19,7 @@ import {
 } from "@workspace/api-zod";
 import { requireAuth } from "../lib/auth";
 import { generateBadgeId } from "../lib/badge";
-import { getAuth } from "@clerk/express";
+import { getSessionUserId } from "../lib/auth";
 import { usersTable } from "@workspace/db";
 
 const router = Router();
@@ -106,8 +106,7 @@ router.post("/guests", requireAuth, async (req, res): Promise<void> => {
     return;
   }
 
-  const auth = getAuth(req);
-  const clerkId = auth?.userId ?? "unknown";
+  const clerkId = getSessionUserId(req) ?? "unknown";
 
   // Watchlist check
   const watchlistMatches = await db
@@ -292,8 +291,7 @@ router.post("/guests/:id/checkout", requireAuth, async (req, res): Promise<void>
     return;
   }
 
-  const auth = getAuth(req);
-  const clerkId = auth?.userId ?? "unknown";
+  const clerkId = getSessionUserId(req) ?? "unknown";
 
   const [guest] = await db
     .update(guestsTable)
