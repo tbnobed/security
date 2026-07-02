@@ -6,3 +6,4 @@ export * from "./audit";
 export * from "./session";
 export * from "./studios";
 export * from "./notifications";
+export * from "./known-guests";

@@ -1,5 +1,5 @@
 import { Link, useLocation } from "wouter";
-import { LayoutDashboard, UserPlus, LogOut, FileText, ClipboardList, ShieldAlert, Users, Building2, Bell, LogOut as LogOutIcon } from "lucide-react";
+import { LayoutDashboard, UserPlus, LogOut, FileText, ClipboardList, ShieldAlert, Users, Building2, Bell, BookUser, LogOut as LogOutIcon } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 
 interface LayoutProps {
@@ -24,6 +24,7 @@ export function Layout({ children }: LayoutProps) {
     { href: "/checkin", label: "Check In", icon: UserPlus },
     { href: "/checkout", label: "Check Out", icon: LogOut },
     { href: "/preregistrations", label: "Pre-Registrations", icon: ClipboardList },
+    { href: "/known-guests", label: "Known Guests", icon: BookUser },
   ];
 
   const adminItems = [

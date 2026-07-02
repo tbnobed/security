@@ -20,9 +20,10 @@ interface GuestAvatarProps {
   name: string;
   photoUrl?: string | null;
   className?: string;
+  enlargeable?: boolean;
 }
 
-export function GuestAvatar({ name, photoUrl, className }: GuestAvatarProps) {
+export function GuestAvatar({ name, photoUrl, className, enlargeable = true }: GuestAvatarProps) {
   const [failed, setFailed] = useState(false);
   const [open, setOpen] = useState(false);
   const showPhoto = Boolean(photoUrl) && !failed;
@@ -49,7 +50,7 @@ export function GuestAvatar({ name, photoUrl, className }: GuestAvatarProps) {
     </div>
   );
 
-  if (!showPhoto) {
+  if (!showPhoto || !enlargeable) {
     return avatar;
   }
 

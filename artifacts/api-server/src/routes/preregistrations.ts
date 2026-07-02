@@ -18,6 +18,7 @@ import { generateBadgeId } from "../lib/badge";
 import { getSessionUserId } from "../lib/auth";
 import { usersTable } from "@workspace/db";
 import { sendVisitorAlert } from "../lib/alerts";
+import { upsertKnownGuest } from "../lib/known-guests";
 
 const router = Router();
 
@@ -207,6 +208,14 @@ router.post("/preregistrations/:id/convert", requireAuth, async (req, res): Prom
     operatorName,
     expectedDeparture: guest.expectedDeparture?.toISOString() ?? null,
     checkinAt: guest.checkinAt.toISOString(),
+  });
+
+  void upsertKnownGuest({
+    name: guest.name,
+    company: guest.company,
+    phone: guest.phone,
+    email: guest.email,
+    photoUrl: guest.photoUrl,
   });
 
   const now = new Date();

@@ -22,10 +22,11 @@ import { generateBadgeId } from "../lib/badge";
 import { getSessionUserId } from "../lib/auth";
 import { usersTable } from "@workspace/db";
 import { sendVisitorAlert } from "../lib/alerts";
+import { upsertKnownGuest } from "../lib/known-guests";
 
 const router = Router();
 
-function toGuestResponse(g: typeof guestsTable.$inferSelect) {
+export function toGuestResponse(g: typeof guestsTable.$inferSelect) {
   const now = new Date();
   const checkin = new Date(g.checkinAt);
   const timeOnSiteMinutes = g.checkoutAt
@@ -189,6 +190,14 @@ router.post("/guests", requireAuth, async (req, res): Promise<void> => {
     operatorName,
     expectedDeparture: guest.expectedDeparture?.toISOString() ?? null,
     checkinAt: guest.checkinAt.toISOString(),
+  });
+
+  void upsertKnownGuest({
+    name: guest.name,
+    company: guest.company,
+    phone: guest.phone,
+    email: guest.email,
+    photoUrl: guest.photoUrl,
   });
 
   res.status(201).json(CreateGuestResponse.parse(toGuestResponse(guest)));

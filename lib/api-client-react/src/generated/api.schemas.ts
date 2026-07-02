@@ -145,6 +145,28 @@ export interface ConvertPreregistrationInput {
   photoUrl?: string;
 }
 
+export interface KnownGuest {
+  id: number;
+  name: string;
+  /** @nullable */
+  company?: string | null;
+  /** @nullable */
+  phone?: string | null;
+  /** @nullable */
+  email?: string | null;
+  /** @nullable */
+  photoUrl?: string | null;
+  isVip: boolean;
+  visitCount: number;
+  /** @nullable */
+  lastVisitAt?: string | null;
+  createdAt: string;
+}
+
+export interface KnownGuestUpdate {
+  isVip: boolean;
+}
+
 export type WatchlistEntryAction = typeof WatchlistEntryAction[keyof typeof WatchlistEntryAction];
 
 
@@ -427,6 +449,11 @@ date?: string;
 
 export type CheckWatchlistParams = {
 name: string;
+};
+
+export type ListKnownGuestsParams = {
+q?: string;
+vip?: boolean;
 };
 
 export type ListAuditLogParams = {

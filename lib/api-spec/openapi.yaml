@@ -494,6 +494,80 @@ paths:
               schema:
                 $ref: "#/components/schemas/WatchlistCheckResult"
 
+  /known-guests:
+    get:
+      operationId: listKnownGuests
+      tags: [known-guests]
+      summary: List known (returning) guests with visit stats
+      parameters:
+        - name: q
+          in: query
+          schema:
+            type: string
+        - name: vip
+          in: query
+          schema:
+            type: boolean
+      responses:
+        "200":
+          description: Known guests
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/KnownGuest"
+
+  /known-guests/{id}:
+    patch:
+      operationId: updateKnownGuest
+      tags: [known-guests]
+      summary: Update a known guest (VIP flag)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/KnownGuestUpdate"
+      responses:
+        "200":
+          description: Updated known guest
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/KnownGuest"
+        "404":
+          description: Not found
+
+  /known-guests/{id}/visits:
+    get:
+      operationId: listKnownGuestVisits
+      tags: [known-guests]
+      summary: Visit history for a known guest
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Past visits (guest records)
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Guest"
+        "404":
+          description: Not found
+
   /audit:
     get:
       operationId: listAuditLog
@@ -1019,6 +1093,46 @@ components:
       properties:
         photoUrl:
           type: string
+
+    KnownGuest:
+      type: object
+      required:
+        - id
+        - name
+        - isVip
+        - visitCount
+        - createdAt
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        company:
+          type: ["string", "null"]
+        phone:
+          type: ["string", "null"]
+        email:
+          type: ["string", "null"]
+        photoUrl:
+          type: ["string", "null"]
+        isVip:
+          type: boolean
+        visitCount:
+          type: integer
+        lastVisitAt:
+          type: ["string", "null"]
+          format: date-time
+        createdAt:
+          type: string
+          format: date-time
+
+    KnownGuestUpdate:
+      type: object
+      required:
+        - isVip
+      properties:
+        isVip:
+          type: boolean
 
     WatchlistEntry:
       type: object

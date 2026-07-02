@@ -598,6 +598,86 @@ export const CheckWatchlistResponse = zod.object({
 
 
 /**
+ * @summary List known (returning) guests with visit stats
+ */
+export const ListKnownGuestsQueryParams = zod.object({
+  "q": zod.coerce.string().optional(),
+  "vip": zod.coerce.boolean().optional()
+})
+
+export const ListKnownGuestsResponseItem = zod.object({
+  "id": zod.number(),
+  "name": zod.string(),
+  "company": zod.string().nullish(),
+  "phone": zod.string().nullish(),
+  "email": zod.string().nullish(),
+  "photoUrl": zod.string().nullish(),
+  "isVip": zod.boolean(),
+  "visitCount": zod.number(),
+  "lastVisitAt": zod.coerce.date().nullish(),
+  "createdAt": zod.coerce.date()
+})
+export const ListKnownGuestsResponse = zod.array(ListKnownGuestsResponseItem)
+
+
+/**
+ * @summary Update a known guest (VIP flag)
+ */
+export const UpdateKnownGuestParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const UpdateKnownGuestBody = zod.object({
+  "isVip": zod.boolean()
+})
+
+export const UpdateKnownGuestResponse = zod.object({
+  "id": zod.number(),
+  "name": zod.string(),
+  "company": zod.string().nullish(),
+  "phone": zod.string().nullish(),
+  "email": zod.string().nullish(),
+  "photoUrl": zod.string().nullish(),
+  "isVip": zod.boolean(),
+  "visitCount": zod.number(),
+  "lastVisitAt": zod.coerce.date().nullish(),
+  "createdAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary Visit history for a known guest
+ */
+export const ListKnownGuestVisitsParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const ListKnownGuestVisitsResponseItem = zod.object({
+  "id": zod.number(),
+  "badgeId": zod.string(),
+  "name": zod.string(),
+  "company": zod.string(),
+  "phone": zod.string().nullish(),
+  "email": zod.string().nullish(),
+  "hostName": zod.string(),
+  "purposeOfVisit": zod.string(),
+  "site": zod.string().describe('Dallas\/The Plex, Tustin, Nashville'),
+  "status": zod.enum(['active', 'checked_out']),
+  "checkinAt": zod.coerce.date(),
+  "checkoutAt": zod.coerce.date().nullish(),
+  "expectedDeparture": zod.coerce.date().nullish(),
+  "photoUrl": zod.string().nullish(),
+  "checkedInByClerkId": zod.string().nullish(),
+  "checkedOutByClerkId": zod.string().nullish(),
+  "preregistrationId": zod.number().nullish(),
+  "studios": zod.array(zod.string()).optional(),
+  "timeOnSiteMinutes": zod.number().nullish(),
+  "isOverdue": zod.boolean().optional()
+})
+export const ListKnownGuestVisitsResponse = zod.array(ListKnownGuestVisitsResponseItem)
+
+
+/**
  * @summary List audit log entries
  */
 export const listAuditLogQueryStartDateRegExp = new RegExp('^\\d{4}-\\d{2}-\\d{2}$');

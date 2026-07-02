@@ -38,8 +38,11 @@ import type {
   GuestInput,
   GuestUpdate,
   HealthStatus,
+  KnownGuest,
+  KnownGuestUpdate,
   ListAuditLogParams,
   ListGuestsParams,
+  ListKnownGuestsParams,
   ListPreregistrationsParams,
   LoginInput,
   PhotoResult,
@@ -1939,6 +1942,238 @@ export function useCheckWatchlist<TData = Awaited<ReturnType<typeof checkWatchli
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
   const queryOptions = getCheckWatchlistQueryOptions(params,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getListKnownGuestsUrl = (params?: ListKnownGuestsParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/known-guests?${stringifiedParams}` : `/api/known-guests`
+}
+
+/**
+ * @summary List known (returning) guests with visit stats
+ */
+export const listKnownGuests = async (params?: ListKnownGuestsParams, options?: RequestInit): Promise<KnownGuest[]> => {
+
+  return customFetch<KnownGuest[]>(getListKnownGuestsUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListKnownGuestsQueryKey = (params?: ListKnownGuestsParams,) => {
+    return [
+    `/api/known-guests`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getListKnownGuestsQueryOptions = <TData = Awaited<ReturnType<typeof listKnownGuests>>, TError = ErrorType<unknown>>(params?: ListKnownGuestsParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listKnownGuests>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListKnownGuestsQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listKnownGuests>>> = ({ signal }) => listKnownGuests(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listKnownGuests>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListKnownGuestsQueryResult = NonNullable<Awaited<ReturnType<typeof listKnownGuests>>>
+export type ListKnownGuestsQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary List known (returning) guests with visit stats
+ */
+
+export function useListKnownGuests<TData = Awaited<ReturnType<typeof listKnownGuests>>, TError = ErrorType<unknown>>(
+ params?: ListKnownGuestsParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listKnownGuests>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListKnownGuestsQueryOptions(params,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getUpdateKnownGuestUrl = (id: number,) => {
+
+
+
+
+  return `/api/known-guests/${id}`
+}
+
+/**
+ * @summary Update a known guest (VIP flag)
+ */
+export const updateKnownGuest = async (id: number,
+    knownGuestUpdate: KnownGuestUpdate, options?: RequestInit): Promise<KnownGuest> => {
+
+  return customFetch<KnownGuest>(getUpdateKnownGuestUrl(id),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(knownGuestUpdate)
+  }
+);}
+
+
+
+
+export const getUpdateKnownGuestMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateKnownGuest>>, TError,{id: number;data: BodyType<KnownGuestUpdate>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateKnownGuest>>, TError,{id: number;data: BodyType<KnownGuestUpdate>}, TContext> => {
+
+const mutationKey = ['updateKnownGuest'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateKnownGuest>>, {id: number;data: BodyType<KnownGuestUpdate>}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  updateKnownGuest(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateKnownGuestMutationResult = NonNullable<Awaited<ReturnType<typeof updateKnownGuest>>>
+    export type UpdateKnownGuestMutationBody = BodyType<KnownGuestUpdate>
+    export type UpdateKnownGuestMutationError = ErrorType<void>
+
+    /**
+ * @summary Update a known guest (VIP flag)
+ */
+export const useUpdateKnownGuest = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateKnownGuest>>, TError,{id: number;data: BodyType<KnownGuestUpdate>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updateKnownGuest>>,
+        TError,
+        {id: number;data: BodyType<KnownGuestUpdate>},
+        TContext
+      > => {
+      return useMutation(getUpdateKnownGuestMutationOptions(options));
+    }
+
+export const getListKnownGuestVisitsUrl = (id: number,) => {
+
+
+
+
+  return `/api/known-guests/${id}/visits`
+}
+
+/**
+ * @summary Visit history for a known guest
+ */
+export const listKnownGuestVisits = async (id: number, options?: RequestInit): Promise<Guest[]> => {
+
+  return customFetch<Guest[]>(getListKnownGuestVisitsUrl(id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListKnownGuestVisitsQueryKey = (id: number,) => {
+    return [
+    `/api/known-guests/${id}/visits`
+    ] as const;
+    }
+
+
+export const getListKnownGuestVisitsQueryOptions = <TData = Awaited<ReturnType<typeof listKnownGuestVisits>>, TError = ErrorType<void>>(id: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listKnownGuestVisits>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListKnownGuestVisitsQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listKnownGuestVisits>>> = ({ signal }) => listKnownGuestVisits(id, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: id !== null && id !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listKnownGuestVisits>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListKnownGuestVisitsQueryResult = NonNullable<Awaited<ReturnType<typeof listKnownGuestVisits>>>
+export type ListKnownGuestVisitsQueryError = ErrorType<void>
+
+
+/**
+ * @summary Visit history for a known guest
+ */
+
+export function useListKnownGuestVisits<TData = Awaited<ReturnType<typeof listKnownGuestVisits>>, TError = ErrorType<void>>(
+ id: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listKnownGuestVisits>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListKnownGuestVisitsQueryOptions(id,options)
 
   const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
 

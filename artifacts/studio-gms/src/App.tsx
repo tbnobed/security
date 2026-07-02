@@ -15,6 +15,7 @@ import Audit from "@/pages/audit";
 import UsersPage from "@/pages/users";
 import StudiosPage from "@/pages/studios";
 import AlertsPage from "@/pages/alerts";
+import KnownGuestsPage from "@/pages/known-guests";
 import Preregister from "@/pages/preregister";
 
 const queryClient = new QueryClient();
@@ -63,6 +64,9 @@ function AppRoutes() {
         </Route>
         <Route path="/preregistrations">
           <ProtectedRoute component={Preregistrations} />
+        </Route>
+        <Route path="/known-guests">
+          <ProtectedRoute component={KnownGuestsPage} />
         </Route>
         <Route path="/watchlist">
           <ProtectedRoute component={Watchlist} />

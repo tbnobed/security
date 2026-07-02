@@ -11,6 +11,7 @@ import productionsRouter from "./productions";
 import photosRouter from "./photos";
 import studiosRouter from "./studios";
 import alertsRouter from "./alerts";
+import knownGuestsRouter from "./known-guests";
 
 const router: IRouter = Router();
 
@@ -26,5 +27,6 @@ router.use(productionsRouter);
 router.use(photosRouter);
 router.use(studiosRouter);
 router.use(alertsRouter);
+router.use(knownGuestsRouter);
 
 export default router;

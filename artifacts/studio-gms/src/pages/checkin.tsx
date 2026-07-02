@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Layout } from "@/components/layout";
-import { useCreateGuest, useCheckWatchlist, useUploadPhoto } from "@workspace/api-client-react";
+import { useCreateGuest, useCheckWatchlist, useUploadPhoto, useListKnownGuests } from "@workspace/api-client-react";
+import { GuestAvatar } from "@/components/guest-avatar";
 import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,7 +14,7 @@ import { SITE_NAME } from "@/lib/site";
 import { PhotoCapture } from "@/components/photo-capture";
 import { VisitorBadge, type VisitorBadgeData } from "@/components/visitor-badge";
 import { printBadge } from "@/lib/print-badge";
-import { AlertTriangle, Printer, UserPlus } from "lucide-react";
+import { AlertTriangle, Printer, UserPlus, Star } from "lucide-react";
 
 const PURPOSES = [
   "Production meeting",
@@ -41,6 +42,45 @@ export default function CheckIn() {
   const [badge, setBadge] = useState<VisitorBadgeData | null>(null);
   const [watchlistWarning, setWatchlistWarning] = useState<string | null>(null);
   const [nameCheckTimeout, setNameCheckTimeout] = useState<ReturnType<typeof setTimeout> | null>(null);
+  const [suggestOpen, setSuggestOpen] = useState(false);
+
+  const suggestQuery = form.name.trim();
+  const { data: suggestions } = useListKnownGuests(
+    { q: suggestQuery },
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    { query: { enabled: suggestOpen && suggestQuery.length >= 2 } as any }
+  );
+
+  useEffect(() => {
+    const raw = sessionStorage.getItem("checkin-prefill");
+    if (!raw) return;
+    sessionStorage.removeItem("checkin-prefill");
+    try {
+      const kg = JSON.parse(raw) as { name?: string; company?: string; phone?: string; email?: string; photoUrl?: string };
+      setForm((f) => ({
+        ...f,
+        name: kg.name ?? "",
+        company: kg.company ?? "",
+        phone: kg.phone ?? "",
+        email: kg.email ?? "",
+      }));
+      if (kg.photoUrl) setPhotoUrl(kg.photoUrl);
+    } catch { /* ignore bad prefill */ }
+  }, []);
+
+  const applyKnownGuest = (kg: { name: string; company?: string | null; phone?: string | null; email?: string | null; photoUrl?: string | null }) => {
+    setSuggestOpen(false);
+    setForm((f) => ({
+      ...f,
+      name: kg.name,
+      company: kg.company ?? f.company,
+      phone: kg.phone ?? f.phone,
+      email: kg.email ?? f.email,
+    }));
+    if (kg.photoUrl) setPhotoUrl(kg.photoUrl);
+    handleNameChange(kg.name);
+    setSuggestOpen(false);
+  };
 
   const { mutateAsync: createGuest, isPending } = useCreateGuest();
   const { mutateAsync: uploadPhoto, isPending: uploadingPhoto } = useUploadPhoto();
@@ -173,9 +213,44 @@ export default function CheckIn() {
               )}
 
               <div className="grid grid-cols-2 gap-4">
-                <div className="col-span-2">
+                <div className="col-span-2 relative">
                   <Label htmlFor="name">Full Name *</Label>
-                  <Input id="name" value={form.name} onChange={(e) => handleNameChange(e.target.value)} placeholder="First Last" required className="mt-1" />
+                  <Input
+                    id="name"
+                    value={form.name}
+                    onChange={(e) => { setSuggestOpen(true); handleNameChange(e.target.value); }}
+                    onFocus={() => setSuggestOpen(true)}
+                    onBlur={() => setTimeout(() => setSuggestOpen(false), 150)}
+                    placeholder="First Last"
+                    autoComplete="off"
+                    required
+                    className="mt-1"
+                  />
+                  {suggestOpen && suggestQuery.length >= 2 && (suggestions?.length ?? 0) > 0 && (
+                    <div className="absolute z-20 left-0 right-0 mt-1 bg-popover border border-border rounded-md shadow-md overflow-hidden">
+                      {suggestions!.slice(0, 6).map((kg) => (
+                        <button
+                          key={kg.id}
+                          type="button"
+                          onMouseDown={(e) => { e.preventDefault(); applyKnownGuest(kg); }}
+                          className="w-full flex items-center gap-3 px-3 py-2 text-left text-sm hover:bg-accent"
+                          data-testid={`suggestion-${kg.id}`}
+                        >
+                          <GuestAvatar name={kg.name} photoUrl={kg.photoUrl} className="h-8 w-8" enlargeable={false} />
+                          <span className="flex-1 min-w-0">
+                            <span className="flex items-center gap-1.5 font-medium">
+                              {kg.name}
+                              {kg.isVip && <Star className="w-3.5 h-3.5 fill-yellow-400 text-yellow-400 shrink-0" />}
+                            </span>
+                            <span className="block text-xs text-muted-foreground truncate">
+                              {kg.company || "—"} · {kg.visitCount} visit{kg.visitCount === 1 ? "" : "s"}
+                            </span>
+                          </span>
+                          <span className="text-xs text-muted-foreground shrink-0">Returning</span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
                 </div>
                 <div>
                   <Label htmlFor="company">Company *</Label>
