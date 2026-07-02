@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { useAuth } from "@/lib/auth";
 
 export default function SignInPage() {
-  const { login, isSignedIn } = useAuth();
+  const { login, isSignedIn, user } = useAuth();
   const basePath = import.meta.env.BASE_URL.replace(/\/$/, "");
 
   const [email, setEmail] = useState("");
@@ -31,7 +31,7 @@ export default function SignInPage() {
   };
 
   if (isSignedIn) {
-    return <Redirect to="/dashboard" />;
+    return <Redirect to={user?.role === "kiosk" ? "/kiosk" : "/dashboard"} />;
   }
 
   return (

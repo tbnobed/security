@@ -17,6 +17,7 @@ import {
 } from "@workspace/api-zod";
 import {
   requireAuth,
+  requireOperator,
   requireAdmin,
   getSessionUserId,
   getUserById,
@@ -107,7 +108,7 @@ router.get("/users/me", requireAuth, async (req, res): Promise<void> => {
   res.json(GetMeResponse.parse(toUserResponse(user)));
 });
 
-router.patch("/users/me", requireAuth, async (req, res): Promise<void> => {
+router.patch("/users/me", requireOperator, async (req, res): Promise<void> => {
   const parsed = UpdateMeBody.safeParse(req.body);
   if (!parsed.success) {
     res.status(400).json({ error: parsed.error.message });

@@ -9,7 +9,7 @@ import {
   CheckWatchlistQueryParams,
   CheckWatchlistResponse,
 } from "@workspace/api-zod";
-import { requireAuth, requireAdmin } from "../lib/auth";
+import { requireOperator, requireAdmin } from "../lib/auth";
 import { getSessionUserId } from "../lib/auth";
 import { usersTable } from "@workspace/db";
 
@@ -82,7 +82,7 @@ router.delete("/watchlist/:id", requireAdmin, async (req, res): Promise<void> =>
   res.sendStatus(204);
 });
 
-router.get("/watchlist/check", requireAuth, async (req, res): Promise<void> => {
+router.get("/watchlist/check", requireOperator, async (req, res): Promise<void> => {
   const parsed = CheckWatchlistQueryParams.safeParse(req.query);
   if (!parsed.success) {
     res.status(400).json({ error: parsed.error.message });

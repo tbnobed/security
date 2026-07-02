@@ -38,6 +38,9 @@ import type {
   GuestInput,
   GuestUpdate,
   HealthStatus,
+  KioskCheckinRequest,
+  KioskListPreregistrationsParams,
+  KioskPreregistration,
   KnownGuest,
   KnownGuestUpdate,
   ListAuditLogParams,
@@ -2185,6 +2188,160 @@ export function useListKnownGuestVisits<TData = Awaited<ReturnType<typeof listKn
 
 
 
+
+export const getKioskListPreregistrationsUrl = (params: KioskListPreregistrationsParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/kiosk/preregistrations?${stringifiedParams}` : `/api/kiosk/preregistrations`
+}
+
+/**
+ * @summary Search today's pending pre-registrations by guest name (kiosk self check-in)
+ */
+export const kioskListPreregistrations = async (params: KioskListPreregistrationsParams, options?: RequestInit): Promise<KioskPreregistration[]> => {
+
+  return customFetch<KioskPreregistration[]>(getKioskListPreregistrationsUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getKioskListPreregistrationsQueryKey = (params?: KioskListPreregistrationsParams,) => {
+    return [
+    `/api/kiosk/preregistrations`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getKioskListPreregistrationsQueryOptions = <TData = Awaited<ReturnType<typeof kioskListPreregistrations>>, TError = ErrorType<void>>(params: KioskListPreregistrationsParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof kioskListPreregistrations>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getKioskListPreregistrationsQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof kioskListPreregistrations>>> = ({ signal }) => kioskListPreregistrations(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof kioskListPreregistrations>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type KioskListPreregistrationsQueryResult = NonNullable<Awaited<ReturnType<typeof kioskListPreregistrations>>>
+export type KioskListPreregistrationsQueryError = ErrorType<void>
+
+
+/**
+ * @summary Search today's pending pre-registrations by guest name (kiosk self check-in)
+ */
+
+export function useKioskListPreregistrations<TData = Awaited<ReturnType<typeof kioskListPreregistrations>>, TError = ErrorType<void>>(
+ params: KioskListPreregistrationsParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof kioskListPreregistrations>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getKioskListPreregistrationsQueryOptions(params,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getKioskCheckinUrl = () => {
+
+
+
+
+  return `/api/kiosk/checkin`
+}
+
+/**
+ * @summary Self check-in for an expected guest (converts the pre-registration)
+ */
+export const kioskCheckin = async (kioskCheckinRequest: KioskCheckinRequest, options?: RequestInit): Promise<Guest> => {
+
+  return customFetch<Guest>(getKioskCheckinUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(kioskCheckinRequest)
+  }
+);}
+
+
+
+
+export const getKioskCheckinMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof kioskCheckin>>, TError,{data: BodyType<KioskCheckinRequest>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof kioskCheckin>>, TError,{data: BodyType<KioskCheckinRequest>}, TContext> => {
+
+const mutationKey = ['kioskCheckin'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof kioskCheckin>>, {data: BodyType<KioskCheckinRequest>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  kioskCheckin(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type KioskCheckinMutationResult = NonNullable<Awaited<ReturnType<typeof kioskCheckin>>>
+    export type KioskCheckinMutationBody = BodyType<KioskCheckinRequest>
+    export type KioskCheckinMutationError = ErrorType<void>
+
+    /**
+ * @summary Self check-in for an expected guest (converts the pre-registration)
+ */
+export const useKioskCheckin = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof kioskCheckin>>, TError,{data: BodyType<KioskCheckinRequest>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof kioskCheckin>>,
+        TError,
+        {data: BodyType<KioskCheckinRequest>},
+        TContext
+      > => {
+      return useMutation(getKioskCheckinMutationOptions(options));
+    }
 
 export const getListAuditLogUrl = (params?: ListAuditLogParams,) => {
   const normalizedParams = new URLSearchParams();

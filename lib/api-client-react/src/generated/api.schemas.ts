@@ -257,6 +257,7 @@ export type AppUserRole = typeof AppUserRole[keyof typeof AppUserRole];
 export const AppUserRole = {
   security: 'security',
   admin: 'admin',
+  kiosk: 'kiosk',
 } as const;
 
 export interface AppUser {
@@ -275,6 +276,7 @@ export type AppUserInputRole = typeof AppUserInputRole[keyof typeof AppUserInput
 export const AppUserInputRole = {
   security: 'security',
   admin: 'admin',
+  kiosk: 'kiosk',
 } as const;
 
 export interface AppUserInput {
@@ -307,10 +309,25 @@ export type RoleUpdateRole = typeof RoleUpdateRole[keyof typeof RoleUpdateRole];
 export const RoleUpdateRole = {
   security: 'security',
   admin: 'admin',
+  kiosk: 'kiosk',
 } as const;
 
 export interface RoleUpdate {
   role: RoleUpdateRole;
+}
+
+export interface KioskPreregistration {
+  id: number;
+  guestName: string;
+  company: string;
+  hostName: string;
+  expectedArrival: string;
+}
+
+export interface KioskCheckinRequest {
+  preregistrationId: number;
+  /** @nullable */
+  photoUrl?: string | null;
 }
 
 export interface SiteCount {
@@ -454,6 +471,13 @@ name: string;
 export type ListKnownGuestsParams = {
 q?: string;
 vip?: boolean;
+};
+
+export type KioskListPreregistrationsParams = {
+/**
+ * @minLength 2
+ */
+q: string;
 };
 
 export type ListAuditLogParams = {

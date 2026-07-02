@@ -10,7 +10,7 @@ import {
   ListKnownGuestVisitsParams,
   ListKnownGuestVisitsResponse,
 } from "@workspace/api-zod";
-import { requireAuth, getSessionUserId } from "../lib/auth";
+import { requireOperator, getSessionUserId } from "../lib/auth";
 import { toGuestResponse } from "./guests";
 
 const router = Router();
@@ -47,7 +47,7 @@ function toKnownGuestResponse(row: {
   };
 }
 
-router.get("/known-guests", requireAuth, async (req, res): Promise<void> => {
+router.get("/known-guests", requireOperator, async (req, res): Promise<void> => {
   const parsed = ListKnownGuestsQueryParams.safeParse(req.query);
   if (!parsed.success) {
     res.status(400).json({ error: parsed.error.message });
@@ -74,7 +74,7 @@ router.get("/known-guests", requireAuth, async (req, res): Promise<void> => {
   res.json(ListKnownGuestsResponse.parse(rows.map(toKnownGuestResponse)));
 });
 
-router.patch("/known-guests/:id", requireAuth, async (req, res): Promise<void> => {
+router.patch("/known-guests/:id", requireOperator, async (req, res): Promise<void> => {
   const parsedParams = UpdateKnownGuestParams.safeParse(req.params);
   const parsedBody = UpdateKnownGuestBody.safeParse(req.body);
   if (!parsedParams.success || !parsedBody.success) {
@@ -107,7 +107,7 @@ router.patch("/known-guests/:id", requireAuth, async (req, res): Promise<void> =
   res.json(UpdateKnownGuestResponse.parse(toKnownGuestResponse(row)));
 });
 
-router.get("/known-guests/:id/visits", requireAuth, async (req, res): Promise<void> => {
+router.get("/known-guests/:id/visits", requireOperator, async (req, res): Promise<void> => {
   const parsed = ListKnownGuestVisitsParams.safeParse(req.params);
   if (!parsed.success) {
     res.status(400).json({ error: parsed.error.message });

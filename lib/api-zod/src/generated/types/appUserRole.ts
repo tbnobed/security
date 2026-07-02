@@ -12,4 +12,5 @@ export type AppUserRole = typeof AppUserRole[keyof typeof AppUserRole];
 export const AppUserRole = {
   security: 'security',
   admin: 'admin',
+  kiosk: 'kiosk',
 } as const;

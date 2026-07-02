@@ -24,7 +24,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Shield, Users, UserPlus, KeyRound, Loader2 } from "lucide-react";
 import { format } from "date-fns";
 
-type Role = "security" | "admin";
+type Role = "security" | "admin" | "kiosk";
 
 export default function UsersPage() {
   const { toast } = useToast();
@@ -145,6 +145,7 @@ export default function UsersPage() {
             <span className="font-medium text-foreground">Roles: </span>
             <strong>Security</strong> — can check guests in/out and view the dashboard.
             {" "}<strong>Admin</strong> — all security permissions plus watchlist, audit log, and user management.
+            {" "}<strong>Kiosk</strong> — locked to the self-service check-in screen only (use for the lobby tablet).
             Operators are created here by an administrator with an email and initial password.
           </div>
         </div>
@@ -203,6 +204,7 @@ export default function UsersPage() {
                           <SelectContent>
                             <SelectItem value="security">Security</SelectItem>
                             <SelectItem value="admin">Admin</SelectItem>
+                            <SelectItem value="kiosk">Kiosk</SelectItem>
                           </SelectContent>
                         </Select>
                       )}
@@ -272,6 +274,7 @@ export default function UsersPage() {
                   <SelectContent>
                     <SelectItem value="security">Security</SelectItem>
                     <SelectItem value="admin">Admin</SelectItem>
+                    <SelectItem value="kiosk">Kiosk</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

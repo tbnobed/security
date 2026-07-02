@@ -6,11 +6,11 @@ import {
   GetRecentActivityQueryParams,
   GetRecentActivityResponse,
 } from "@workspace/api-zod";
-import { requireAuth } from "../lib/auth";
+import { requireOperator } from "../lib/auth";
 
 const router = Router();
 
-router.get("/dashboard/summary", requireAuth, async (req, res): Promise<void> => {
+router.get("/dashboard/summary", requireOperator, async (req, res): Promise<void> => {
   const now = new Date();
   const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   const tomorrowStart = new Date(todayStart.getTime() + 86400000);
@@ -77,7 +77,7 @@ router.get("/dashboard/summary", requireAuth, async (req, res): Promise<void> =>
   );
 });
 
-router.get("/dashboard/recent-activity", requireAuth, async (req, res): Promise<void> => {
+router.get("/dashboard/recent-activity", requireOperator, async (req, res): Promise<void> => {
   const parsed = GetRecentActivityQueryParams.safeParse(req.query);
   if (!parsed.success) {
     res.status(400).json({ error: parsed.error.message });

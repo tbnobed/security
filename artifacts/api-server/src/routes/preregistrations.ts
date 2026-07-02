@@ -13,7 +13,7 @@ import {
   ConvertPreregistrationResponse,
   CreatePublicPreregistrationResponse,
 } from "@workspace/api-zod";
-import { requireAuth } from "../lib/auth";
+import { requireOperator } from "../lib/auth";
 import { generateBadgeId } from "../lib/badge";
 import { getSessionUserId } from "../lib/auth";
 import { usersTable } from "@workspace/db";
@@ -40,7 +40,7 @@ async function getOperatorName(clerkId: string): Promise<string> {
   return user?.displayName ?? user?.email ?? clerkId;
 }
 
-router.get("/preregistrations", requireAuth, async (req, res): Promise<void> => {
+router.get("/preregistrations", requireOperator, async (req, res): Promise<void> => {
   const parsed = ListPreregistrationsQueryParams.safeParse(req.query);
   if (!parsed.success) {
     res.status(400).json({ error: parsed.error.message });
@@ -71,7 +71,7 @@ router.get("/preregistrations", requireAuth, async (req, res): Promise<void> => 
   res.json(ListPreregistrationsResponse.parse(pregs.map(toPreregResponse)));
 });
 
-router.post("/preregistrations", requireAuth, async (req, res): Promise<void> => {
+router.post("/preregistrations", requireOperator, async (req, res): Promise<void> => {
   const parsed = CreatePreregistrationBody.safeParse(req.body);
   if (!parsed.success) {
     res.status(400).json({ error: parsed.error.message });
@@ -125,7 +125,7 @@ router.post("/preregistrations", requireAuth, async (req, res): Promise<void> =>
   res.status(201).json(CreatePreregistrationResponse.parse(toPreregResponse(preg)));
 });
 
-router.delete("/preregistrations/:id", requireAuth, async (req, res): Promise<void> => {
+router.delete("/preregistrations/:id", requireOperator, async (req, res): Promise<void> => {
   const params = DeletePreregistrationParams.safeParse(req.params);
   if (!params.success) {
     res.status(400).json({ error: params.error.message });
@@ -136,7 +136,7 @@ router.delete("/preregistrations/:id", requireAuth, async (req, res): Promise<vo
   res.sendStatus(204);
 });
 
-router.post("/preregistrations/:id/convert", requireAuth, async (req, res): Promise<void> => {
+router.post("/preregistrations/:id/convert", requireOperator, async (req, res): Promise<void> => {
   const params = ConvertPreregistrationParams.safeParse(req.params);
   if (!params.success) {
     res.status(400).json({ error: params.error.message });

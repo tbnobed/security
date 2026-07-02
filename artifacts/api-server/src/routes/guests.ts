@@ -17,7 +17,7 @@ import {
   ListOverdueGuestsResponse,
   GetGuestBadgeResponse,
 } from "@workspace/api-zod";
-import { requireAuth } from "../lib/auth";
+import { requireOperator } from "../lib/auth";
 import { generateBadgeId } from "../lib/badge";
 import { getSessionUserId } from "../lib/auth";
 import { usersTable } from "@workspace/db";
@@ -59,7 +59,7 @@ async function getOperatorName(clerkId: string): Promise<string> {
   return user?.displayName ?? user?.email ?? clerkId;
 }
 
-router.get("/guests", requireAuth, async (req, res): Promise<void> => {
+router.get("/guests", requireOperator, async (req, res): Promise<void> => {
   const parsed = ListGuestsQueryParams.safeParse(req.query);
   if (!parsed.success) {
     res.status(400).json({ error: parsed.error.message });
@@ -101,7 +101,7 @@ router.get("/guests", requireAuth, async (req, res): Promise<void> => {
   res.json(ListGuestsResponse.parse(guests.map(toGuestResponse)));
 });
 
-router.post("/guests", requireAuth, async (req, res): Promise<void> => {
+router.post("/guests", requireOperator, async (req, res): Promise<void> => {
   const parsed = CreateGuestBody.safeParse(req.body);
   if (!parsed.success) {
     res.status(400).json({ error: parsed.error.message });
@@ -203,7 +203,7 @@ router.post("/guests", requireAuth, async (req, res): Promise<void> => {
   res.status(201).json(CreateGuestResponse.parse(toGuestResponse(guest)));
 });
 
-router.get("/guests/search", requireAuth, async (req, res): Promise<void> => {
+router.get("/guests/search", requireOperator, async (req, res): Promise<void> => {
   const parsed = SearchGuestsQueryParams.safeParse(req.query);
   if (!parsed.success) {
     res.status(400).json({ error: parsed.error.message });
@@ -230,7 +230,7 @@ router.get("/guests/search", requireAuth, async (req, res): Promise<void> => {
   res.json(SearchGuestsResponse.parse(guests.map(toGuestResponse)));
 });
 
-router.get("/guests/overdue", requireAuth, async (req, res): Promise<void> => {
+router.get("/guests/overdue", requireOperator, async (req, res): Promise<void> => {
   const now = new Date();
   const guests = await db
     .select()
@@ -246,7 +246,7 @@ router.get("/guests/overdue", requireAuth, async (req, res): Promise<void> => {
   res.json(ListOverdueGuestsResponse.parse(guests.map(toGuestResponse)));
 });
 
-router.get("/guests/:id", requireAuth, async (req, res): Promise<void> => {
+router.get("/guests/:id", requireOperator, async (req, res): Promise<void> => {
   const params = GetGuestParams.safeParse(req.params);
   if (!params.success) {
     res.status(400).json({ error: params.error.message });
@@ -266,7 +266,7 @@ router.get("/guests/:id", requireAuth, async (req, res): Promise<void> => {
   res.json(GetGuestResponse.parse(toGuestResponse(guest)));
 });
 
-router.patch("/guests/:id", requireAuth, async (req, res): Promise<void> => {
+router.patch("/guests/:id", requireOperator, async (req, res): Promise<void> => {
   const params = UpdateGuestParams.safeParse(req.params);
   if (!params.success) {
     res.status(400).json({ error: params.error.message });
@@ -308,7 +308,7 @@ router.patch("/guests/:id", requireAuth, async (req, res): Promise<void> => {
   res.json(toGuestResponse(guest));
 });
 
-router.post("/guests/:id/checkout", requireAuth, async (req, res): Promise<void> => {
+router.post("/guests/:id/checkout", requireOperator, async (req, res): Promise<void> => {
   const params = CheckoutGuestParams.safeParse(req.params);
   if (!params.success) {
     res.status(400).json({ error: params.error.message });
@@ -358,7 +358,7 @@ router.post("/guests/:id/checkout", requireAuth, async (req, res): Promise<void>
   res.json(toGuestResponse(guest));
 });
 
-router.get("/guests/:id/badge", requireAuth, async (req, res): Promise<void> => {
+router.get("/guests/:id/badge", requireOperator, async (req, res): Promise<void> => {
   const params = GetGuestBadgeParams.safeParse(req.params);
   if (!params.success) {
     res.status(400).json({ error: params.error.message });

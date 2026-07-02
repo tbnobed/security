@@ -12,6 +12,7 @@ import photosRouter from "./photos";
 import studiosRouter from "./studios";
 import alertsRouter from "./alerts";
 import knownGuestsRouter from "./known-guests";
+import kioskRouter from "./kiosk";
 
 const router: IRouter = Router();
 
@@ -28,5 +29,6 @@ router.use(photosRouter);
 router.use(studiosRouter);
 router.use(alertsRouter);
 router.use(knownGuestsRouter);
+router.use(kioskRouter);
 
 export default router;

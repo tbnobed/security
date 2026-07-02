@@ -17,6 +17,7 @@ import StudiosPage from "@/pages/studios";
 import AlertsPage from "@/pages/alerts";
 import KnownGuestsPage from "@/pages/known-guests";
 import Preregister from "@/pages/preregister";
+import KioskPage from "@/pages/kiosk";
 
 const queryClient = new QueryClient();
 
@@ -31,16 +32,26 @@ function AuthLoading() {
 }
 
 function HomeRedirect() {
-  const { isLoading, isSignedIn } = useAuth();
+  const { isLoading, isSignedIn, user } = useAuth();
   if (isLoading) return <AuthLoading />;
-  return <Redirect to={isSignedIn ? "/dashboard" : "/sign-in"} />;
+  if (!isSignedIn) return <Redirect to="/sign-in" />;
+  return <Redirect to={user?.role === "kiosk" ? "/kiosk" : "/dashboard"} />;
 }
 
 function ProtectedRoute({ component: Component }: { component: React.ComponentType<any> }) {
+  const { isLoading, isSignedIn, user } = useAuth();
+  if (isLoading) return <AuthLoading />;
+  if (!isSignedIn) return <Redirect to="/sign-in" />;
+  // Kiosk accounts are locked to the kiosk screen.
+  if (user?.role === "kiosk") return <Redirect to="/kiosk" />;
+  return <Component />;
+}
+
+function KioskRoute() {
   const { isLoading, isSignedIn } = useAuth();
   if (isLoading) return <AuthLoading />;
   if (!isSignedIn) return <Redirect to="/sign-in" />;
-  return <Component />;
+  return <KioskPage />;
 }
 
 function AppRoutes() {
@@ -83,6 +94,7 @@ function AppRoutes() {
         <Route path="/alerts">
           <ProtectedRoute component={AlertsPage} />
         </Route>
+        <Route path="/kiosk" component={KioskRoute} />
         <Route component={NotFound} />
       </Switch>
       <Toaster />

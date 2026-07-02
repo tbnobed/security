@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { GetProductionsTodayResponse } from "@workspace/api-zod";
-import { requireAuth } from "../lib/auth";
+import { requireOperator } from "../lib/auth";
 
 const router = Router();
 
@@ -16,7 +16,7 @@ function todayUtcRange(): { start: string; end: string } {
   return { start: start.toISOString(), end: end.toISOString() };
 }
 
-router.get("/productions/today", requireAuth, async (req, res): Promise<void> => {
+router.get("/productions/today", requireOperator, async (req, res): Promise<void> => {
   const baseUrl = process.env.BOOKINGS_API_URL ?? DEFAULT_BOOKINGS_API_URL;
   const { start, end } = todayUtcRange();
 

@@ -678,6 +678,59 @@ export const ListKnownGuestVisitsResponse = zod.array(ListKnownGuestVisitsRespon
 
 
 /**
+ * @summary Search today's pending pre-registrations by guest name (kiosk self check-in)
+ */
+export const kioskListPreregistrationsQueryQMin = 2;
+
+
+
+export const KioskListPreregistrationsQueryParams = zod.object({
+  "q": zod.coerce.string().min(kioskListPreregistrationsQueryQMin)
+})
+
+export const KioskListPreregistrationsResponseItem = zod.object({
+  "id": zod.number(),
+  "guestName": zod.string(),
+  "company": zod.string(),
+  "hostName": zod.string(),
+  "expectedArrival": zod.coerce.date()
+})
+export const KioskListPreregistrationsResponse = zod.array(KioskListPreregistrationsResponseItem)
+
+
+/**
+ * @summary Self check-in for an expected guest (converts the pre-registration)
+ */
+export const KioskCheckinBody = zod.object({
+  "preregistrationId": zod.number(),
+  "photoUrl": zod.string().nullish()
+})
+
+export const KioskCheckinResponse = zod.object({
+  "id": zod.number(),
+  "badgeId": zod.string(),
+  "name": zod.string(),
+  "company": zod.string(),
+  "phone": zod.string().nullish(),
+  "email": zod.string().nullish(),
+  "hostName": zod.string(),
+  "purposeOfVisit": zod.string(),
+  "site": zod.string().describe('Dallas\/The Plex, Tustin, Nashville'),
+  "status": zod.enum(['active', 'checked_out']),
+  "checkinAt": zod.coerce.date(),
+  "checkoutAt": zod.coerce.date().nullish(),
+  "expectedDeparture": zod.coerce.date().nullish(),
+  "photoUrl": zod.string().nullish(),
+  "checkedInByClerkId": zod.string().nullish(),
+  "checkedOutByClerkId": zod.string().nullish(),
+  "preregistrationId": zod.number().nullish(),
+  "studios": zod.array(zod.string()).optional(),
+  "timeOnSiteMinutes": zod.number().nullish(),
+  "isOverdue": zod.boolean().optional()
+})
+
+
+/**
  * @summary List audit log entries
  */
 export const listAuditLogQueryStartDateRegExp = new RegExp('^\\d{4}-\\d{2}-\\d{2}$');
@@ -736,7 +789,7 @@ export const LoginResponse = zod.object({
   "clerkId": zod.string(),
   "displayName": zod.string().nullish(),
   "email": zod.string().nullish(),
-  "role": zod.enum(['security', 'admin']),
+  "role": zod.enum(['security', 'admin', 'kiosk']),
   "createdAt": zod.coerce.date()
 })
 
@@ -754,7 +807,7 @@ export const ListUsersResponseItem = zod.object({
   "clerkId": zod.string(),
   "displayName": zod.string().nullish(),
   "email": zod.string().nullish(),
-  "role": zod.enum(['security', 'admin']),
+  "role": zod.enum(['security', 'admin', 'kiosk']),
   "createdAt": zod.coerce.date()
 })
 export const ListUsersResponse = zod.array(ListUsersResponseItem)
@@ -773,14 +826,14 @@ export const CreateUserBody = zod.object({
   "email": zod.string().email().min(createUserBodyEmailMin).describe('Login email; must be unique (case-insensitive)'),
   "password": zod.string().min(createUserBodyPasswordMin).describe('Initial password for the operator'),
   "displayName": zod.string().optional(),
-  "role": zod.enum(['security', 'admin'])
+  "role": zod.enum(['security', 'admin', 'kiosk'])
 })
 
 export const CreateUserResponse = zod.object({
   "clerkId": zod.string(),
   "displayName": zod.string().nullish(),
   "email": zod.string().nullish(),
-  "role": zod.enum(['security', 'admin']),
+  "role": zod.enum(['security', 'admin', 'kiosk']),
   "createdAt": zod.coerce.date()
 })
 
@@ -792,7 +845,7 @@ export const GetMeResponse = zod.object({
   "clerkId": zod.string(),
   "displayName": zod.string().nullish(),
   "email": zod.string().nullish(),
-  "role": zod.enum(['security', 'admin']),
+  "role": zod.enum(['security', 'admin', 'kiosk']),
   "createdAt": zod.coerce.date()
 })
 
@@ -808,7 +861,7 @@ export const UpdateMeResponse = zod.object({
   "clerkId": zod.string(),
   "displayName": zod.string().nullish(),
   "email": zod.string().nullish(),
-  "role": zod.enum(['security', 'admin']),
+  "role": zod.enum(['security', 'admin', 'kiosk']),
   "createdAt": zod.coerce.date()
 })
 
@@ -821,14 +874,14 @@ export const UpdateUserRoleParams = zod.object({
 })
 
 export const UpdateUserRoleBody = zod.object({
-  "role": zod.enum(['security', 'admin'])
+  "role": zod.enum(['security', 'admin', 'kiosk'])
 })
 
 export const UpdateUserRoleResponse = zod.object({
   "clerkId": zod.string(),
   "displayName": zod.string().nullish(),
   "email": zod.string().nullish(),
-  "role": zod.enum(['security', 'admin']),
+  "role": zod.enum(['security', 'admin', 'kiosk']),
   "createdAt": zod.coerce.date()
 })
 
@@ -852,7 +905,7 @@ export const ResetUserPasswordResponse = zod.object({
   "clerkId": zod.string(),
   "displayName": zod.string().nullish(),
   "email": zod.string().nullish(),
-  "role": zod.enum(['security', 'admin']),
+  "role": zod.enum(['security', 'admin', 'kiosk']),
   "createdAt": zod.coerce.date()
 })
 
