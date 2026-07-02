@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Layout } from "@/components/layout";
 import { GuestAvatar } from "@/components/guest-avatar";
 import {
@@ -8,7 +8,18 @@ import {
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Users, LogIn, LogOut, AlertTriangle, CalendarClock, Clapperboard } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { VisitorBadge, type VisitorBadgeData } from "@/components/visitor-badge";
+import { printBadge } from "@/lib/print-badge";
+import {
+  Users,
+  LogIn,
+  LogOut,
+  AlertTriangle,
+  CalendarClock,
+  Clapperboard,
+  Printer,
+} from "lucide-react";
 import { format } from "date-fns";
 
 export default function Dashboard() {
@@ -21,6 +32,8 @@ export default function Dashboard() {
     isError: productionsError,
   } = useGetProductionsToday();
 
+  const [printData, setPrintData] = useState<VisitorBadgeData | null>(null);
+
   useEffect(() => {
     const interval = setInterval(() => {
       queryClient.invalidateQueries({ queryKey: ["/api/guests"] });
@@ -29,6 +42,16 @@ export default function Dashboard() {
     }, 30000);
     return () => clearInterval(interval);
   }, [queryClient]);
+
+  // Print the off-screen badge once it has rendered, then clear it.
+  useEffect(() => {
+    if (!printData) return undefined;
+    const t = setTimeout(() => {
+      printBadge();
+      setPrintData(null);
+    }, 100);
+    return () => clearTimeout(t);
+  }, [printData]);
 
   return (
     <Layout>
@@ -166,17 +189,18 @@ export default function Dashboard() {
                   <th className="px-4 py-3 font-medium">Check In</th>
                   <th className="px-4 py-3 font-medium">Studios</th>
                   <th className="px-4 py-3 font-medium">Time On-Site</th>
-                  <th className="px-4 py-3 font-medium text-right">Status</th>
+                  <th className="px-4 py-3 font-medium">Status</th>
+                  <th className="px-4 py-3 font-medium text-right">Badge</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
                 {loadingGuests ? (
                   <tr>
-                    <td colSpan={7} className="px-4 py-8 text-center text-muted-foreground">Loading operations data...</td>
+                    <td colSpan={8} className="px-4 py-8 text-center text-muted-foreground">Loading operations data...</td>
                   </tr>
                 ) : guests?.length === 0 ? (
                   <tr>
-                    <td colSpan={7} className="px-4 py-8 text-center text-muted-foreground">No active guests on site.</td>
+                    <td colSpan={8} className="px-4 py-8 text-center text-muted-foreground">No active guests on site.</td>
                   </tr>
                 ) : (
                   guests?.map((guest) => (
@@ -192,7 +216,7 @@ export default function Dashboard() {
                       <td className="px-4 py-3 text-muted-foreground">{format(new Date(guest.checkinAt), "HH:mm")}</td>
                       <td className="px-4 py-3 text-muted-foreground">{guest.studios?.length ? guest.studios.join(", ") : "—"}</td>
                       <td className="px-4 py-3 font-mono text-xs">{guest.timeOnSiteMinutes}m</td>
-                      <td className="px-4 py-3 text-right">
+                      <td className="px-4 py-3">
                         {guest.isOverdue ? (
                           <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-destructive/20 text-destructive border border-destructive/30">
                             OVERDUE
@@ -203,6 +227,29 @@ export default function Dashboard() {
                           </span>
                         )}
                       </td>
+                      <td className="px-4 py-3 text-right">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() =>
+                            setPrintData({
+                              badgeId: guest.badgeId,
+                              name: guest.name,
+                              company: guest.company,
+                              host: guest.hostName,
+                              site: guest.site,
+                              studios: guest.studios ?? [],
+                              purpose: guest.purposeOfVisit,
+                              checkinAt: guest.checkinAt,
+                              expectedDeparture: guest.expectedDeparture ?? null,
+                              photo: guest.photoUrl ?? null,
+                            })
+                          }
+                          data-testid={`button-print-badge-${guest.id}`}
+                        >
+                          <Printer className="w-4 h-4 mr-1.5" /> Print Badge
+                        </Button>
+                      </td>
                     </tr>
                   ))
                 )}
@@ -211,6 +258,13 @@ export default function Dashboard() {
           </div>
         </div>
       </div>
+
+      {/* Off-screen source for badge printing (printBadge clones #print-badge). */}
+      {printData && (
+        <div aria-hidden className="pointer-events-none fixed -left-[9999px] top-0">
+          <VisitorBadge data={printData} />
+        </div>
+      )}
     </Layout>
   );
 }

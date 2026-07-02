@@ -6,12 +6,11 @@ import {
   ApiError,
 } from "@workspace/api-client-react";
 import type { KioskPreregistration } from "@workspace/api-client-react";
-import { Loader2, UserCheck, Camera, Printer, ShieldAlert, RotateCcw } from "lucide-react";
+import { Loader2, UserCheck, Camera, ShieldAlert, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { PhotoCapture } from "@/components/photo-capture";
 import { VisitorBadge, type VisitorBadgeData } from "@/components/visitor-badge";
-import { printBadge } from "@/lib/print-badge";
 import { SITE_NAME } from "@/lib/site";
 import logoUrl from "/logo.svg";
 
@@ -62,13 +61,6 @@ export default function KioskPage() {
       if (idleTimer.current) clearTimeout(idleTimer.current);
     };
   }, [step, query, photo, reset]);
-
-  // Auto-print the badge once it renders.
-  useEffect(() => {
-    if (step !== "badge" || !badge) return undefined;
-    const t = setTimeout(() => printBadge(), 700);
-    return () => clearTimeout(t);
-  }, [step, badge]);
 
   const handleCheckin = async () => {
     if (!selected || submitting) return;
@@ -129,7 +121,7 @@ export default function KioskPage() {
             <div className="space-y-2">
               <h2 className="text-3xl font-bold">Welcome!</h2>
               <p className="text-lg text-muted-foreground">
-                Expected today? Check yourself in and print your visitor badge.
+                Expected today? Check yourself in, then collect your badge at the security desk.
               </p>
             </div>
             <Button
@@ -230,7 +222,7 @@ export default function KioskPage() {
                 data-testid="button-kiosk-checkin"
               >
                 {submitting ? <Loader2 className="w-5 h-5 animate-spin mr-2" /> : null}
-                Check In &amp; Print Badge
+                Check In
               </Button>
               <button
                 onClick={handleCheckin}
@@ -252,23 +244,14 @@ export default function KioskPage() {
             <div className="text-center space-y-1">
               <h2 className="text-2xl font-bold">You're checked in!</h2>
               <p className="text-muted-foreground">
-                Your badge is printing. Please wear it visibly while on site.
+                Please collect your printed visitor badge from the security desk, then wear it
+                visibly while on site.
               </p>
             </div>
             <VisitorBadge data={badge} />
-            <div className="flex gap-4">
-              <Button
-                size="lg"
-                variant="outline"
-                onClick={() => printBadge()}
-                data-testid="button-kiosk-reprint"
-              >
-                <Printer className="w-5 h-5 mr-2" /> Print Again
-              </Button>
-              <Button size="lg" onClick={reset} data-testid="button-kiosk-done">
-                Done
-              </Button>
-            </div>
+            <Button size="lg" onClick={reset} data-testid="button-kiosk-done">
+              Done
+            </Button>
           </div>
         )}
 
