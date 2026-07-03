@@ -25,6 +25,7 @@ export * from './dashboardSummary';
 export * from './exportAuditLogParams';
 export * from './getRecentActivityParams';
 export * from './guest';
+export * from './guestCheckinSource';
 export * from './guestInput';
 export * from './guestStatus';
 export * from './guestUpdate';

@@ -5,6 +5,7 @@
  * Studio Guest Management System API
  * OpenAPI spec version: 0.1.0
  */
+import type { GuestCheckinSource } from './guestCheckinSource';
 import type { GuestStatus } from './guestStatus';
 
 export interface Guest {
@@ -35,6 +36,13 @@ export interface Guest {
   /** @nullable */
   preregistrationId?: number | null;
   studios?: string[];
+  /** Where the check-in originated: 'desk' (operator) or 'kiosk' (guest self check-in). */
+  checkinSource?: GuestCheckinSource;
+  /**
+     * When the badge was printed at the security desk; null means it still needs printing.
+     * @nullable
+     */
+  badgePrintedAt?: Date | null;
   /** @nullable */
   timeOnSiteMinutes?: number | null;
   isOverdue?: boolean;

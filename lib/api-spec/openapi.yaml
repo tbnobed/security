@@ -187,6 +187,27 @@ paths:
               schema:
                 $ref: "#/components/schemas/BadgeData"
 
+  /guests/{id}/print-badge:
+    post:
+      operationId: markBadgePrinted
+      tags: [guests]
+      summary: Mark a guest's badge as printed at the security desk
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Updated guest
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Guest"
+        "404":
+          description: Not found
+
   /guests/search:
     get:
       operationId: searchGuests
@@ -956,6 +977,14 @@ components:
           type: array
           items:
             type: string
+        checkinSource:
+          type: string
+          enum: [desk, kiosk]
+          description: "Where the check-in originated: 'desk' (operator) or 'kiosk' (guest self check-in)."
+        badgePrintedAt:
+          type: ["string", "null"]
+          format: date-time
+          description: "When the badge was printed at the security desk; null means it still needs printing."
         timeOnSiteMinutes:
           type: ["integer", "null"]
         isOverdue:

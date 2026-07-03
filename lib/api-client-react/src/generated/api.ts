@@ -619,6 +619,76 @@ export function useGetGuestBadge<TData = Awaited<ReturnType<typeof getGuestBadge
 
 
 
+export const getMarkBadgePrintedUrl = (id: number,) => {
+
+
+
+
+  return `/api/guests/${id}/print-badge`
+}
+
+/**
+ * @summary Mark a guest's badge as printed at the security desk
+ */
+export const markBadgePrinted = async (id: number, options?: RequestInit): Promise<Guest> => {
+
+  return customFetch<Guest>(getMarkBadgePrintedUrl(id),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+export const getMarkBadgePrintedMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof markBadgePrinted>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof markBadgePrinted>>, TError,{id: number}, TContext> => {
+
+const mutationKey = ['markBadgePrinted'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof markBadgePrinted>>, {id: number}> = (props) => {
+          const {id} = props ?? {};
+
+          return  markBadgePrinted(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type MarkBadgePrintedMutationResult = NonNullable<Awaited<ReturnType<typeof markBadgePrinted>>>
+
+    export type MarkBadgePrintedMutationError = ErrorType<void>
+
+    /**
+ * @summary Mark a guest's badge as printed at the security desk
+ */
+export const useMarkBadgePrinted = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof markBadgePrinted>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof markBadgePrinted>>,
+        TError,
+        {id: number},
+        TContext
+      > => {
+      return useMutation(getMarkBadgePrintedMutationOptions(options));
+    }
+
 export const getSearchGuestsUrl = (params: SearchGuestsParams,) => {
   const normalizedParams = new URLSearchParams();
 

@@ -47,6 +47,8 @@ export const ListGuestsResponseItem = zod.object({
   "checkedOutByClerkId": zod.string().nullish(),
   "preregistrationId": zod.number().nullish(),
   "studios": zod.array(zod.string()).optional(),
+  "checkinSource": zod.enum(['desk', 'kiosk']).optional().describe('Where the check-in originated: \'desk\' (operator) or \'kiosk\' (guest self check-in).'),
+  "badgePrintedAt": zod.coerce.date().nullish().describe('When the badge was printed at the security desk; null means it still needs printing.'),
   "timeOnSiteMinutes": zod.number().nullish(),
   "isOverdue": zod.boolean().optional()
 })
@@ -96,6 +98,8 @@ export const CreateGuestResponse = zod.object({
   "checkedOutByClerkId": zod.string().nullish(),
   "preregistrationId": zod.number().nullish(),
   "studios": zod.array(zod.string()).optional(),
+  "checkinSource": zod.enum(['desk', 'kiosk']).optional().describe('Where the check-in originated: \'desk\' (operator) or \'kiosk\' (guest self check-in).'),
+  "badgePrintedAt": zod.coerce.date().nullish().describe('When the badge was printed at the security desk; null means it still needs printing.'),
   "timeOnSiteMinutes": zod.number().nullish(),
   "isOverdue": zod.boolean().optional()
 })
@@ -127,6 +131,8 @@ export const GetGuestResponse = zod.object({
   "checkedOutByClerkId": zod.string().nullish(),
   "preregistrationId": zod.number().nullish(),
   "studios": zod.array(zod.string()).optional(),
+  "checkinSource": zod.enum(['desk', 'kiosk']).optional().describe('Where the check-in originated: \'desk\' (operator) or \'kiosk\' (guest self check-in).'),
+  "badgePrintedAt": zod.coerce.date().nullish().describe('When the badge was printed at the security desk; null means it still needs printing.'),
   "timeOnSiteMinutes": zod.number().nullish(),
   "isOverdue": zod.boolean().optional()
 })
@@ -170,6 +176,8 @@ export const UpdateGuestResponse = zod.object({
   "checkedOutByClerkId": zod.string().nullish(),
   "preregistrationId": zod.number().nullish(),
   "studios": zod.array(zod.string()).optional(),
+  "checkinSource": zod.enum(['desk', 'kiosk']).optional().describe('Where the check-in originated: \'desk\' (operator) or \'kiosk\' (guest self check-in).'),
+  "badgePrintedAt": zod.coerce.date().nullish().describe('When the badge was printed at the security desk; null means it still needs printing.'),
   "timeOnSiteMinutes": zod.number().nullish(),
   "isOverdue": zod.boolean().optional()
 })
@@ -201,6 +209,8 @@ export const CheckoutGuestResponse = zod.object({
   "checkedOutByClerkId": zod.string().nullish(),
   "preregistrationId": zod.number().nullish(),
   "studios": zod.array(zod.string()).optional(),
+  "checkinSource": zod.enum(['desk', 'kiosk']).optional().describe('Where the check-in originated: \'desk\' (operator) or \'kiosk\' (guest self check-in).'),
+  "badgePrintedAt": zod.coerce.date().nullish().describe('When the badge was printed at the security desk; null means it still needs printing.'),
   "timeOnSiteMinutes": zod.number().nullish(),
   "isOverdue": zod.boolean().optional()
 })
@@ -222,6 +232,39 @@ export const GetGuestBadgeResponse = zod.object({
   "site": zod.string(),
   "studios": zod.array(zod.string()).optional(),
   "photoUrl": zod.string().nullish()
+})
+
+
+/**
+ * @summary Mark a guest's badge as printed at the security desk
+ */
+export const MarkBadgePrintedParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const MarkBadgePrintedResponse = zod.object({
+  "id": zod.number(),
+  "badgeId": zod.string(),
+  "name": zod.string(),
+  "company": zod.string(),
+  "phone": zod.string().nullish(),
+  "email": zod.string().nullish(),
+  "hostName": zod.string(),
+  "purposeOfVisit": zod.string(),
+  "site": zod.string().describe('Dallas\/The Plex, Tustin, Nashville'),
+  "status": zod.enum(['active', 'checked_out']),
+  "checkinAt": zod.coerce.date(),
+  "checkoutAt": zod.coerce.date().nullish(),
+  "expectedDeparture": zod.coerce.date().nullish(),
+  "photoUrl": zod.string().nullish(),
+  "checkedInByClerkId": zod.string().nullish(),
+  "checkedOutByClerkId": zod.string().nullish(),
+  "preregistrationId": zod.number().nullish(),
+  "studios": zod.array(zod.string()).optional(),
+  "checkinSource": zod.enum(['desk', 'kiosk']).optional().describe('Where the check-in originated: \'desk\' (operator) or \'kiosk\' (guest self check-in).'),
+  "badgePrintedAt": zod.coerce.date().nullish().describe('When the badge was printed at the security desk; null means it still needs printing.'),
+  "timeOnSiteMinutes": zod.number().nullish(),
+  "isOverdue": zod.boolean().optional()
 })
 
 
@@ -251,6 +294,8 @@ export const SearchGuestsResponseItem = zod.object({
   "checkedOutByClerkId": zod.string().nullish(),
   "preregistrationId": zod.number().nullish(),
   "studios": zod.array(zod.string()).optional(),
+  "checkinSource": zod.enum(['desk', 'kiosk']).optional().describe('Where the check-in originated: \'desk\' (operator) or \'kiosk\' (guest self check-in).'),
+  "badgePrintedAt": zod.coerce.date().nullish().describe('When the badge was printed at the security desk; null means it still needs printing.'),
   "timeOnSiteMinutes": zod.number().nullish(),
   "isOverdue": zod.boolean().optional()
 })
@@ -279,6 +324,8 @@ export const ListOverdueGuestsResponseItem = zod.object({
   "checkedOutByClerkId": zod.string().nullish(),
   "preregistrationId": zod.number().nullish(),
   "studios": zod.array(zod.string()).optional(),
+  "checkinSource": zod.enum(['desk', 'kiosk']).optional().describe('Where the check-in originated: \'desk\' (operator) or \'kiosk\' (guest self check-in).'),
+  "badgePrintedAt": zod.coerce.date().nullish().describe('When the badge was printed at the security desk; null means it still needs printing.'),
   "timeOnSiteMinutes": zod.number().nullish(),
   "isOverdue": zod.boolean().optional()
 })
@@ -393,6 +440,8 @@ export const ConvertPreregistrationResponse = zod.object({
   "checkedOutByClerkId": zod.string().nullish(),
   "preregistrationId": zod.number().nullish(),
   "studios": zod.array(zod.string()).optional(),
+  "checkinSource": zod.enum(['desk', 'kiosk']).optional().describe('Where the check-in originated: \'desk\' (operator) or \'kiosk\' (guest self check-in).'),
+  "badgePrintedAt": zod.coerce.date().nullish().describe('When the badge was printed at the security desk; null means it still needs printing.'),
   "timeOnSiteMinutes": zod.number().nullish(),
   "isOverdue": zod.boolean().optional()
 })
@@ -671,6 +720,8 @@ export const ListKnownGuestVisitsResponseItem = zod.object({
   "checkedOutByClerkId": zod.string().nullish(),
   "preregistrationId": zod.number().nullish(),
   "studios": zod.array(zod.string()).optional(),
+  "checkinSource": zod.enum(['desk', 'kiosk']).optional().describe('Where the check-in originated: \'desk\' (operator) or \'kiosk\' (guest self check-in).'),
+  "badgePrintedAt": zod.coerce.date().nullish().describe('When the badge was printed at the security desk; null means it still needs printing.'),
   "timeOnSiteMinutes": zod.number().nullish(),
   "isOverdue": zod.boolean().optional()
 })
@@ -725,6 +776,8 @@ export const KioskCheckinResponse = zod.object({
   "checkedOutByClerkId": zod.string().nullish(),
   "preregistrationId": zod.number().nullish(),
   "studios": zod.array(zod.string()).optional(),
+  "checkinSource": zod.enum(['desk', 'kiosk']).optional().describe('Where the check-in originated: \'desk\' (operator) or \'kiosk\' (guest self check-in).'),
+  "badgePrintedAt": zod.coerce.date().nullish().describe('When the badge was printed at the security desk; null means it still needs printing.'),
   "timeOnSiteMinutes": zod.number().nullish(),
   "isOverdue": zod.boolean().optional()
 })

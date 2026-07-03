@@ -23,6 +23,8 @@ export const guestsTable = pgTable("guests", {
   preregistrationId: integer("preregistration_id"),
   studios: text("studios").array().notNull().default(sql`'{}'::text[]`),
   overdueAlertSentAt: timestamp("overdue_alert_sent_at", { withTimezone: true }),
+  checkinSource: text("checkin_source").notNull().default("desk"),
+  badgePrintedAt: timestamp("badge_printed_at", { withTimezone: true }),
 });
 
 export const insertGuestSchema = createInsertSchema(guestsTable).omit({

@@ -17,6 +17,17 @@ export const GuestStatus = {
   checked_out: 'checked_out',
 } as const;
 
+/**
+ * Where the check-in originated: 'desk' (operator) or 'kiosk' (guest self check-in).
+ */
+export type GuestCheckinSource = typeof GuestCheckinSource[keyof typeof GuestCheckinSource];
+
+
+export const GuestCheckinSource = {
+  desk: 'desk',
+  kiosk: 'kiosk',
+} as const;
+
 export interface Guest {
   id: number;
   badgeId: string;
@@ -45,6 +56,13 @@ export interface Guest {
   /** @nullable */
   preregistrationId?: number | null;
   studios?: string[];
+  /** Where the check-in originated: 'desk' (operator) or 'kiosk' (guest self check-in). */
+  checkinSource?: GuestCheckinSource;
+  /**
+     * When the badge was printed at the security desk; null means it still needs printing.
+     * @nullable
+     */
+  badgePrintedAt?: string | null;
   /** @nullable */
   timeOnSiteMinutes?: number | null;
   isOverdue?: boolean;
