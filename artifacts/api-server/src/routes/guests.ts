@@ -49,6 +49,7 @@ export function toGuestResponse(g: typeof guestsTable.$inferSelect) {
     checkedOutByClerkId: g.checkedOutByClerkId ?? null,
     preregistrationId: g.preregistrationId ?? null,
     checkinAt: g.checkinAt.toISOString(),
+    badgePrintedAt: g.badgePrintedAt?.toISOString() ?? null,
     timeOnSiteMinutes,
     isOverdue,
   };
@@ -383,6 +384,27 @@ router.get("/guests/:id/badge", requireOperator, async (req, res): Promise<void>
       photoUrl: guest.photoUrl ?? null,
     }),
   );
+});
+
+router.post("/guests/:id/print-badge", requireOperator, async (req, res): Promise<void> => {
+  const params = GetGuestParams.safeParse(req.params);
+  if (!params.success) {
+    res.status(400).json({ error: params.error.message });
+    return;
+  }
+
+  const [guest] = await db
+    .update(guestsTable)
+    .set({ badgePrintedAt: new Date() })
+    .where(eq(guestsTable.id, params.data.id))
+    .returning();
+
+  if (!guest) {
+    res.status(404).json({ error: "Guest not found" });
+    return;
+  }
+
+  res.json(toGuestResponse(guest));
 });
 
 export default router;

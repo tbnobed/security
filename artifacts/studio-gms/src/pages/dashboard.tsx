@@ -5,6 +5,7 @@ import {
   useListGuests,
   useGetDashboardSummary,
   useGetProductionsToday,
+  useMarkBadgePrinted,
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -33,6 +34,42 @@ export default function Dashboard() {
   } = useGetProductionsToday();
 
   const [printData, setPrintData] = useState<VisitorBadgeData | null>(null);
+
+  const markPrinted = useMarkBadgePrinted({
+    mutation: {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: ["/api/guests"] });
+      },
+    },
+  });
+
+  const needsBadge = (g: { checkinSource?: string; badgePrintedAt?: string | null }) =>
+    g.checkinSource === "kiosk" && !g.badgePrintedAt;
+
+  // Self-check-in guests awaiting a printed badge float to the top of the list.
+  const sortedGuests = guests
+    ? [...guests].sort((a, b) => Number(needsBadge(b)) - Number(needsBadge(a)))
+    : guests;
+
+  const needsBadgeCount = guests?.filter(needsBadge).length ?? 0;
+
+  const handlePrint = (guest: NonNullable<typeof guests>[number]) => {
+    setPrintData({
+      badgeId: guest.badgeId,
+      name: guest.name,
+      company: guest.company,
+      host: guest.hostName,
+      site: guest.site,
+      studios: guest.studios ?? [],
+      purpose: guest.purposeOfVisit,
+      checkinAt: guest.checkinAt,
+      expectedDeparture: guest.expectedDeparture ?? null,
+      photo: guest.photoUrl ?? null,
+    });
+    if (needsBadge(guest)) {
+      markPrinted.mutate({ id: guest.id });
+    }
+  };
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -178,6 +215,12 @@ export default function Dashboard() {
         <div className="bg-card border border-border rounded-md shadow-sm">
           <div className="p-4 border-b border-border flex items-center justify-between">
             <h3 className="font-medium">Active Guests</h3>
+            {needsBadgeCount > 0 && (
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded text-xs font-semibold bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30">
+                <Printer className="w-3.5 h-3.5" />
+                {needsBadgeCount} {needsBadgeCount === 1 ? "badge" : "badges"} to print
+              </span>
+            )}
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-sm text-left">
@@ -198,13 +241,22 @@ export default function Dashboard() {
                   <tr>
                     <td colSpan={8} className="px-4 py-8 text-center text-muted-foreground">Loading operations data...</td>
                   </tr>
-                ) : guests?.length === 0 ? (
+                ) : sortedGuests?.length === 0 ? (
                   <tr>
                     <td colSpan={8} className="px-4 py-8 text-center text-muted-foreground">No active guests on site.</td>
                   </tr>
                 ) : (
-                  guests?.map((guest) => (
-                    <tr key={guest.id} className="hover:bg-muted/30 transition-colors">
+                  sortedGuests?.map((guest) => {
+                    const awaitingBadge = needsBadge(guest);
+                    return (
+                    <tr
+                      key={guest.id}
+                      className={
+                        awaitingBadge
+                          ? "bg-amber-500/10 hover:bg-amber-500/15 transition-colors"
+                          : "hover:bg-muted/30 transition-colors"
+                      }
+                    >
                       <td className="px-4 py-3 font-medium">
                         <div className="flex items-center gap-3">
                           <GuestAvatar name={guest.name} photoUrl={guest.photoUrl} />
@@ -217,41 +269,36 @@ export default function Dashboard() {
                       <td className="px-4 py-3 text-muted-foreground">{guest.studios?.length ? guest.studios.join(", ") : "—"}</td>
                       <td className="px-4 py-3 font-mono text-xs">{guest.timeOnSiteMinutes}m</td>
                       <td className="px-4 py-3">
-                        {guest.isOverdue ? (
-                          <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-destructive/20 text-destructive border border-destructive/30">
-                            OVERDUE
-                          </span>
-                        ) : (
-                          <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-primary/20 text-primary border border-primary/30">
-                            ACTIVE
-                          </span>
-                        )}
+                        <div className="flex flex-wrap items-center gap-1.5">
+                          {awaitingBadge && (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-semibold bg-amber-500/20 text-amber-600 dark:text-amber-400 border border-amber-500/40">
+                              <Printer className="w-3 h-3" /> NEEDS BADGE
+                            </span>
+                          )}
+                          {guest.isOverdue ? (
+                            <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-destructive/20 text-destructive border border-destructive/30">
+                              OVERDUE
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-primary/20 text-primary border border-primary/30">
+                              ACTIVE
+                            </span>
+                          )}
+                        </div>
                       </td>
                       <td className="px-4 py-3 text-right">
                         <Button
-                          variant="outline"
+                          variant={awaitingBadge ? "default" : "outline"}
                           size="sm"
-                          onClick={() =>
-                            setPrintData({
-                              badgeId: guest.badgeId,
-                              name: guest.name,
-                              company: guest.company,
-                              host: guest.hostName,
-                              site: guest.site,
-                              studios: guest.studios ?? [],
-                              purpose: guest.purposeOfVisit,
-                              checkinAt: guest.checkinAt,
-                              expectedDeparture: guest.expectedDeparture ?? null,
-                              photo: guest.photoUrl ?? null,
-                            })
-                          }
+                          onClick={() => handlePrint(guest)}
                           data-testid={`button-print-badge-${guest.id}`}
                         >
                           <Printer className="w-4 h-4 mr-1.5" /> Print Badge
                         </Button>
                       </td>
                     </tr>
-                  ))
+                    );
+                  })
                 )}
               </tbody>
             </table>

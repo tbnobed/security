@@ -142,6 +142,7 @@ router.post("/kiosk/checkin", requireAuth, async (req, res): Promise<void> => {
         checkedInByClerkId: kioskUserId,
         preregistrationId: preg.id,
         status: "active",
+        checkinSource: "kiosk",
       })
       .returning();
 
