@@ -7,5 +7,13 @@
  */
 
 export interface KnownGuestUpdate {
-  isVip: boolean;
+  /** @minLength 1 */
+  name?: string;
+  /** @nullable */
+  company?: string | null;
+  /** @nullable */
+  phone?: string | null;
+  /** @nullable */
+  email?: string | null;
+  isVip?: boolean;
 }

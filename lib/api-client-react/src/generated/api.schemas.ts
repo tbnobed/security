@@ -181,8 +181,23 @@ export interface KnownGuest {
   createdAt: string;
 }
 
+export interface KnownGuestList {
+  items: KnownGuest[];
+  total: number;
+  page: number;
+  pageSize: number;
+}
+
 export interface KnownGuestUpdate {
-  isVip: boolean;
+  /** @minLength 1 */
+  name?: string;
+  /** @nullable */
+  company?: string | null;
+  /** @nullable */
+  phone?: string | null;
+  /** @nullable */
+  email?: string | null;
+  isVip?: boolean;
 }
 
 export type WatchlistEntryAction = typeof WatchlistEntryAction[keyof typeof WatchlistEntryAction];
@@ -244,6 +259,9 @@ export const AuditEntryEventType = {
   user_created: 'user_created',
   role_changed: 'role_changed',
   password_reset: 'password_reset',
+  known_guest_vip: 'known_guest_vip',
+  known_guest_edited: 'known_guest_edited',
+  known_guest_deleted: 'known_guest_deleted',
 } as const;
 
 export interface AuditEntry {
@@ -489,6 +507,17 @@ name: string;
 export type ListKnownGuestsParams = {
 q?: string;
 vip?: boolean;
+/**
+ * 1-based page number
+ * @minimum 1
+ */
+page?: number;
+/**
+ * Number of items per page
+ * @minimum 1
+ * @maximum 100
+ */
+pageSize?: number;
 };
 
 export type KioskListPreregistrationsParams = {

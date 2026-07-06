@@ -34,6 +34,7 @@ export * from './kioskCheckinRequest';
 export * from './kioskListPreregistrationsParams';
 export * from './kioskPreregistration';
 export * from './knownGuest';
+export * from './knownGuestList';
 export * from './knownGuestUpdate';
 export * from './listAuditLogParams';
 export * from './listGuestsParams';

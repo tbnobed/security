@@ -649,12 +649,22 @@ export const CheckWatchlistResponse = zod.object({
 /**
  * @summary List known (returning) guests with visit stats
  */
+export const listKnownGuestsQueryPageDefault = 1;
+
+export const listKnownGuestsQueryPageSizeDefault = 20;
+export const listKnownGuestsQueryPageSizeMax = 100;
+
+
+
 export const ListKnownGuestsQueryParams = zod.object({
   "q": zod.coerce.string().optional(),
-  "vip": zod.coerce.boolean().optional()
+  "vip": zod.coerce.boolean().optional(),
+  "page": zod.coerce.number().min(1).default(listKnownGuestsQueryPageDefault).describe('1-based page number'),
+  "pageSize": zod.coerce.number().min(1).max(listKnownGuestsQueryPageSizeMax).default(listKnownGuestsQueryPageSizeDefault).describe('Number of items per page')
 })
 
-export const ListKnownGuestsResponseItem = zod.object({
+export const ListKnownGuestsResponse = zod.object({
+  "items": zod.array(zod.object({
   "id": zod.number(),
   "name": zod.string(),
   "company": zod.string().nullish(),
@@ -665,19 +675,29 @@ export const ListKnownGuestsResponseItem = zod.object({
   "visitCount": zod.number(),
   "lastVisitAt": zod.coerce.date().nullish(),
   "createdAt": zod.coerce.date()
+})),
+  "total": zod.number(),
+  "page": zod.number(),
+  "pageSize": zod.number()
 })
-export const ListKnownGuestsResponse = zod.array(ListKnownGuestsResponseItem)
 
 
 /**
- * @summary Update a known guest (VIP flag)
+ * @summary Update a known guest (name, company, contact, VIP flag)
  */
 export const UpdateKnownGuestParams = zod.object({
   "id": zod.coerce.number()
 })
 
+
+
+
 export const UpdateKnownGuestBody = zod.object({
-  "isVip": zod.boolean()
+  "name": zod.string().min(1).optional(),
+  "company": zod.string().nullish(),
+  "phone": zod.string().nullish(),
+  "email": zod.string().nullish(),
+  "isVip": zod.boolean().optional()
 })
 
 export const UpdateKnownGuestResponse = zod.object({
@@ -692,6 +712,16 @@ export const UpdateKnownGuestResponse = zod.object({
   "lastVisitAt": zod.coerce.date().nullish(),
   "createdAt": zod.coerce.date()
 })
+
+
+/**
+ * @summary Delete a known guest profile
+ */
+export const DeleteKnownGuestParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const DeleteKnownGuestResponse = zod.void()
 
 
 /**
@@ -800,7 +830,7 @@ export const ListAuditLogQueryParams = zod.object({
 
 export const ListAuditLogResponseItem = zod.object({
   "id": zod.number(),
-  "eventType": zod.enum(['checkin', 'checkout', 'preregistration', 'watchlist_flag', 'watchlist_block', 'user_created', 'role_changed', 'password_reset']),
+  "eventType": zod.enum(['checkin', 'checkout', 'preregistration', 'watchlist_flag', 'watchlist_block', 'user_created', 'role_changed', 'password_reset', 'known_guest_vip', 'known_guest_edited', 'known_guest_deleted']),
   "guestId": zod.number().nullable(),
   "guestName": zod.string(),
   "operatorClerkId": zod.string(),

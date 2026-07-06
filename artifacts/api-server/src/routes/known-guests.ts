@@ -9,6 +9,7 @@ import {
   UpdateKnownGuestResponse,
   ListKnownGuestVisitsParams,
   ListKnownGuestVisitsResponse,
+  DeleteKnownGuestParams,
 } from "@workspace/api-zod";
 import { requireOperator, getSessionUserId } from "../lib/auth";
 import { toGuestResponse } from "./guests";
@@ -54,6 +55,8 @@ router.get("/known-guests", requireOperator, async (req, res): Promise<void> => 
     return;
   }
   const { q, vip } = parsed.data;
+  const page = parsed.data.page ?? 1;
+  const pageSize = parsed.data.pageSize ?? 20;
 
   const conditions = [];
   if (q && q.trim()) {
@@ -65,13 +68,27 @@ router.get("/known-guests", requireOperator, async (req, res): Promise<void> => 
   if (vip === true) {
     conditions.push(eq(knownGuestsTable.isVip, true));
   }
+  const where = conditions.length > 0 ? sql.join(conditions, sql` AND `) : undefined;
+
+  const [{ total }] = await db
+    .select({ total: sql<number>`count(*)::int` })
+    .from(knownGuestsTable)
+    .where(where);
 
   const rows = await knownGuestStatsQuery()
-    .where(conditions.length > 0 ? sql.join(conditions, sql` AND `) : undefined)
+    .where(where)
     .orderBy(desc(knownGuestsTable.isVip), knownGuestsTable.name)
-    .limit(200);
+    .limit(pageSize)
+    .offset((page - 1) * pageSize);
 
-  res.json(ListKnownGuestsResponse.parse(rows.map(toKnownGuestResponse)));
+  res.json(
+    ListKnownGuestsResponse.parse({
+      items: rows.map(toKnownGuestResponse),
+      total,
+      page,
+      pageSize,
+    }),
+  );
 });
 
 router.patch("/known-guests/:id", requireOperator, async (req, res): Promise<void> => {
@@ -82,11 +99,36 @@ router.patch("/known-guests/:id", requireOperator, async (req, res): Promise<voi
     return;
   }
 
-  const [updated] = await db
-    .update(knownGuestsTable)
-    .set({ isVip: parsedBody.data.isVip, updatedAt: new Date() })
-    .where(eq(knownGuestsTable.id, parsedParams.data.id))
-    .returning();
+  const body = parsedBody.data;
+  const changes: Partial<typeof knownGuestsTable.$inferInsert> = {};
+  if (body.name !== undefined) changes.name = body.name.trim();
+  if (body.company !== undefined) changes.company = body.company?.trim() || null;
+  if (body.phone !== undefined) changes.phone = body.phone?.trim() || null;
+  if (body.email !== undefined) changes.email = body.email?.trim() || null;
+  if (body.isVip !== undefined) changes.isVip = body.isVip;
+
+  if (Object.keys(changes).length === 0) {
+    res.status(400).json({ error: "No fields to update" });
+    return;
+  }
+
+  let updated: typeof knownGuestsTable.$inferSelect | undefined;
+  try {
+    [updated] = await db
+      .update(knownGuestsTable)
+      .set({ ...changes, updatedAt: new Date() })
+      .where(eq(knownGuestsTable.id, parsedParams.data.id))
+      .returning();
+  } catch (err) {
+    const code =
+      (err as { code?: string })?.code ??
+      (err as { cause?: { code?: string } })?.cause?.code;
+    if (code === "23505") {
+      res.status(409).json({ error: "Another known guest already has that name" });
+      return;
+    }
+    throw err;
+  }
 
   if (!updated) {
     res.status(404).json({ error: "Known guest not found" });
@@ -94,17 +136,47 @@ router.patch("/known-guests/:id", requireOperator, async (req, res): Promise<voi
   }
 
   const clerkId = getSessionUserId(req) ?? "unknown";
+  const onlyVipChange = Object.keys(changes).length === 1 && "isVip" in changes;
   await db.insert(auditTable).values({
-    eventType: "known_guest_vip",
+    eventType: onlyVipChange ? "known_guest_vip" : "known_guest_edited",
     guestName: updated.name,
     operatorClerkId: clerkId,
     operatorName: clerkId,
-    metadata: JSON.stringify({ knownGuestId: updated.id, isVip: updated.isVip }),
+    metadata: JSON.stringify({ knownGuestId: updated.id, fields: Object.keys(changes) }),
   });
 
   const [row] = await knownGuestStatsQuery().where(eq(knownGuestsTable.id, updated.id));
 
   res.json(UpdateKnownGuestResponse.parse(toKnownGuestResponse(row)));
+});
+
+router.delete("/known-guests/:id", requireOperator, async (req, res): Promise<void> => {
+  const parsed = DeleteKnownGuestParams.safeParse(req.params);
+  if (!parsed.success) {
+    res.status(400).json({ error: parsed.error.message });
+    return;
+  }
+
+  const [deleted] = await db
+    .delete(knownGuestsTable)
+    .where(eq(knownGuestsTable.id, parsed.data.id))
+    .returning();
+
+  if (!deleted) {
+    res.status(404).json({ error: "Known guest not found" });
+    return;
+  }
+
+  const clerkId = getSessionUserId(req) ?? "unknown";
+  await db.insert(auditTable).values({
+    eventType: "known_guest_deleted",
+    guestName: deleted.name,
+    operatorClerkId: clerkId,
+    operatorName: clerkId,
+    metadata: JSON.stringify({ knownGuestId: deleted.id }),
+  });
+
+  res.status(204).end();
 });
 
 router.get("/known-guests/:id/visits", requireOperator, async (req, res): Promise<void> => {

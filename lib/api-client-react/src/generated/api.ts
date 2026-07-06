@@ -42,6 +42,7 @@ import type {
   KioskListPreregistrationsParams,
   KioskPreregistration,
   KnownGuest,
+  KnownGuestList,
   KnownGuestUpdate,
   ListAuditLogParams,
   ListGuestsParams,
@@ -2045,9 +2046,9 @@ export const getListKnownGuestsUrl = (params?: ListKnownGuestsParams,) => {
 /**
  * @summary List known (returning) guests with visit stats
  */
-export const listKnownGuests = async (params?: ListKnownGuestsParams, options?: RequestInit): Promise<KnownGuest[]> => {
+export const listKnownGuests = async (params?: ListKnownGuestsParams, options?: RequestInit): Promise<KnownGuestList> => {
 
-  return customFetch<KnownGuest[]>(getListKnownGuestsUrl(params),
+  return customFetch<KnownGuestList>(getListKnownGuestsUrl(params),
   {
     ...options,
     method: 'GET'
@@ -2120,7 +2121,7 @@ export const getUpdateKnownGuestUrl = (id: number,) => {
 }
 
 /**
- * @summary Update a known guest (VIP flag)
+ * @summary Update a known guest (name, company, contact, VIP flag)
  */
 export const updateKnownGuest = async (id: number,
     knownGuestUpdate: KnownGuestUpdate, options?: RequestInit): Promise<KnownGuest> => {
@@ -2169,7 +2170,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type UpdateKnownGuestMutationError = ErrorType<void>
 
     /**
- * @summary Update a known guest (VIP flag)
+ * @summary Update a known guest (name, company, contact, VIP flag)
  */
 export const useUpdateKnownGuest = <TError = ErrorType<void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateKnownGuest>>, TError,{id: number;data: BodyType<KnownGuestUpdate>}, TContext>, request?: SecondParameter<typeof customFetch>}
@@ -2180,6 +2181,76 @@ export const useUpdateKnownGuest = <TError = ErrorType<void>,
         TContext
       > => {
       return useMutation(getUpdateKnownGuestMutationOptions(options));
+    }
+
+export const getDeleteKnownGuestUrl = (id: number,) => {
+
+
+
+
+  return `/api/known-guests/${id}`
+}
+
+/**
+ * @summary Delete a known guest profile
+ */
+export const deleteKnownGuest = async (id: number, options?: RequestInit): Promise<void> => {
+
+  return customFetch<void>(getDeleteKnownGuestUrl(id),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+export const getDeleteKnownGuestMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteKnownGuest>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteKnownGuest>>, TError,{id: number}, TContext> => {
+
+const mutationKey = ['deleteKnownGuest'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteKnownGuest>>, {id: number}> = (props) => {
+          const {id} = props ?? {};
+
+          return  deleteKnownGuest(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteKnownGuestMutationResult = NonNullable<Awaited<ReturnType<typeof deleteKnownGuest>>>
+
+    export type DeleteKnownGuestMutationError = ErrorType<void>
+
+    /**
+ * @summary Delete a known guest profile
+ */
+export const useDeleteKnownGuest = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteKnownGuest>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof deleteKnownGuest>>,
+        TError,
+        {id: number},
+        TContext
+      > => {
+      return useMutation(getDeleteKnownGuestMutationOptions(options));
     }
 
 export const getListKnownGuestVisitsUrl = (id: number,) => {

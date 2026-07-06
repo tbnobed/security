@@ -18,4 +18,7 @@ export const AuditEntryEventType = {
   user_created: 'user_created',
   role_changed: 'role_changed',
   password_reset: 'password_reset',
+  known_guest_vip: 'known_guest_vip',
+  known_guest_edited: 'known_guest_edited',
+  known_guest_deleted: 'known_guest_deleted',
 } as const;

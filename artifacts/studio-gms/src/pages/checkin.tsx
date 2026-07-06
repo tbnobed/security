@@ -226,9 +226,9 @@ export default function CheckIn() {
                     required
                     className="mt-1"
                   />
-                  {suggestOpen && suggestQuery.length >= 2 && (suggestions?.length ?? 0) > 0 && (
+                  {suggestOpen && suggestQuery.length >= 2 && (suggestions?.items?.length ?? 0) > 0 && (
                     <div className="absolute z-20 left-0 right-0 mt-1 bg-popover border border-border rounded-md shadow-md overflow-hidden">
-                      {suggestions!.slice(0, 6).map((kg) => (
+                      {suggestions!.items.slice(0, 6).map((kg) => (
                         <button
                           key={kg.id}
                           type="button"

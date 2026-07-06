@@ -1,5 +1,1 @@
-- [Badge print isolation](badge-print-isolation.md) — print a fixed-size card from inside a Radix dialog by cloning it to body under an @media print block; runtime photo PII (uploads/) must stay gitignored.
-- [Dedup after confirmed send](dedup-after-confirmed-send.md) — scheduler/notifier dedup columns must be stamped after a successful send, never before, or transient failures drop alerts permanently.
-- [Session cookie Secure vs HTTP](session-cookie-secure-http.md) — cookie `secure` is env-driven (SESSION_COOKIE_SECURE), not NODE_ENV; a Secure cookie silently breaks login over plain-HTTP LAN self-hosts.
-- [Drizzle SQL pitfalls](drizzle-sql-pitfalls.md) — correlated subqueries in select fields silently uncorrelate (use LEFT JOIN + GROUP BY); expression-index upserts need raw `ON CONFLICT (lower(col))`.
-- [Watchlist name matching](watchlist-matching.md) — watchlist checks must match substrings bidirectionally; unattended endpoints need atomic prereg claims.
+- [Audit eventType enum is strict](audit-eventtype-enum.md) — new audit event types must be added to openapi AuditEntry enum or GET /api/audit 500s (dashboard recent-activity is lenient and won't catch it).

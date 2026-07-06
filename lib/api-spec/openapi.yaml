@@ -529,21 +529,34 @@ paths:
           in: query
           schema:
             type: boolean
+        - name: page
+          in: query
+          description: 1-based page number
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: pageSize
+          in: query
+          description: Number of items per page
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
       responses:
         "200":
           description: Known guests
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/KnownGuest"
+                $ref: "#/components/schemas/KnownGuestList"
 
   /known-guests/{id}:
     patch:
       operationId: updateKnownGuest
       tags: [known-guests]
-      summary: Update a known guest (VIP flag)
+      summary: Update a known guest (name, company, contact, VIP flag)
       parameters:
         - name: id
           in: path
@@ -563,6 +576,23 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/KnownGuest"
+        "404":
+          description: Not found
+        "409":
+          description: Another known guest already has that name
+    delete:
+      operationId: deleteKnownGuest
+      tags: [known-guests]
+      summary: Delete a known guest profile
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
         "404":
           description: Not found
 
@@ -1202,11 +1232,37 @@ components:
           type: string
           format: date-time
 
-    KnownGuestUpdate:
+    KnownGuestList:
       type: object
       required:
-        - isVip
+        - items
+        - total
+        - page
+        - pageSize
       properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/KnownGuest"
+        total:
+          type: integer
+        page:
+          type: integer
+        pageSize:
+          type: integer
+
+    KnownGuestUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+        company:
+          type: ["string", "null"]
+        phone:
+          type: ["string", "null"]
+        email:
+          type: ["string", "null"]
         isVip:
           type: boolean
 
@@ -1293,7 +1349,7 @@ components:
           type: integer
         eventType:
           type: string
-          enum: [checkin, checkout, preregistration, watchlist_flag, watchlist_block, user_created, role_changed, password_reset]
+          enum: [checkin, checkout, preregistration, watchlist_flag, watchlist_block, user_created, role_changed, password_reset, known_guest_vip, known_guest_edited, known_guest_deleted]
         guestId:
           type: ["integer", "null"]
         guestName:
