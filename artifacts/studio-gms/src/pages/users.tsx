@@ -24,7 +24,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Shield, Users, UserPlus, KeyRound, Loader2 } from "lucide-react";
 import { format } from "date-fns";
 
-type Role = "security" | "admin" | "kiosk";
+type Role = "security" | "admin" | "kiosk" | "client";
 
 export default function UsersPage() {
   const { toast } = useToast();
@@ -43,6 +43,8 @@ export default function UsersPage() {
   const [newName, setNewName] = useState("");
   const [newRole, setNewRole] = useState<Role>("security");
   const [newPassword, setNewPassword] = useState("");
+  const [newCompany, setNewCompany] = useState("");
+  const [newNotifyEmail, setNewNotifyEmail] = useState("");
   const [addError, setAddError] = useState<string | null>(null);
 
   // Reset-password dialog state
@@ -70,6 +72,8 @@ export default function UsersPage() {
     setNewName("");
     setNewRole("security");
     setNewPassword("");
+    setNewCompany("");
+    setNewNotifyEmail("");
     setAddError(null);
   };
 
@@ -82,6 +86,11 @@ export default function UsersPage() {
       return;
     }
 
+    if (newRole === "client" && !newCompany.trim()) {
+      setAddError("Company name is required for client accounts.");
+      return;
+    }
+
     try {
       await createUser({
         data: {
@@ -89,6 +98,8 @@ export default function UsersPage() {
           password: newPassword,
           displayName: newName.trim() || undefined,
           role: newRole,
+          companyName: newRole === "client" ? newCompany.trim() : undefined,
+          notifyEmail: newRole === "client" ? newNotifyEmail.trim() || undefined : undefined,
         },
       });
       refreshUsers();
@@ -146,6 +157,7 @@ export default function UsersPage() {
             <strong>Security</strong> — can check guests in/out and view the dashboard.
             {" "}<strong>Admin</strong> — all security permissions plus watchlist, audit log, and user management.
             {" "}<strong>Kiosk</strong> — locked to the self-service check-in screen only (use for the lobby tablet).
+            {" "}<strong>Client</strong> — external client account locked to the client portal (roster + pre-registration for their company).
             Operators are created here by an administrator with an email and initial password.
           </div>
         </div>
@@ -179,6 +191,9 @@ export default function UsersPage() {
                         </div>
                         <div>
                           <div className="font-medium">{user.displayName ?? "—"}</div>
+                          {user.role === "client" && user.companyName && (
+                            <div className="text-xs text-muted-foreground">{user.companyName}</div>
+                          )}
                           {user.clerkId === me?.clerkId && (
                             <div className="text-xs text-primary">You</div>
                           )}
@@ -205,6 +220,7 @@ export default function UsersPage() {
                             <SelectItem value="security">Security</SelectItem>
                             <SelectItem value="admin">Admin</SelectItem>
                             <SelectItem value="kiosk">Kiosk</SelectItem>
+                            {user.role === "client" && <SelectItem value="client">Client</SelectItem>}
                           </SelectContent>
                         </Select>
                       )}
@@ -275,9 +291,37 @@ export default function UsersPage() {
                     <SelectItem value="security">Security</SelectItem>
                     <SelectItem value="admin">Admin</SelectItem>
                     <SelectItem value="kiosk">Kiosk</SelectItem>
+                    <SelectItem value="client">Client</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
+              {newRole === "client" && (
+                <>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="new-company">Company name</Label>
+                    <Input
+                      id="new-company"
+                      required
+                      value={newCompany}
+                      onChange={(e) => setNewCompany(e.target.value)}
+                      placeholder="Acme Productions"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="new-notify-email">Notification email (optional)</Label>
+                    <Input
+                      id="new-notify-email"
+                      type="email"
+                      value={newNotifyEmail}
+                      onChange={(e) => setNewNotifyEmail(e.target.value)}
+                      placeholder="Defaults to the sign-in email"
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Check-in notifications for this client's employees are sent here.
+                    </p>
+                  </div>
+                </>
+              )}
               <div className="space-y-1.5">
                 <Label htmlFor="new-password">Initial password</Label>
                 <Input

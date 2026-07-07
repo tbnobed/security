@@ -13,4 +13,5 @@ export const AppUserInputRole = {
   security: 'security',
   admin: 'admin',
   kiosk: 'kiosk',
+  client: 'client',
 } as const;

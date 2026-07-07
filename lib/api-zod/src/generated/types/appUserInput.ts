@@ -20,4 +20,8 @@ export interface AppUserInput {
   password: string;
   displayName?: string;
   role: AppUserInputRole;
+  /** Required when role is client */
+  companyName?: string;
+  /** Optional notification email for client accounts (defaults to login email) */
+  notifyEmail?: string;
 }

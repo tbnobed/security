@@ -16,6 +16,10 @@ export const preregistrationsTable = pgTable("preregistrations", {
   expectedDeparture: timestamp("expected_departure", { withTimezone: true }),
   status: text("status").notNull().default("pending"),
   createdByClerkId: text("created_by_clerk_id"),
+  // Set when a client-portal account created this pre-registration (visit
+  // scoping + check-in notification back to the client).
+  clientUserId: text("client_user_id"),
+  clientEmployeeId: integer("client_employee_id"),
   convertedGuestId: integer("converted_guest_id"),
   studios: text("studios").array().notNull().default(sql`'{}'::text[]`),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),

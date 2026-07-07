@@ -17,7 +17,7 @@ import { requireOperator } from "../lib/auth";
 import { generateBadgeId } from "../lib/badge";
 import { getSessionUserId } from "../lib/auth";
 import { usersTable } from "@workspace/db";
-import { sendVisitorAlert } from "../lib/alerts";
+import { sendVisitorAlert, sendClientCheckinNotification } from "../lib/alerts";
 import { upsertKnownGuest } from "../lib/known-guests";
 
 const router = Router();
@@ -217,6 +217,19 @@ router.post("/preregistrations/:id/convert", requireOperator, async (req, res): 
     email: guest.email,
     photoUrl: guest.photoUrl,
   });
+
+  if (preg.clientUserId) {
+    void sendClientCheckinNotification(preg.clientUserId, {
+      guestName: guest.name,
+      company: guest.company,
+      hostName: guest.hostName,
+      purposeOfVisit: guest.purposeOfVisit,
+      site: guest.site,
+      studios: guest.studios,
+      badgeId: guest.badgeId,
+      checkinAt: guest.checkinAt.toISOString(),
+    });
+  }
 
   const now = new Date();
   const timeOnSiteMinutes = Math.round((now.getTime() - guest.checkinAt.getTime()) / 60000);

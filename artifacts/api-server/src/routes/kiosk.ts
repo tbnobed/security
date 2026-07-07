@@ -13,9 +13,9 @@ import {
   KioskCheckinBody,
   KioskCheckinResponse,
 } from "@workspace/api-zod";
-import { requireAuth, getSessionUserId } from "../lib/auth";
+import { requireKioskAccess, getSessionUserId } from "../lib/auth";
 import { generateBadgeId } from "../lib/badge";
-import { sendVisitorAlert } from "../lib/alerts";
+import { sendVisitorAlert, sendClientCheckinNotification } from "../lib/alerts";
 import { upsertKnownGuest } from "../lib/known-guests";
 
 const router = Router();
@@ -27,7 +27,7 @@ function todayWindow(): { dayStart: Date; dayEnd: Date } {
   return { dayStart, dayEnd };
 }
 
-router.get("/kiosk/preregistrations", requireAuth, async (req, res): Promise<void> => {
+router.get("/kiosk/preregistrations", requireKioskAccess, async (req, res): Promise<void> => {
   const parsed = KioskListPreregistrationsQueryParams.safeParse(req.query);
   if (!parsed.success) {
     res.status(400).json({ error: parsed.error.message });
@@ -62,7 +62,7 @@ router.get("/kiosk/preregistrations", requireAuth, async (req, res): Promise<voi
   );
 });
 
-router.post("/kiosk/checkin", requireAuth, async (req, res): Promise<void> => {
+router.post("/kiosk/checkin", requireKioskAccess, async (req, res): Promise<void> => {
   const body = KioskCheckinBody.safeParse(req.body);
   if (!body.success) {
     res.status(400).json({ error: body.error.message });
@@ -193,6 +193,19 @@ router.post("/kiosk/checkin", requireAuth, async (req, res): Promise<void> => {
     email: guest.email,
     photoUrl: guest.photoUrl,
   });
+
+  if (preg.clientUserId) {
+    void sendClientCheckinNotification(preg.clientUserId, {
+      guestName: guest.name,
+      company: guest.company,
+      hostName: guest.hostName,
+      purposeOfVisit: guest.purposeOfVisit,
+      site: guest.site,
+      studios: guest.studios,
+      badgeId: guest.badgeId,
+      checkinAt: guest.checkinAt.toISOString(),
+    });
+  }
 
   const now = new Date();
   const timeOnSiteMinutes = Math.round((now.getTime() - guest.checkinAt.getTime()) / 60000);

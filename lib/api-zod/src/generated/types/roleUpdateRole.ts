@@ -13,4 +13,5 @@ export const RoleUpdateRole = {
   security: 'security',
   admin: 'admin',
   kiosk: 'kiosk',
+  client: 'client',
 } as const;

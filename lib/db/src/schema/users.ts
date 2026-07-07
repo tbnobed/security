@@ -14,6 +14,9 @@ export const usersTable = pgTable(
     email: text("email"),
     passwordHash: text("password_hash"),
     role: text("role").notNull().default("security"),
+    // Client-portal accounts (role === "client") only:
+    companyName: text("company_name"),
+    notifyEmail: text("notify_email"),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (table) => [

@@ -1,5 +1,5 @@
 import { eq } from "drizzle-orm";
-import { db, alertRecipientsTable } from "@workspace/db";
+import { db, alertRecipientsTable, usersTable } from "@workspace/db";
 import { sendMail, isEmailConfigured } from "./email";
 import { logger } from "./logger";
 
@@ -85,6 +85,35 @@ function escapeHtml(s: string): string {
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;");
+}
+
+/**
+ * Notify a client-portal account that one of their employees has checked in.
+ * Sends to the client's notifyEmail (falling back to their login email).
+ * Fire-and-forget safe: never throws, no-ops when unconfigured.
+ */
+export async function sendClientCheckinNotification(
+  clientUserId: string,
+  ctx: AlertContext,
+): Promise<boolean> {
+  try {
+    if (!isEmailConfigured()) return false;
+
+    const [client] = await db.select().from(usersTable).where(eq(usersTable.clerkId, clientUserId));
+    const to = client?.notifyEmail ?? client?.email;
+    if (!client || client.role !== "client" || !to) return false;
+
+    const { text, html } = buildBody("checkin", ctx);
+    const subject = `[FrontDesk] ${ctx.guestName} has checked in`;
+    const ok = await sendMail({ to: [to], subject, text, html });
+    if (ok) {
+      logger.info({ clientUserId }, "Sent client check-in notification");
+    }
+    return ok;
+  } catch (err) {
+    logger.error({ err, clientUserId }, "sendClientCheckinNotification failed");
+    return false;
+  }
 }
 
 /**

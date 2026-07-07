@@ -30,6 +30,14 @@ import type {
   AuditEntry,
   BadgeData,
   CheckWatchlistParams,
+  ClientBulkPreregisterRequest,
+  ClientBulkPreregisterResult,
+  ClientEmployee,
+  ClientEmployeeImportRequest,
+  ClientEmployeeImportResult,
+  ClientEmployeeInput,
+  ClientEmployeeUpdate,
+  ClientVisit,
   ConvertPreregistrationInput,
   DashboardSummary,
   ExportAuditLogParams,
@@ -48,6 +56,7 @@ import type {
   ListGuestsParams,
   ListKnownGuestsParams,
   ListPreregistrationsParams,
+  ListRosterEmployeesParams,
   LoginInput,
   PhotoResult,
   PhotoUpload,
@@ -2483,6 +2492,595 @@ export const useKioskCheckin = <TError = ErrorType<void>,
       > => {
       return useMutation(getKioskCheckinMutationOptions(options));
     }
+
+export const getListRosterEmployeesUrl = (params?: ListRosterEmployeesParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/client/employees?${stringifiedParams}` : `/api/client/employees`
+}
+
+/**
+ * @summary List the signed-in client's employee roster
+ */
+export const listRosterEmployees = async (params?: ListRosterEmployeesParams, options?: RequestInit): Promise<ClientEmployee[]> => {
+
+  return customFetch<ClientEmployee[]>(getListRosterEmployeesUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListRosterEmployeesQueryKey = (params?: ListRosterEmployeesParams,) => {
+    return [
+    `/api/client/employees`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getListRosterEmployeesQueryOptions = <TData = Awaited<ReturnType<typeof listRosterEmployees>>, TError = ErrorType<unknown>>(params?: ListRosterEmployeesParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listRosterEmployees>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListRosterEmployeesQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listRosterEmployees>>> = ({ signal }) => listRosterEmployees(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listRosterEmployees>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListRosterEmployeesQueryResult = NonNullable<Awaited<ReturnType<typeof listRosterEmployees>>>
+export type ListRosterEmployeesQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary List the signed-in client's employee roster
+ */
+
+export function useListRosterEmployees<TData = Awaited<ReturnType<typeof listRosterEmployees>>, TError = ErrorType<unknown>>(
+ params?: ListRosterEmployeesParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listRosterEmployees>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListRosterEmployeesQueryOptions(params,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getCreateRosterEmployeeUrl = () => {
+
+
+
+
+  return `/api/client/employees`
+}
+
+/**
+ * @summary Add an employee to the roster
+ */
+export const createRosterEmployee = async (clientEmployeeInput: ClientEmployeeInput, options?: RequestInit): Promise<ClientEmployee> => {
+
+  return customFetch<ClientEmployee>(getCreateRosterEmployeeUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(clientEmployeeInput)
+  }
+);}
+
+
+
+
+export const getCreateRosterEmployeeMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createRosterEmployee>>, TError,{data: BodyType<ClientEmployeeInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createRosterEmployee>>, TError,{data: BodyType<ClientEmployeeInput>}, TContext> => {
+
+const mutationKey = ['createRosterEmployee'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createRosterEmployee>>, {data: BodyType<ClientEmployeeInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  createRosterEmployee(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateRosterEmployeeMutationResult = NonNullable<Awaited<ReturnType<typeof createRosterEmployee>>>
+    export type CreateRosterEmployeeMutationBody = BodyType<ClientEmployeeInput>
+    export type CreateRosterEmployeeMutationError = ErrorType<void>
+
+    /**
+ * @summary Add an employee to the roster
+ */
+export const useCreateRosterEmployee = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createRosterEmployee>>, TError,{data: BodyType<ClientEmployeeInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createRosterEmployee>>,
+        TError,
+        {data: BodyType<ClientEmployeeInput>},
+        TContext
+      > => {
+      return useMutation(getCreateRosterEmployeeMutationOptions(options));
+    }
+
+export const getImportRosterEmployeesUrl = () => {
+
+
+
+
+  return `/api/client/employees/import`
+}
+
+/**
+ * @summary Bulk-import employees (parsed CSV rows)
+ */
+export const importRosterEmployees = async (clientEmployeeImportRequest: ClientEmployeeImportRequest, options?: RequestInit): Promise<ClientEmployeeImportResult> => {
+
+  return customFetch<ClientEmployeeImportResult>(getImportRosterEmployeesUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(clientEmployeeImportRequest)
+  }
+);}
+
+
+
+
+export const getImportRosterEmployeesMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof importRosterEmployees>>, TError,{data: BodyType<ClientEmployeeImportRequest>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof importRosterEmployees>>, TError,{data: BodyType<ClientEmployeeImportRequest>}, TContext> => {
+
+const mutationKey = ['importRosterEmployees'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof importRosterEmployees>>, {data: BodyType<ClientEmployeeImportRequest>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  importRosterEmployees(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ImportRosterEmployeesMutationResult = NonNullable<Awaited<ReturnType<typeof importRosterEmployees>>>
+    export type ImportRosterEmployeesMutationBody = BodyType<ClientEmployeeImportRequest>
+    export type ImportRosterEmployeesMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Bulk-import employees (parsed CSV rows)
+ */
+export const useImportRosterEmployees = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof importRosterEmployees>>, TError,{data: BodyType<ClientEmployeeImportRequest>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof importRosterEmployees>>,
+        TError,
+        {data: BodyType<ClientEmployeeImportRequest>},
+        TContext
+      > => {
+      return useMutation(getImportRosterEmployeesMutationOptions(options));
+    }
+
+export const getUpdateRosterEmployeeUrl = (id: number,) => {
+
+
+
+
+  return `/api/client/employees/${id}`
+}
+
+/**
+ * @summary Update an employee
+ */
+export const updateRosterEmployee = async (id: number,
+    clientEmployeeUpdate: ClientEmployeeUpdate, options?: RequestInit): Promise<ClientEmployee> => {
+
+  return customFetch<ClientEmployee>(getUpdateRosterEmployeeUrl(id),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(clientEmployeeUpdate)
+  }
+);}
+
+
+
+
+export const getUpdateRosterEmployeeMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateRosterEmployee>>, TError,{id: number;data: BodyType<ClientEmployeeUpdate>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateRosterEmployee>>, TError,{id: number;data: BodyType<ClientEmployeeUpdate>}, TContext> => {
+
+const mutationKey = ['updateRosterEmployee'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateRosterEmployee>>, {id: number;data: BodyType<ClientEmployeeUpdate>}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  updateRosterEmployee(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateRosterEmployeeMutationResult = NonNullable<Awaited<ReturnType<typeof updateRosterEmployee>>>
+    export type UpdateRosterEmployeeMutationBody = BodyType<ClientEmployeeUpdate>
+    export type UpdateRosterEmployeeMutationError = ErrorType<void>
+
+    /**
+ * @summary Update an employee
+ */
+export const useUpdateRosterEmployee = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateRosterEmployee>>, TError,{id: number;data: BodyType<ClientEmployeeUpdate>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updateRosterEmployee>>,
+        TError,
+        {id: number;data: BodyType<ClientEmployeeUpdate>},
+        TContext
+      > => {
+      return useMutation(getUpdateRosterEmployeeMutationOptions(options));
+    }
+
+export const getDeleteRosterEmployeeUrl = (id: number,) => {
+
+
+
+
+  return `/api/client/employees/${id}`
+}
+
+/**
+ * @summary Remove an employee from the roster
+ */
+export const deleteRosterEmployee = async (id: number, options?: RequestInit): Promise<void> => {
+
+  return customFetch<void>(getDeleteRosterEmployeeUrl(id),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+export const getDeleteRosterEmployeeMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteRosterEmployee>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteRosterEmployee>>, TError,{id: number}, TContext> => {
+
+const mutationKey = ['deleteRosterEmployee'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteRosterEmployee>>, {id: number}> = (props) => {
+          const {id} = props ?? {};
+
+          return  deleteRosterEmployee(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteRosterEmployeeMutationResult = NonNullable<Awaited<ReturnType<typeof deleteRosterEmployee>>>
+
+    export type DeleteRosterEmployeeMutationError = ErrorType<void>
+
+    /**
+ * @summary Remove an employee from the roster
+ */
+export const useDeleteRosterEmployee = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteRosterEmployee>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof deleteRosterEmployee>>,
+        TError,
+        {id: number},
+        TContext
+      > => {
+      return useMutation(getDeleteRosterEmployeeMutationOptions(options));
+    }
+
+export const getListRosterEmployeeVisitsUrl = (id: number,) => {
+
+
+
+
+  return `/api/client/employees/${id}/visits`
+}
+
+/**
+ * @summary Visit history for one of the client's employees
+ */
+export const listRosterEmployeeVisits = async (id: number, options?: RequestInit): Promise<ClientVisit[]> => {
+
+  return customFetch<ClientVisit[]>(getListRosterEmployeeVisitsUrl(id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListRosterEmployeeVisitsQueryKey = (id: number,) => {
+    return [
+    `/api/client/employees/${id}/visits`
+    ] as const;
+    }
+
+
+export const getListRosterEmployeeVisitsQueryOptions = <TData = Awaited<ReturnType<typeof listRosterEmployeeVisits>>, TError = ErrorType<void>>(id: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listRosterEmployeeVisits>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListRosterEmployeeVisitsQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listRosterEmployeeVisits>>> = ({ signal }) => listRosterEmployeeVisits(id, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: id !== null && id !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listRosterEmployeeVisits>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListRosterEmployeeVisitsQueryResult = NonNullable<Awaited<ReturnType<typeof listRosterEmployeeVisits>>>
+export type ListRosterEmployeeVisitsQueryError = ErrorType<void>
+
+
+/**
+ * @summary Visit history for one of the client's employees
+ */
+
+export function useListRosterEmployeeVisits<TData = Awaited<ReturnType<typeof listRosterEmployeeVisits>>, TError = ErrorType<void>>(
+ id: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listRosterEmployeeVisits>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListRosterEmployeeVisitsQueryOptions(id,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getClientBulkPreregisterUrl = () => {
+
+
+
+
+  return `/api/client/preregistrations/bulk`
+}
+
+/**
+ * @summary Pre-register multiple roster employees for a visit
+ */
+export const clientBulkPreregister = async (clientBulkPreregisterRequest: ClientBulkPreregisterRequest, options?: RequestInit): Promise<ClientBulkPreregisterResult> => {
+
+  return customFetch<ClientBulkPreregisterResult>(getClientBulkPreregisterUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(clientBulkPreregisterRequest)
+  }
+);}
+
+
+
+
+export const getClientBulkPreregisterMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof clientBulkPreregister>>, TError,{data: BodyType<ClientBulkPreregisterRequest>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof clientBulkPreregister>>, TError,{data: BodyType<ClientBulkPreregisterRequest>}, TContext> => {
+
+const mutationKey = ['clientBulkPreregister'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof clientBulkPreregister>>, {data: BodyType<ClientBulkPreregisterRequest>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  clientBulkPreregister(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ClientBulkPreregisterMutationResult = NonNullable<Awaited<ReturnType<typeof clientBulkPreregister>>>
+    export type ClientBulkPreregisterMutationBody = BodyType<ClientBulkPreregisterRequest>
+    export type ClientBulkPreregisterMutationError = ErrorType<void>
+
+    /**
+ * @summary Pre-register multiple roster employees for a visit
+ */
+export const useClientBulkPreregister = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof clientBulkPreregister>>, TError,{data: BodyType<ClientBulkPreregisterRequest>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof clientBulkPreregister>>,
+        TError,
+        {data: BodyType<ClientBulkPreregisterRequest>},
+        TContext
+      > => {
+      return useMutation(getClientBulkPreregisterMutationOptions(options));
+    }
+
+export const getListClientVisitsTodayUrl = () => {
+
+
+
+
+  return `/api/client/visits/today`
+}
+
+/**
+ * @summary Today's visit status for the client's pre-registered employees
+ */
+export const listClientVisitsToday = async ( options?: RequestInit): Promise<ClientVisit[]> => {
+
+  return customFetch<ClientVisit[]>(getListClientVisitsTodayUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListClientVisitsTodayQueryKey = () => {
+    return [
+    `/api/client/visits/today`
+    ] as const;
+    }
+
+
+export const getListClientVisitsTodayQueryOptions = <TData = Awaited<ReturnType<typeof listClientVisitsToday>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listClientVisitsToday>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListClientVisitsTodayQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listClientVisitsToday>>> = ({ signal }) => listClientVisitsToday({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listClientVisitsToday>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListClientVisitsTodayQueryResult = NonNullable<Awaited<ReturnType<typeof listClientVisitsToday>>>
+export type ListClientVisitsTodayQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Today's visit status for the client's pre-registered employees
+ */
+
+export function useListClientVisitsToday<TData = Awaited<ReturnType<typeof listClientVisitsToday>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listClientVisitsToday>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListClientVisitsTodayQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
 
 export const getListAuditLogUrl = (params?: ListAuditLogParams,) => {
   const normalizedParams = new URLSearchParams();

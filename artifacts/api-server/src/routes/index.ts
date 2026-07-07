@@ -13,6 +13,7 @@ import studiosRouter from "./studios";
 import alertsRouter from "./alerts";
 import knownGuestsRouter from "./known-guests";
 import kioskRouter from "./kiosk";
+import clientRouter from "./client";
 
 const router: IRouter = Router();
 
@@ -30,5 +31,6 @@ router.use(studiosRouter);
 router.use(alertsRouter);
 router.use(knownGuestsRouter);
 router.use(kioskRouter);
+router.use(clientRouter);
 
 export default router;

@@ -60,6 +60,52 @@ export async function requireOperator(
   next();
 }
 
+/**
+ * Requires an authenticated user allowed to use the kiosk endpoints:
+ * kiosk, security, or admin. Client-portal accounts are rejected — they
+ * must not see other companies' preregistrations or perform check-ins.
+ */
+export async function requireKioskAccess(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+): Promise<void> {
+  const userId = req.session?.userId;
+  if (!userId) {
+    res.status(401).json({ error: "Unauthorized" });
+    return;
+  }
+  const [user] = await db.select().from(usersTable).where(eq(usersTable.clerkId, userId));
+  if (!user || (user.role !== "kiosk" && user.role !== "security" && user.role !== "admin")) {
+    res.status(403).json({ error: "Kiosk access required" });
+    return;
+  }
+  next();
+}
+
+/**
+ * Requires an authenticated user whose role is client (client-portal account).
+ * Attaches the loaded user row to res.locals.clientUser for handlers.
+ */
+export async function requireClient(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+): Promise<void> {
+  const userId = req.session?.userId;
+  if (!userId) {
+    res.status(401).json({ error: "Unauthorized" });
+    return;
+  }
+  const [user] = await db.select().from(usersTable).where(eq(usersTable.clerkId, userId));
+  if (!user || user.role !== "client") {
+    res.status(403).json({ error: "Client access required" });
+    return;
+  }
+  res.locals.clientUser = user;
+  next();
+}
+
 export async function requireAdmin(req: Request, res: Response, next: NextFunction): Promise<void> {
   const userId = req.session?.userId;
   if (!userId) {

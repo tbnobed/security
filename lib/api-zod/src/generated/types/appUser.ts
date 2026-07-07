@@ -14,5 +14,15 @@ export interface AppUser {
   /** @nullable */
   email?: string | null;
   role: AppUserRole;
+  /**
+     * Company the account belongs to (client role only)
+     * @nullable
+     */
+  companyName?: string | null;
+  /**
+     * Email that receives check-in notifications (client role only)
+     * @nullable
+     */
+  notifyEmail?: string | null;
   createdAt: Date;
 }

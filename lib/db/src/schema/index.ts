@@ -7,3 +7,4 @@ export * from "./session";
 export * from "./studios";
 export * from "./notifications";
 export * from "./known-guests";
+export * from "./client-employees";

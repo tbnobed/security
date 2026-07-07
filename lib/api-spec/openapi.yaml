@@ -666,6 +666,167 @@ paths:
         "403":
           description: Entry requires assistance at the security desk
 
+  /client/employees:
+    get:
+      operationId: listRosterEmployees
+      tags: [client]
+      summary: List the signed-in client's employee roster
+      parameters:
+        - name: q
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Employees
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ClientEmployee"
+    post:
+      operationId: createRosterEmployee
+      tags: [client]
+      summary: Add an employee to the roster
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ClientEmployeeInput"
+      responses:
+        "201":
+          description: Created employee
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ClientEmployee"
+        "409":
+          description: An employee with this name already exists
+
+  /client/employees/import:
+    post:
+      operationId: importRosterEmployees
+      tags: [client]
+      summary: Bulk-import employees (parsed CSV rows)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ClientEmployeeImportRequest"
+      responses:
+        "200":
+          description: Import result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ClientEmployeeImportResult"
+
+  /client/employees/{id}:
+    patch:
+      operationId: updateRosterEmployee
+      tags: [client]
+      summary: Update an employee
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ClientEmployeeUpdate"
+      responses:
+        "200":
+          description: Updated employee
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ClientEmployee"
+        "404":
+          description: Not found
+        "409":
+          description: An employee with this name already exists
+    delete:
+      operationId: deleteRosterEmployee
+      tags: [client]
+      summary: Remove an employee from the roster
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+        "404":
+          description: Not found
+
+  /client/employees/{id}/visits:
+    get:
+      operationId: listRosterEmployeeVisits
+      tags: [client]
+      summary: Visit history for one of the client's employees
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Past visits
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ClientVisit"
+        "404":
+          description: Not found
+
+  /client/preregistrations/bulk:
+    post:
+      operationId: clientBulkPreregister
+      tags: [client]
+      summary: Pre-register multiple roster employees for a visit
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ClientBulkPreregisterRequest"
+      responses:
+        "201":
+          description: Bulk pre-registration result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ClientBulkPreregisterResult"
+        "400":
+          description: Invalid request
+
+  /client/visits/today:
+    get:
+      operationId: listClientVisitsToday
+      tags: [client]
+      summary: Today's visit status for the client's pre-registered employees
+      responses:
+        "200":
+          description: Today's visits with live status
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ClientVisit"
+
   /audit:
     get:
       operationId: listAuditLog
@@ -1349,7 +1510,7 @@ components:
           type: integer
         eventType:
           type: string
-          enum: [checkin, checkout, preregistration, watchlist_flag, watchlist_block, user_created, role_changed, password_reset, known_guest_vip, known_guest_edited, known_guest_deleted]
+          enum: [checkin, checkout, preregistration, watchlist_flag, watchlist_block, user_created, role_changed, password_reset, known_guest_vip, known_guest_edited, known_guest_deleted, client_employee_added, client_employee_edited, client_employee_deleted, client_employees_imported]
         guestId:
           type: ["integer", "null"]
         guestName:
@@ -1393,7 +1554,13 @@ components:
           type: ["string", "null"]
         role:
           type: string
-          enum: [security, admin, kiosk]
+          enum: [security, admin, kiosk, client]
+        companyName:
+          type: ["string", "null"]
+          description: Company the account belongs to (client role only)
+        notifyEmail:
+          type: ["string", "null"]
+          description: Email that receives check-in notifications (client role only)
         createdAt:
           type: string
           format: date-time
@@ -1418,7 +1585,14 @@ components:
           type: string
         role:
           type: string
-          enum: [security, admin, kiosk]
+          enum: [security, admin, kiosk, client]
+        companyName:
+          type: string
+          description: Required when role is client
+        notifyEmail:
+          type: string
+          format: email
+          description: Optional notification email for client accounts (defaults to login email)
 
     ResetPasswordInput:
       type: object
@@ -1442,7 +1616,175 @@ components:
       properties:
         role:
           type: string
-          enum: [security, admin, kiosk]
+          enum: [security, admin, kiosk, client]
+
+    ClientEmployee:
+      type: object
+      required:
+        - id
+        - name
+        - createdAt
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        title:
+          type: ["string", "null"]
+        phone:
+          type: ["string", "null"]
+        email:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+          format: date-time
+
+    ClientEmployeeInput:
+      type: object
+      required:
+        - name
+      properties:
+        name:
+          type: string
+          minLength: 1
+        title:
+          type: string
+        phone:
+          type: string
+        email:
+          type: string
+
+    ClientEmployeeUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+        title:
+          type: ["string", "null"]
+        phone:
+          type: ["string", "null"]
+        email:
+          type: ["string", "null"]
+
+    ClientEmployeeImportRequest:
+      type: object
+      required:
+        - rows
+      properties:
+        rows:
+          type: array
+          minItems: 1
+          maxItems: 500
+          items:
+            $ref: "#/components/schemas/ClientEmployeeInput"
+
+    ClientEmployeeImportResult:
+      type: object
+      required:
+        - imported
+        - skipped
+        - errors
+      properties:
+        imported:
+          type: integer
+        skipped:
+          type: integer
+          description: Rows skipped because an employee with the same name already exists
+        errors:
+          type: array
+          items:
+            type: object
+            required:
+              - row
+              - message
+            properties:
+              row:
+                type: integer
+                description: 1-based index into the submitted rows
+              message:
+                type: string
+
+    ClientBulkPreregisterRequest:
+      type: object
+      required:
+        - employeeIds
+        - hostName
+        - site
+        - expectedArrival
+      properties:
+        site:
+          type: string
+          minLength: 1
+        employeeIds:
+          type: array
+          minItems: 1
+          maxItems: 200
+          items:
+            type: integer
+        hostName:
+          type: string
+          minLength: 1
+        purposeOfVisit:
+          type: string
+        expectedArrival:
+          type: string
+          format: date-time
+        expectedDeparture:
+          type: string
+          format: date-time
+        studios:
+          type: array
+          items:
+            type: string
+
+    ClientBulkPreregisterResult:
+      type: object
+      required:
+        - created
+        - preregistrations
+      properties:
+        created:
+          type: integer
+        preregistrations:
+          type: array
+          items:
+            $ref: "#/components/schemas/Preregistration"
+
+    ClientVisit:
+      type: object
+      required:
+        - preregistrationId
+        - guestName
+        - status
+        - expectedArrival
+      properties:
+        preregistrationId:
+          type: integer
+        clientEmployeeId:
+          type: ["integer", "null"]
+        guestName:
+          type: string
+        hostName:
+          type: ["string", "null"]
+        purposeOfVisit:
+          type: ["string", "null"]
+        studios:
+          type: array
+          items:
+            type: string
+        status:
+          type: string
+          enum: [expected, on_site, checked_out]
+        expectedArrival:
+          type: string
+          format: date-time
+        checkinAt:
+          type: ["string", "null"]
+          format: date-time
+        checkoutAt:
+          type: ["string", "null"]
+          format: date-time
 
     KioskPreregistration:
       type: object

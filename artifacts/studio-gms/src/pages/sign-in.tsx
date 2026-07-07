@@ -31,7 +31,11 @@ export default function SignInPage() {
   };
 
   if (isSignedIn) {
-    return <Redirect to={user?.role === "kiosk" ? "/kiosk" : "/dashboard"} />;
+    return (
+      <Redirect
+        to={user?.role === "kiosk" ? "/kiosk" : user?.role === "client" ? "/portal" : "/dashboard"}
+      />
+    );
   }
 
   return (

@@ -21,4 +21,8 @@ export const AuditEntryEventType = {
   known_guest_vip: 'known_guest_vip',
   known_guest_edited: 'known_guest_edited',
   known_guest_deleted: 'known_guest_deleted',
+  client_employee_added: 'client_employee_added',
+  client_employee_edited: 'client_employee_edited',
+  client_employee_deleted: 'client_employee_deleted',
+  client_employees_imported: 'client_employees_imported',
 } as const;

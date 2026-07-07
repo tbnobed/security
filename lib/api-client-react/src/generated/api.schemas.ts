@@ -262,6 +262,10 @@ export const AuditEntryEventType = {
   known_guest_vip: 'known_guest_vip',
   known_guest_edited: 'known_guest_edited',
   known_guest_deleted: 'known_guest_deleted',
+  client_employee_added: 'client_employee_added',
+  client_employee_edited: 'client_employee_edited',
+  client_employee_deleted: 'client_employee_deleted',
+  client_employees_imported: 'client_employees_imported',
 } as const;
 
 export interface AuditEntry {
@@ -294,6 +298,7 @@ export const AppUserRole = {
   security: 'security',
   admin: 'admin',
   kiosk: 'kiosk',
+  client: 'client',
 } as const;
 
 export interface AppUser {
@@ -303,6 +308,16 @@ export interface AppUser {
   /** @nullable */
   email?: string | null;
   role: AppUserRole;
+  /**
+     * Company the account belongs to (client role only)
+     * @nullable
+     */
+  companyName?: string | null;
+  /**
+     * Email that receives check-in notifications (client role only)
+     * @nullable
+     */
+  notifyEmail?: string | null;
   createdAt: string;
 }
 
@@ -313,6 +328,7 @@ export const AppUserInputRole = {
   security: 'security',
   admin: 'admin',
   kiosk: 'kiosk',
+  client: 'client',
 } as const;
 
 export interface AppUserInput {
@@ -328,6 +344,10 @@ export interface AppUserInput {
   password: string;
   displayName?: string;
   role: AppUserInputRole;
+  /** Required when role is client */
+  companyName?: string;
+  /** Optional notification email for client accounts (defaults to login email) */
+  notifyEmail?: string;
 }
 
 export interface ResetPasswordInput {
@@ -346,10 +366,111 @@ export const RoleUpdateRole = {
   security: 'security',
   admin: 'admin',
   kiosk: 'kiosk',
+  client: 'client',
 } as const;
 
 export interface RoleUpdate {
   role: RoleUpdateRole;
+}
+
+export interface ClientEmployee {
+  id: number;
+  name: string;
+  /** @nullable */
+  title?: string | null;
+  /** @nullable */
+  phone?: string | null;
+  /** @nullable */
+  email?: string | null;
+  createdAt: string;
+}
+
+export interface ClientEmployeeInput {
+  /** @minLength 1 */
+  name: string;
+  title?: string;
+  phone?: string;
+  email?: string;
+}
+
+export interface ClientEmployeeUpdate {
+  /** @minLength 1 */
+  name?: string;
+  /** @nullable */
+  title?: string | null;
+  /** @nullable */
+  phone?: string | null;
+  /** @nullable */
+  email?: string | null;
+}
+
+export interface ClientEmployeeImportRequest {
+  /**
+     * @minItems 1
+     * @maxItems 500
+     */
+  rows: ClientEmployeeInput[];
+}
+
+export type ClientEmployeeImportResultErrorsItem = {
+  /** 1-based index into the submitted rows */
+  row: number;
+  message: string;
+};
+
+export interface ClientEmployeeImportResult {
+  imported: number;
+  /** Rows skipped because an employee with the same name already exists */
+  skipped: number;
+  errors: ClientEmployeeImportResultErrorsItem[];
+}
+
+export interface ClientBulkPreregisterRequest {
+  /** @minLength 1 */
+  site: string;
+  /**
+     * @minItems 1
+     * @maxItems 200
+     */
+  employeeIds: number[];
+  /** @minLength 1 */
+  hostName: string;
+  purposeOfVisit?: string;
+  expectedArrival: string;
+  expectedDeparture?: string;
+  studios?: string[];
+}
+
+export interface ClientBulkPreregisterResult {
+  created: number;
+  preregistrations: Preregistration[];
+}
+
+export type ClientVisitStatus = typeof ClientVisitStatus[keyof typeof ClientVisitStatus];
+
+
+export const ClientVisitStatus = {
+  expected: 'expected',
+  on_site: 'on_site',
+  checked_out: 'checked_out',
+} as const;
+
+export interface ClientVisit {
+  preregistrationId: number;
+  /** @nullable */
+  clientEmployeeId?: number | null;
+  guestName: string;
+  /** @nullable */
+  hostName?: string | null;
+  /** @nullable */
+  purposeOfVisit?: string | null;
+  studios?: string[];
+  status: ClientVisitStatus;
+  expectedArrival: string;
+  /** @nullable */
+  checkinAt?: string | null;
+  /** @nullable */
+  checkoutAt?: string | null;
 }
 
 export interface KioskPreregistration {
@@ -525,6 +646,10 @@ export type KioskListPreregistrationsParams = {
  * @minLength 2
  */
 q: string;
+};
+
+export type ListRosterEmployeesParams = {
+q?: string;
 };
 
 export type ListAuditLogParams = {

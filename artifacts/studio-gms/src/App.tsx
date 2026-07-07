@@ -18,6 +18,9 @@ import AlertsPage from "@/pages/alerts";
 import KnownGuestsPage from "@/pages/known-guests";
 import Preregister from "@/pages/preregister";
 import KioskPage from "@/pages/kiosk";
+import PortalPage from "@/pages/portal";
+import PortalRosterPage from "@/pages/portal-roster";
+import PortalPreregisterPage from "@/pages/portal-preregister";
 
 const queryClient = new QueryClient();
 
@@ -35,7 +38,9 @@ function HomeRedirect() {
   const { isLoading, isSignedIn, user } = useAuth();
   if (isLoading) return <AuthLoading />;
   if (!isSignedIn) return <Redirect to="/sign-in" />;
-  return <Redirect to={user?.role === "kiosk" ? "/kiosk" : "/dashboard"} />;
+  if (user?.role === "kiosk") return <Redirect to="/kiosk" />;
+  if (user?.role === "client") return <Redirect to="/portal" />;
+  return <Redirect to="/dashboard" />;
 }
 
 function ProtectedRoute({ component: Component }: { component: React.ComponentType<any> }) {
@@ -44,13 +49,26 @@ function ProtectedRoute({ component: Component }: { component: React.ComponentTy
   if (!isSignedIn) return <Redirect to="/sign-in" />;
   // Kiosk accounts are locked to the kiosk screen.
   if (user?.role === "kiosk") return <Redirect to="/kiosk" />;
+  // Client accounts are locked to the client portal.
+  if (user?.role === "client") return <Redirect to="/portal" />;
+  return <Component />;
+}
+
+function ClientRoute({ component: Component }: { component: React.ComponentType<any> }) {
+  const { isLoading, isSignedIn, user } = useAuth();
+  if (isLoading) return <AuthLoading />;
+  if (!isSignedIn) return <Redirect to="/sign-in" />;
+  if (user?.role === "kiosk") return <Redirect to="/kiosk" />;
+  if (user?.role !== "client") return <Redirect to="/dashboard" />;
   return <Component />;
 }
 
 function KioskRoute() {
-  const { isLoading, isSignedIn } = useAuth();
+  const { isLoading, isSignedIn, user } = useAuth();
   if (isLoading) return <AuthLoading />;
   if (!isSignedIn) return <Redirect to="/sign-in" />;
+  // Client-portal accounts have no business on the kiosk screen.
+  if (user?.role === "client") return <Redirect to="/portal" />;
   return <KioskPage />;
 }
 
@@ -95,6 +113,15 @@ function AppRoutes() {
           <ProtectedRoute component={AlertsPage} />
         </Route>
         <Route path="/kiosk" component={KioskRoute} />
+        <Route path="/portal">
+          <ClientRoute component={PortalPage} />
+        </Route>
+        <Route path="/portal/roster">
+          <ClientRoute component={PortalRosterPage} />
+        </Route>
+        <Route path="/portal/preregister">
+          <ClientRoute component={PortalPreregisterPage} />
+        </Route>
         <Route component={NotFound} />
       </Switch>
       <Toaster />

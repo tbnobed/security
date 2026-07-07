@@ -32,7 +32,9 @@ function toUserResponse(u: typeof usersTable.$inferSelect) {
     clerkId: u.clerkId,
     displayName: u.displayName ?? null,
     email: u.email ?? null,
-    role: u.role as "security" | "admin",
+    role: u.role as "security" | "admin" | "kiosk" | "client",
+    companyName: u.companyName ?? null,
+    notifyEmail: u.notifyEmail ?? null,
     createdAt: u.createdAt.toISOString(),
   };
 }
@@ -50,6 +52,11 @@ router.post("/users", requireAdmin, async (req, res): Promise<void> => {
   }
 
   const email = parsed.data.email.trim().toLowerCase();
+
+  if (parsed.data.role === "client" && !parsed.data.companyName?.trim()) {
+    res.status(400).json({ error: "Company name is required for client accounts" });
+    return;
+  }
 
   const [existing] = await db
     .select()
@@ -73,6 +80,10 @@ router.post("/users", requireAdmin, async (req, res): Promise<void> => {
         email,
         passwordHash,
         role: parsed.data.role,
+        companyName:
+          parsed.data.role === "client" ? (parsed.data.companyName?.trim() ?? null) : null,
+        notifyEmail:
+          parsed.data.role === "client" ? (parsed.data.notifyEmail?.trim() || null) : null,
       })
       .returning();
   } catch (err) {
