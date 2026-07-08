@@ -88,10 +88,25 @@ export default function ScanPage() {
       return false;
     }
     try {
+      // Request the highest resolution available — a driver's-license PDF417
+      // is extremely dense and reliably decodes only with plenty of pixels.
+      // Phones clamp `ideal` to their real max (typically 4K on the rear cam).
       const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: "environment", width: { ideal: 1920 }, height: { ideal: 1080 } },
+        video: { facingMode: "environment", width: { ideal: 3840 }, height: { ideal: 2160 } },
       });
       streamRef.current = stream;
+      // Ask for continuous autofocus where supported (Android Chrome honors
+      // this; iOS Safari ignores unknown constraints — safe either way).
+      const [track] = stream.getVideoTracks();
+      if (track) {
+        try {
+          await track.applyConstraints({
+            advanced: [{ focusMode: "continuous" } as MediaTrackConstraintSet],
+          });
+        } catch {
+          /* focus constraint unsupported — fine */
+        }
+      }
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
         await videoRef.current.play().catch(() => undefined);
@@ -128,6 +143,9 @@ export default function ScanPage() {
           },
         });
         readBarcodes = mod.readBarcodes;
+        // Warm-up decode: forces WASM instantiation NOW so a broken module
+        // surfaces as a visible error instead of silently failing every frame.
+        await readBarcodes(new ImageData(2, 2), { formats: ["PDF417"] });
       } catch {
         if (!cancelled) {
           setScannerError(true);
@@ -138,15 +156,34 @@ export default function ScanPage() {
       if (cancelled) return;
       scanningRef.current = true;
 
+      // Decode a bounded-size image, never the raw (possibly 4K) frame:
+      // full 4K RGBA frames are ~33MB each and can OOM/stall mobile browsers.
+      // Alternate between the center guide-box region (best pixel density
+      // when the guest fills the frame) and the full frame downscaled (in
+      // case they hold the license further away).
+      const DECODE_LONG_EDGE = 1600;
+      let frameNo = 0;
+      let consecutiveDecodeErrors = 0;
+
       const tick = async () => {
         if (cancelled || !scanningRef.current) return;
         const video = videoRef.current;
         const canvas = canvasRef.current;
         if (video && canvas && video.videoWidth > 0) {
-          canvas.width = video.videoWidth;
-          canvas.height = video.videoHeight;
+          const vw = video.videoWidth;
+          const vh = video.videoHeight;
+          const useCrop = frameNo % 2 === 0;
+          frameNo += 1;
+          // Center crop ≈ the on-screen guide box (80% × 60% of the frame).
+          const sw = useCrop ? Math.round(vw * 0.8) : vw;
+          const sh = useCrop ? Math.round(vh * 0.6) : vh;
+          const sx = Math.round((vw - sw) / 2);
+          const sy = Math.round((vh - sh) / 2);
+          const scale = Math.min(1, DECODE_LONG_EDGE / Math.max(sw, sh));
+          canvas.width = Math.round(sw * scale);
+          canvas.height = Math.round(sh * scale);
           const ctx = canvas.getContext("2d", { willReadFrequently: true })!;
-          ctx.drawImage(video, 0, 0);
+          ctx.drawImage(video, sx, sy, sw, sh, 0, 0, canvas.width, canvas.height);
           try {
             const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
             const results = await readBarcodes(imageData, {
@@ -154,6 +191,7 @@ export default function ScanPage() {
               tryHarder: true,
               maxNumberOfSymbols: 1,
             });
+            consecutiveDecodeErrors = 0;
             const text = results[0]?.text;
             if (text && !cancelled) {
               const parsed = parseAamvaName(text);
@@ -165,7 +203,15 @@ export default function ScanPage() {
               }
             }
           } catch {
-            /* frame decode failed — keep scanning */
+            // A single bad frame is fine, but persistent decode exceptions
+            // mean the decoder is broken on this device — surface it instead
+            // of silently scanning forever.
+            consecutiveDecodeErrors += 1;
+            if (consecutiveDecodeErrors >= 10 && !cancelled) {
+              setScannerError(true);
+              stopCamera();
+              return;
+            }
           }
         }
         if (!cancelled && scanningRef.current) setTimeout(tick, 250);
@@ -197,9 +243,12 @@ export default function ScanPage() {
     const video = videoRef.current;
     const canvas = canvasRef.current;
     if (!video || !canvas || video.videoWidth === 0) return;
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
-    canvas.getContext("2d")!.drawImage(video, 0, 0);
+    // Cap the badge photo at 1280px long edge — the camera may be running at
+    // 4K for barcode scanning, and a full-res JPEG would bloat the upload.
+    const scale = Math.min(1, 1280 / Math.max(video.videoWidth, video.videoHeight));
+    canvas.width = Math.round(video.videoWidth * scale);
+    canvas.height = Math.round(video.videoHeight * scale);
+    canvas.getContext("2d")!.drawImage(video, 0, 0, canvas.width, canvas.height);
     setPhoto(canvas.toDataURL("image/jpeg", 0.8));
     stopCamera();
   };
@@ -266,9 +315,15 @@ export default function ScanPage() {
                     <p>Camera unavailable. Allow camera access and reload, or enter the name manually.</p>
                   </div>
                 ) : (
-                  <p className="text-xs text-muted-foreground flex items-center gap-2">
-                    <Loader2 className="w-3 h-3 animate-spin" /> Scanning… only the name is read from the ID.
-                  </p>
+                  <div className="space-y-1 text-center">
+                    <p className="text-xs text-muted-foreground flex items-center justify-center gap-2">
+                      <Loader2 className="w-3 h-3 animate-spin" /> Scanning… only the name is read from the ID.
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      Fill the frame with the barcode, hold steady, and avoid glare — move slightly
+                      closer or farther until it focuses.
+                    </p>
+                  </div>
                 )}
                 <p className="text-xs text-muted-foreground text-center">
                   The barcode is read on this device only — license data never leaves the phone.{" "}
