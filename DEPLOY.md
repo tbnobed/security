@@ -75,8 +75,16 @@ docker compose logs -f web
 
 ## 4. HTTPS (recommended for production)
 
-The app ships over plain HTTP by default so it works immediately on a LAN. For
-internet-facing use, terminate TLS in front of it and then:
+The app ships over plain HTTP by default so it works immediately on a LAN.
+
+**Camera features require HTTPS on phones and tablets.** iOS Safari, Android
+Chrome, and all modern browsers only allow camera access on secure (HTTPS)
+pages. Over plain HTTP the phone ID-scan page, kiosk photo capture, and webcam
+photos will show a "camera unavailable" message with a manual-entry fallback.
+If you use the ID scan or kiosk photos, HTTPS is effectively required.
+
+For internet-facing use (or to enable camera features), terminate TLS in front
+of it and then:
 
 1. Point your TLS reverse proxy (Caddy, nginx, Traefik, or a load balancer) at
    the published `web` port.

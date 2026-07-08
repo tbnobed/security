@@ -59,6 +59,8 @@ export default function ScanPage() {
   const [errorMsg, setErrorMsg] = useState("");
   const [cameraError, setCameraError] = useState(false);
   const [manualEntry, setManualEntry] = useState(false);
+  const [insecureContext, setInsecureContext] = useState(false);
+  const [scannerError, setScannerError] = useState(false);
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -78,6 +80,13 @@ export default function ScanPage() {
 
   const startCamera = useCallback(async () => {
     setCameraError(false);
+    // iOS Safari (and modern Chrome/Android) only expose the camera in a
+    // secure context — over plain HTTP, navigator.mediaDevices is undefined.
+    if (!navigator.mediaDevices?.getUserMedia) {
+      setInsecureContext(!window.isSecureContext);
+      setCameraError(true);
+      return false;
+    }
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
         video: { facingMode: "environment", width: { ideal: 1920 }, height: { ideal: 1080 } },
@@ -98,11 +107,35 @@ export default function ScanPage() {
   useEffect(() => {
     if (step !== "scan" || manualEntry) return;
     let cancelled = false;
+    setScannerError(false);
 
     (async () => {
       const ok = await startCamera();
       if (!ok || cancelled) return;
-      const { readBarcodes } = await import("zxing-wasm/reader");
+      let readBarcodes: typeof import("zxing-wasm/reader").readBarcodes;
+      try {
+        // Serve the WASM binary from our own origin instead of the default
+        // jsDelivr CDN — required for self-hosted/offline deploys and iOS
+        // content blockers, otherwise decoding silently never starts.
+        const [mod, wasm] = await Promise.all([
+          import("zxing-wasm/reader"),
+          import("zxing-wasm/reader/zxing_reader.wasm?url"),
+        ]);
+        mod.prepareZXingModule({
+          overrides: {
+            locateFile: (path: string, prefix: string) =>
+              path.endsWith(".wasm") ? wasm.default : prefix + path,
+          },
+        });
+        readBarcodes = mod.readBarcodes;
+      } catch {
+        if (!cancelled) {
+          setScannerError(true);
+          stopCamera();
+        }
+        return;
+      }
+      if (cancelled) return;
       scanningRef.current = true;
 
       const tick = async () => {
@@ -112,7 +145,7 @@ export default function ScanPage() {
         if (video && canvas && video.videoWidth > 0) {
           canvas.width = video.videoWidth;
           canvas.height = video.videoHeight;
-          const ctx = canvas.getContext("2d")!;
+          const ctx = canvas.getContext("2d", { willReadFrequently: true })!;
           ctx.drawImage(video, 0, 0);
           try {
             const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
@@ -215,7 +248,20 @@ export default function ScanPage() {
                   <video ref={videoRef} autoPlay muted playsInline className="w-full h-full object-cover" />
                   <div className="absolute inset-6 border-2 border-primary/60 rounded pointer-events-none" />
                 </div>
-                {cameraError ? (
+                {insecureContext ? (
+                  <div className="text-sm text-destructive text-center space-y-2" data-testid="text-insecure-context">
+                    <p>
+                      The camera can't be used because this page was opened over an insecure
+                      (HTTP) connection — iPhones and modern browsers require HTTPS for camera
+                      access. Enter the name manually below, or ask your administrator to serve
+                      FrontDesk over HTTPS.
+                    </p>
+                  </div>
+                ) : scannerError ? (
+                  <div className="text-sm text-destructive text-center space-y-2" data-testid="text-scanner-error">
+                    <p>The barcode scanner failed to load on this device. Enter the name manually instead.</p>
+                  </div>
+                ) : cameraError ? (
                   <div className="text-sm text-destructive text-center space-y-2">
                     <p>Camera unavailable. Allow camera access and reload, or enter the name manually.</p>
                   </div>
