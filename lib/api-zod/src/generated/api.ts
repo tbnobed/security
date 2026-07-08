@@ -1331,6 +1331,50 @@ export const DeleteBadgeLogoResponse = zod.void()
 
 
 /**
+ * @summary Create a short-lived ID-scan session (operator; desk shows the QR)
+ */
+export const CreateScanSessionResponse = zod.object({
+  "id": zod.string(),
+  "expiresAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary Poll a scan session for its result (operator)
+ */
+export const GetScanSessionParams = zod.object({
+  "id": zod.coerce.string()
+})
+
+export const GetScanSessionResponse = zod.object({
+  "status": zod.enum(['pending', 'completed']),
+  "result": zod.object({
+  "name": zod.string(),
+  "photoUrl": zod.string().nullish()
+}).nullish()
+})
+
+
+/**
+ * @summary Submit scanned ID data from the paired phone (token-authenticated by session id)
+ */
+export const SubmitScanResultParams = zod.object({
+  "id": zod.coerce.string()
+})
+
+export const submitScanResultBodyNameMax = 200;
+
+
+
+export const SubmitScanResultBody = zod.object({
+  "name": zod.string().min(1).max(submitScanResultBodyNameMax),
+  "photoData": zod.string().optional().describe('Base64-encoded JPEG (no data-URL prefix) of the live guest photo')
+})
+
+export const SubmitScanResultResponse = zod.void()
+
+
+/**
  * @summary Upload a guest photo (base64)
  */
 export const UploadPhotoBody = zod.object({

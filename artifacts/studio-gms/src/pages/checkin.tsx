@@ -12,9 +12,10 @@ import { useToast } from "@/hooks/use-toast";
 import { useListStudios } from "@workspace/api-client-react";
 import { SITE_NAME } from "@/lib/site";
 import { PhotoCapture } from "@/components/photo-capture";
+import { ScanIdDialog } from "@/components/scan-id-dialog";
 import { VisitorBadge, type VisitorBadgeData } from "@/components/visitor-badge";
 import { printBadge } from "@/lib/print-badge";
-import { AlertTriangle, Printer, UserPlus, Star } from "lucide-react";
+import { AlertTriangle, Printer, UserPlus, Star, ScanLine } from "lucide-react";
 
 const PURPOSES = [
   "Production meeting",
@@ -43,6 +44,7 @@ export default function CheckIn() {
   const [watchlistWarning, setWatchlistWarning] = useState<string | null>(null);
   const [nameCheckTimeout, setNameCheckTimeout] = useState<ReturnType<typeof setTimeout> | null>(null);
   const [suggestOpen, setSuggestOpen] = useState(false);
+  const [scanOpen, setScanOpen] = useState(false);
 
   const suggestQuery = form.name.trim();
   const { data: suggestions } = useListKnownGuests(
@@ -89,6 +91,15 @@ export default function CheckIn() {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     { query: { enabled: false, retry: false } as any }
   );
+
+  const handleScanned = (result: { name: string; photoUrl: string | null }) => {
+    handleNameChange(result.name);
+    if (result.photoUrl) {
+      setPhoto(null);
+      setPhotoUrl(result.photoUrl);
+    }
+    toast({ title: "ID scanned", description: `Name${result.photoUrl ? " and photo" : ""} filled in from the phone.` });
+  };
 
   const handleNameChange = (value: string) => {
     setForm((f) => ({ ...f, name: value }));
@@ -214,7 +225,19 @@ export default function CheckIn() {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="sm:col-span-2 relative">
-                  <Label htmlFor="name">Full Name *</Label>
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="name">Full Name *</Label>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="h-7 px-2 text-xs"
+                      onClick={() => setScanOpen(true)}
+                      data-testid="scan-id-button"
+                    >
+                      <ScanLine className="w-3.5 h-3.5 mr-1" /> Scan ID
+                    </Button>
+                  </div>
                   <Input
                     id="name"
                     value={form.name}
@@ -320,6 +343,8 @@ export default function CheckIn() {
             </div>
           </form>
         )}
+
+        <ScanIdDialog open={scanOpen} onOpenChange={setScanOpen} onScanned={handleScanned} />
       </div>
     </Layout>
   );

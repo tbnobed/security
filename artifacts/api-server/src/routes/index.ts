@@ -15,6 +15,7 @@ import knownGuestsRouter from "./known-guests";
 import kioskRouter from "./kiosk";
 import clientRouter from "./client";
 import settingsRouter from "./settings";
+import scanSessionsRouter from "./scan-sessions";
 
 const router: IRouter = Router();
 
@@ -34,5 +35,6 @@ router.use(knownGuestsRouter);
 router.use(kioskRouter);
 router.use(clientRouter);
 router.use(settingsRouter);
+router.use(scanSessionsRouter);
 
 export default router;

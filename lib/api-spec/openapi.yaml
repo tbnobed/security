@@ -1188,6 +1188,65 @@ paths:
         "204":
           description: Badge logo removed
 
+  /scan-sessions:
+    post:
+      operationId: createScanSession
+      tags: [scan]
+      summary: Create a short-lived ID-scan session (operator; desk shows the QR)
+      responses:
+        "201":
+          description: Scan session created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ScanSession"
+
+  /scan-sessions/{id}:
+    get:
+      operationId: getScanSession
+      tags: [scan]
+      summary: Poll a scan session for its result (operator)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Scan session state
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ScanSessionState"
+        "404":
+          description: Unknown or expired session
+
+  /scan-sessions/{id}/submit:
+    post:
+      operationId: submitScanResult
+      tags: [scan]
+      summary: Submit scanned ID data from the paired phone (token-authenticated by session id)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ScanSubmission"
+      responses:
+        "204":
+          description: Scan result accepted
+        "404":
+          description: Unknown or expired session
+        "409":
+          description: Session already completed
+
   /photos:
     post:
       operationId: uploadPhoto
@@ -2171,3 +2230,48 @@ components:
           type: array
           items:
             type: string
+
+    ScanSession:
+      type: object
+      required:
+        - id
+        - expiresAt
+      properties:
+        id:
+          type: string
+        expiresAt:
+          type: string
+          format: date-time
+
+    ScanSessionState:
+      type: object
+      required:
+        - status
+      properties:
+        status:
+          type: string
+          enum: [pending, completed]
+        result:
+          type: object
+          nullable: true
+          required:
+            - name
+          properties:
+            name:
+              type: string
+            photoUrl:
+              type: string
+              nullable: true
+
+    ScanSubmission:
+      type: object
+      required:
+        - name
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 200
+        photoData:
+          type: string
+          description: Base64-encoded JPEG (no data-URL prefix) of the live guest photo

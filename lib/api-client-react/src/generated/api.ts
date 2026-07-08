@@ -69,6 +69,9 @@ import type {
   PublicPreregistrationInput,
   ResetPasswordInput,
   RoleUpdate,
+  ScanSession,
+  ScanSessionState,
+  ScanSubmission,
   SearchGuestsParams,
   Studio,
   StudioInput,
@@ -4366,6 +4369,224 @@ export const useDeleteBadgeLogo = <TError = ErrorType<unknown>,
         TContext
       > => {
       return useMutation(getDeleteBadgeLogoMutationOptions(options));
+    }
+
+export const getCreateScanSessionUrl = () => {
+
+
+
+
+  return `/api/scan-sessions`
+}
+
+/**
+ * @summary Create a short-lived ID-scan session (operator; desk shows the QR)
+ */
+export const createScanSession = async ( options?: RequestInit): Promise<ScanSession> => {
+
+  return customFetch<ScanSession>(getCreateScanSessionUrl(),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+export const getCreateScanSessionMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createScanSession>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createScanSession>>, TError,void, TContext> => {
+
+const mutationKey = ['createScanSession'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createScanSession>>, void> = () => {
+
+
+          return  createScanSession(requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateScanSessionMutationResult = NonNullable<Awaited<ReturnType<typeof createScanSession>>>
+
+    export type CreateScanSessionMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Create a short-lived ID-scan session (operator; desk shows the QR)
+ */
+export const useCreateScanSession = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createScanSession>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createScanSession>>,
+        TError,
+        void,
+        TContext
+      > => {
+      return useMutation(getCreateScanSessionMutationOptions(options));
+    }
+
+export const getGetScanSessionUrl = (id: string,) => {
+
+
+
+
+  return `/api/scan-sessions/${id}`
+}
+
+/**
+ * @summary Poll a scan session for its result (operator)
+ */
+export const getScanSession = async (id: string, options?: RequestInit): Promise<ScanSessionState> => {
+
+  return customFetch<ScanSessionState>(getGetScanSessionUrl(id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetScanSessionQueryKey = (id: string,) => {
+    return [
+    `/api/scan-sessions/${id}`
+    ] as const;
+    }
+
+
+export const getGetScanSessionQueryOptions = <TData = Awaited<ReturnType<typeof getScanSession>>, TError = ErrorType<void>>(id: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getScanSession>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetScanSessionQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getScanSession>>> = ({ signal }) => getScanSession(id, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: id !== null && id !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getScanSession>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetScanSessionQueryResult = NonNullable<Awaited<ReturnType<typeof getScanSession>>>
+export type GetScanSessionQueryError = ErrorType<void>
+
+
+/**
+ * @summary Poll a scan session for its result (operator)
+ */
+
+export function useGetScanSession<TData = Awaited<ReturnType<typeof getScanSession>>, TError = ErrorType<void>>(
+ id: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getScanSession>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetScanSessionQueryOptions(id,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getSubmitScanResultUrl = (id: string,) => {
+
+
+
+
+  return `/api/scan-sessions/${id}/submit`
+}
+
+/**
+ * @summary Submit scanned ID data from the paired phone (token-authenticated by session id)
+ */
+export const submitScanResult = async (id: string,
+    scanSubmission: ScanSubmission, options?: RequestInit): Promise<void> => {
+
+  return customFetch<void>(getSubmitScanResultUrl(id),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(scanSubmission)
+  }
+);}
+
+
+
+
+export const getSubmitScanResultMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof submitScanResult>>, TError,{id: string;data: BodyType<ScanSubmission>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof submitScanResult>>, TError,{id: string;data: BodyType<ScanSubmission>}, TContext> => {
+
+const mutationKey = ['submitScanResult'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof submitScanResult>>, {id: string;data: BodyType<ScanSubmission>}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  submitScanResult(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SubmitScanResultMutationResult = NonNullable<Awaited<ReturnType<typeof submitScanResult>>>
+    export type SubmitScanResultMutationBody = BodyType<ScanSubmission>
+    export type SubmitScanResultMutationError = ErrorType<void>
+
+    /**
+ * @summary Submit scanned ID data from the paired phone (token-authenticated by session id)
+ */
+export const useSubmitScanResult = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof submitScanResult>>, TError,{id: string;data: BodyType<ScanSubmission>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof submitScanResult>>,
+        TError,
+        {id: string;data: BodyType<ScanSubmission>},
+        TContext
+      > => {
+      return useMutation(getSubmitScanResultMutationOptions(options));
     }
 
 export const getUploadPhotoUrl = () => {

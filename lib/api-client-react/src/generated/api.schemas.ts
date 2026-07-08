@@ -606,6 +606,39 @@ export interface PublicPreregistrationInput {
   studios?: string[];
 }
 
+export interface ScanSession {
+  id: string;
+  expiresAt: string;
+}
+
+export type ScanSessionStateStatus = typeof ScanSessionStateStatus[keyof typeof ScanSessionStateStatus];
+
+
+export const ScanSessionStateStatus = {
+  pending: 'pending',
+  completed: 'completed',
+} as const;
+
+export type ScanSessionStateResult = {
+  name: string;
+  photoUrl?: string | null;
+} | null;
+
+export interface ScanSessionState {
+  status: ScanSessionStateStatus;
+  result?: ScanSessionStateResult;
+}
+
+export interface ScanSubmission {
+  /**
+     * @minLength 1
+     * @maxLength 200
+     */
+  name: string;
+  /** Base64-encoded JPEG (no data-URL prefix) of the live guest photo */
+  photoData?: string;
+}
+
 export type ListGuestsParams = {
 /**
  * Filter by status

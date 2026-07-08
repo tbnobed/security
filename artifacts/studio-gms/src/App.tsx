@@ -19,6 +19,7 @@ import BrandingPage from "@/pages/branding";
 import KnownGuestsPage from "@/pages/known-guests";
 import VisitLogPage from "@/pages/visit-log";
 import Preregister from "@/pages/preregister";
+import ScanPage from "@/pages/scan";
 import KioskPage from "@/pages/kiosk";
 import PortalPage from "@/pages/portal";
 import PortalRosterPage from "@/pages/portal-roster";
@@ -80,6 +81,7 @@ function AppRoutes() {
       <Switch>
         <Route path="/" component={HomeRedirect} />
         <Route path="/preregister" component={Preregister} />
+        <Route path="/scan/:id" component={ScanPage} />
         <Route path="/sign-in" component={SignInPage} />
         <Route path="/sign-up">
           <Redirect to="/sign-in" />
