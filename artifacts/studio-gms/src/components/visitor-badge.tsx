@@ -80,7 +80,7 @@ export const VisitorBadge = forwardRef<HTMLDivElement, { data: VisitorBadgeData 
                 <img
                   src={logoUrl}
                   alt=""
-                  className="h-[0.57in] w-auto max-w-[1.28in] shrink-0 object-contain"
+                  className="h-[0.38in] w-auto max-w-[0.85in] shrink-0 object-contain"
                 />
               )}
             </div>
