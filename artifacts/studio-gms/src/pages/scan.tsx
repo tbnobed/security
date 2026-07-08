@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Link, useRoute } from "wouter";
-import { useSubmitScanResult } from "@workspace/api-client-react";
+import { getGetScanSessionStatusUrl, useSubmitScanResult } from "@workspace/api-client-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -86,6 +86,10 @@ export default function ScanPage() {
   const sessionId = params?.id ?? "";
 
   const [step, setStep] = useState<Step>("scan");
+  // null = still verifying with the server; false = the desk cancelled the
+  // session (navigated away / closed the dialog), it expired, or it was
+  // already used — show a dead-link screen instead of the scanner.
+  const [sessionValid, setSessionValid] = useState<boolean | null>(null);
   const [name, setName] = useState("");
   const [photo, setPhoto] = useState<string | null>(null);
   const [errorMsg, setErrorMsg] = useState("");
@@ -196,15 +200,56 @@ export default function ScanPage() {
     }
   }, []);
 
+  // Verify the token with the server on load AND every time the page becomes
+  // visible again (reload, back-navigation, returning from the camera app).
+  // The desk invalidates the session when its dialog closes or the operator
+  // navigates away — a reloaded phone page must show a dead link, not a
+  // working scanner. Only a definitive 404 kills the page; transient network
+  // errors / rate limiting leave the current state alone.
+  useEffect(() => {
+    if (!sessionId) {
+      setSessionValid(false);
+      return;
+    }
+    if (step === "sending" || step === "done") return;
+    let cancelled = false;
+    const check = async () => {
+      try {
+        const r = await fetch(getGetScanSessionStatusUrl(sessionId), { cache: "no-store" });
+        if (cancelled) return;
+        if (r.status === 404) setSessionValid(false);
+        else if (r.ok) setSessionValid(true);
+      } catch {
+        /* offline / transient — keep current state */
+      }
+    };
+    void check();
+    const onVisible = () => {
+      if (!document.hidden) void check();
+    };
+    document.addEventListener("visibilitychange", onVisible);
+    window.addEventListener("pageshow", onVisible);
+    return () => {
+      cancelled = true;
+      document.removeEventListener("visibilitychange", onVisible);
+      window.removeEventListener("pageshow", onVisible);
+    };
+  }, [sessionId, step]);
+
+  // Session died (desk cancelled / expired) → release the camera immediately.
+  useEffect(() => {
+    if (sessionValid === false) stopCamera();
+  }, [sessionValid, stopCamera]);
+
   // Offer the still-photo fallback after 5s of live scanning without a hit.
   useEffect(() => {
-    if (step !== "scan" || manualEntry) {
+    if (step !== "scan" || manualEntry || sessionValid !== true) {
       setStillOffer(false);
       return;
     }
     const t = setTimeout(() => setStillOffer(true), 5000);
     return () => clearTimeout(t);
-  }, [step, manualEntry]);
+  }, [step, manualEntry, sessionValid]);
 
   // Decode a still photo taken with the native camera app (file input with
   // capture). Native camera stills are sharp (real autofocus/macro) and
@@ -311,9 +356,10 @@ export default function ScanPage() {
     [stopCamera],
   );
 
-  // Barcode scan loop (step === "scan")
+  // Barcode scan loop (step === "scan") — only once the server has confirmed
+  // the session token is still valid.
   useEffect(() => {
-    if (step !== "scan" || manualEntry) return;
+    if (step !== "scan" || manualEntry || sessionValid !== true) return;
     let cancelled = false;
     setScannerError(false);
 
@@ -461,11 +507,11 @@ export default function ScanPage() {
       cancelled = true;
       stopCamera();
     };
-  }, [step, manualEntry, startCamera, stopCamera]);
+  }, [step, manualEntry, sessionValid, startCamera, stopCamera]);
 
   // Live guest photo (step === "photo")
   useEffect(() => {
-    if (step !== "photo" || photo) return;
+    if (step !== "photo" || photo || sessionValid !== true) return;
     let cancelled = false;
     (async () => {
       const ok = await startCamera();
@@ -475,7 +521,7 @@ export default function ScanPage() {
       cancelled = true;
       stopCamera();
     };
-  }, [step, photo, startCamera, stopCamera]);
+  }, [step, photo, sessionValid, startCamera, stopCamera]);
 
   const capturePhoto = () => {
     const video = videoRef.current;
@@ -523,6 +569,22 @@ export default function ScanPage() {
       </header>
 
       <main className="flex-1 p-4 flex flex-col items-center justify-center gap-4 max-w-md w-full mx-auto">
+        {sessionValid === false && step !== "done" ? (
+          <div className="flex flex-col items-center gap-3 text-center" data-testid="text-session-dead">
+            <XCircle className="w-12 h-12 text-destructive" />
+            <h2 className="text-lg font-semibold">This scan link is no longer valid</h2>
+            <p className="text-sm text-muted-foreground">
+              The security desk closed or restarted the scan. Ask the desk to open the Scan ID
+              dialog again and scan the new QR code.
+            </p>
+          </div>
+        ) : sessionValid === null && step === "scan" ? (
+          <div className="flex flex-col items-center gap-3 text-muted-foreground" data-testid="text-session-checking">
+            <Loader2 className="w-8 h-8 animate-spin" />
+            <p className="text-sm">Checking scan link…</p>
+          </div>
+        ) : (
+          <>
         {step === "scan" && (
           <>
             {!manualEntry ? (
@@ -751,6 +813,8 @@ export default function ScanPage() {
               Try again
             </Button>
           </div>
+        )}
+          </>
         )}
       </main>
 

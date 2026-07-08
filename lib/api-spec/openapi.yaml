@@ -1367,6 +1367,23 @@ paths:
         "204":
           description: Session cancelled (or already gone)
 
+  /scan-sessions/{id}/status:
+    get:
+      operationId: getScanSessionStatus
+      tags: [scan]
+      summary: Check whether a scan session is still valid (token-authenticated by session id; the paired phone gates its UI on this)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "204":
+          description: Session exists and is still awaiting a scan
+        "404":
+          description: Unknown, expired, cancelled, or already-completed session
+
   /scan-sessions/{id}/submit:
     post:
       operationId: submitScanResult

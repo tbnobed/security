@@ -69,17 +69,36 @@ const RATE_LIMIT = 30;
 const RATE_WINDOW_MS = 60 * 1000;
 const submitHits = new Map<string, { count: number; windowStart: number }>();
 
-function rateLimited(ip: string): boolean {
+function rateLimited(ip: string, bucket = ""): boolean {
+  // Separate buckets per endpoint (key prefix) so e.g. status polling from a
+  // shared office IP can never consume the submit budget.
+  const key = `${bucket}:${ip}`;
   const now = Date.now();
-  const hit = submitHits.get(ip);
+  const hit = submitHits.get(key);
   if (!hit || now - hit.windowStart >= RATE_WINDOW_MS) {
     if (submitHits.size > 1000) submitHits.clear();
-    submitHits.set(ip, { count: 1, windowStart: now });
+    submitHits.set(key, { count: 1, windowStart: now });
     return false;
   }
   hit.count += 1;
   return hit.count > RATE_LIMIT;
 }
+
+// Token-authenticated by the unguessable session id — the paired phone checks
+// this on load (and whenever it returns to the foreground) so a cancelled or
+// expired QR token shows a dead-link screen instead of a working scanner.
+router.get("/scan-sessions/:id/status", (req, res): void => {
+  if (rateLimited(req.ip ?? "unknown", "status")) {
+    res.status(429).json({ error: "Too many requests" });
+    return;
+  }
+  const entry = getLive(req.params.id as string);
+  if (!entry || entry.result) {
+    res.status(404).json({ error: "Scan session not found or expired" });
+    return;
+  }
+  res.status(204).end();
+});
 
 // Token-authenticated by the unguessable session id — the paired phone is not signed in.
 router.post("/scan-sessions/:id/submit", (req, res): void => {

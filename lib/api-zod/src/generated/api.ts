@@ -1548,6 +1548,16 @@ export const CancelScanSessionResponse = zod.void()
 
 
 /**
+ * @summary Check whether a scan session is still valid (token-authenticated by session id; the paired phone gates its UI on this)
+ */
+export const GetScanSessionStatusParams = zod.object({
+  "id": zod.coerce.string()
+})
+
+export const GetScanSessionStatusResponse = zod.void()
+
+
+/**
  * @summary Submit scanned ID data from the paired phone (token-authenticated by session id)
  */
 export const SubmitScanResultParams = zod.object({

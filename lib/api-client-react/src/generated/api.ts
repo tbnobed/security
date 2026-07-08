@@ -5114,6 +5114,83 @@ export const useCancelScanSession = <TError = ErrorType<unknown>,
       return useMutation(getCancelScanSessionMutationOptions(options));
     }
 
+export const getGetScanSessionStatusUrl = (id: string,) => {
+
+
+
+
+  return `/api/scan-sessions/${id}/status`
+}
+
+/**
+ * @summary Check whether a scan session is still valid (token-authenticated by session id; the paired phone gates its UI on this)
+ */
+export const getScanSessionStatus = async (id: string, options?: RequestInit): Promise<void> => {
+
+  return customFetch<void>(getGetScanSessionStatusUrl(id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetScanSessionStatusQueryKey = (id: string,) => {
+    return [
+    `/api/scan-sessions/${id}/status`
+    ] as const;
+    }
+
+
+export const getGetScanSessionStatusQueryOptions = <TData = Awaited<ReturnType<typeof getScanSessionStatus>>, TError = ErrorType<void>>(id: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getScanSessionStatus>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetScanSessionStatusQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getScanSessionStatus>>> = ({ signal }) => getScanSessionStatus(id, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: id !== null && id !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getScanSessionStatus>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetScanSessionStatusQueryResult = NonNullable<Awaited<ReturnType<typeof getScanSessionStatus>>>
+export type GetScanSessionStatusQueryError = ErrorType<void>
+
+
+/**
+ * @summary Check whether a scan session is still valid (token-authenticated by session id; the paired phone gates its UI on this)
+ */
+
+export function useGetScanSessionStatus<TData = Awaited<ReturnType<typeof getScanSessionStatus>>, TError = ErrorType<void>>(
+ id: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getScanSessionStatus>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetScanSessionStatusQueryOptions(id,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
 export const getSubmitScanResultUrl = (id: string,) => {
 
 
