@@ -107,6 +107,7 @@ export default function ScanPage() {
   const [stillOffer, setStillOffer] = useState(false);
   const [stillBusy, setStillBusy] = useState(false);
   const [stillFailed, setStillFailed] = useState(false);
+  const [stillFailedMsg, setStillFailedMsg] = useState("");
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -259,6 +260,7 @@ export default function ScanPage() {
       stillBusyRef.current = true;
       setStillBusy(true);
       setStillFailed(false);
+      setStillFailedMsg("");
       try {
         // Prefer createImageBitmap; fall back to an <img> element for older
         // browsers / unsupported codecs (both are valid CanvasImageSource /
@@ -308,28 +310,57 @@ export default function ScanPage() {
           if (text === undefined) {
             const readBarcodes = await loadZxing();
             if (readBarcodes) {
-              const work = document.createElement("canvas");
-              const ctx = work.getContext("2d", { willReadFrequently: true })!;
-              // Two passes: near-full resolution first (dense barcodes need
-              // pixels), then a smaller pass (helps slightly blurry shots).
-              for (const cap of [3200, 2000]) {
-                const scale = Math.min(1, cap / Math.max(srcW, srcH));
-                work.width = Math.round(srcW * scale);
-                work.height = Math.round(srcH * scale);
-                ctx.drawImage(source, 0, 0, work.width, work.height);
-                const results = await readBarcodes(
-                  ctx.getImageData(0, 0, work.width, work.height),
-                  {
-                    formats: ["PDF417"],
-                    tryHarder: true,
-                    tryRotate: true,
-                    tryInvert: true,
-                    tryDownscale: true,
-                    maxNumberOfSymbols: 1,
-                  },
-                );
+              const opts = {
+                formats: ["PDF417"] as ["PDF417"],
+                tryHarder: true,
+                tryRotate: true,
+                tryInvert: true,
+                tryDownscale: true,
+                maxNumberOfSymbols: 1,
+              };
+
+              // Pass 1: hand zxing the raw photo file — the wasm decodes the
+              // JPEG itself at FULL resolution (a 12MP native still keeps all
+              // its pixel density; canvas passes below inevitably downscale).
+              try {
+                const results = await readBarcodes(file, opts);
                 text = results[0]?.text;
-                if (text !== undefined) break;
+              } catch {
+                /* fall through to canvas passes */
+              }
+
+              if (text === undefined) {
+                const work = document.createElement("canvas");
+                const ctx = work.getContext("2d", { willReadFrequently: true })!;
+                const runPass = async (
+                  sx: number,
+                  sy: number,
+                  sw: number,
+                  sh: number,
+                  cap: number,
+                ) => {
+                  const scale = Math.min(1, cap / Math.max(sw, sh));
+                  work.width = Math.round(sw * scale);
+                  work.height = Math.round(sh * scale);
+                  ctx.drawImage(source, sx, sy, sw, sh, 0, 0, work.width, work.height);
+                  const results = await readBarcodes(
+                    ctx.getImageData(0, 0, work.width, work.height),
+                    opts,
+                  );
+                  return results[0]?.text;
+                };
+                // Pass 2: full frame at 3200px cap.
+                text = await runPass(0, 0, srcW, srcH, 3200);
+                // Pass 3: middle horizontal band (full width × central 60%) at
+                // high res — the PDF417 strip usually sits mid-frame, and the
+                // crop keeps more pixels per barcode module after capping.
+                if (text === undefined) {
+                  text = await runPass(0, Math.round(srcH * 0.2), srcW, Math.round(srcH * 0.6), 3600);
+                }
+                // Pass 4: smaller full frame (helps slightly blurry shots).
+                if (text === undefined) {
+                  text = await runPass(0, 0, srcW, srcH, 2000);
+                }
               }
             }
           }
@@ -341,6 +372,11 @@ export default function ScanPage() {
             setStep("confirm");
             return;
           }
+          setStillFailedMsg(
+            text !== undefined
+              ? "We read the barcode, but couldn't find a name on it — this may not be a US driver's license. Use manual entry below."
+              : "Couldn't read the barcode from that photo. Fill the frame with the barcode, make sure it's in focus, avoid glare — and try again.",
+          );
           setStillFailed(true);
         } finally {
           cleanup();
@@ -684,8 +720,8 @@ export default function ScanPage() {
                     </Button>
                     {stillFailed && !stillBusy && (
                       <p className="text-xs text-destructive text-center" data-testid="text-still-failed">
-                        Couldn't read the barcode from that photo. Fill the frame with the barcode,
-                        make sure it's in focus, avoid glare — and try again.
+                        {stillFailedMsg ||
+                          "Couldn't read the barcode from that photo. Fill the frame with the barcode, make sure it's in focus, avoid glare — and try again."}
                       </p>
                     )}
                   </div>
