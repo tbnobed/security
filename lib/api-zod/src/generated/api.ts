@@ -412,7 +412,10 @@ export const ListPreregistrationsResponseItem = zod.object({
   "status": zod.enum(['pending', 'converted', 'cancelled']),
   "createdByClerkId": zod.string().nullish(),
   "convertedGuestId": zod.number().nullish(),
-  "studios": zod.array(zod.string()).optional()
+  "studios": zod.array(zod.string()).optional(),
+  "approvalStatus": zod.enum(['approved', 'pending', 'denied']).optional(),
+  "approvalStage": zod.number().nullish().describe('1 or 2 while approvalStatus is pending'),
+  "lateRegistration": zod.boolean().optional().describe('Registered less than 4 hours before expected arrival')
 })
 export const ListPreregistrationsResponse = zod.array(ListPreregistrationsResponseItem)
 
@@ -452,7 +455,10 @@ export const CreatePreregistrationResponse = zod.object({
   "status": zod.enum(['pending', 'converted', 'cancelled']),
   "createdByClerkId": zod.string().nullish(),
   "convertedGuestId": zod.number().nullish(),
-  "studios": zod.array(zod.string()).optional()
+  "studios": zod.array(zod.string()).optional(),
+  "approvalStatus": zod.enum(['approved', 'pending', 'denied']).optional(),
+  "approvalStage": zod.number().nullish().describe('1 or 2 while approvalStatus is pending'),
+  "lateRegistration": zod.boolean().optional().describe('Registered less than 4 hours before expected arrival')
 })
 
 
@@ -538,7 +544,142 @@ export const CreatePublicPreregistrationResponse = zod.object({
   "status": zod.enum(['pending', 'converted', 'cancelled']),
   "createdByClerkId": zod.string().nullish(),
   "convertedGuestId": zod.number().nullish(),
-  "studios": zod.array(zod.string()).optional()
+  "studios": zod.array(zod.string()).optional(),
+  "approvalStatus": zod.enum(['approved', 'pending', 'denied']).optional(),
+  "approvalStage": zod.number().nullish().describe('1 or 2 while approvalStatus is pending'),
+  "lateRegistration": zod.boolean().optional().describe('Registered less than 4 hours before expected arrival')
+})
+
+
+/**
+ * @summary Get the pre-registration approval workflow configuration (admin)
+ */
+export const GetApprovalWorkflowResponse = zod.object({
+  "approver1Id": zod.string().nullable(),
+  "approver2Id": zod.string().nullable(),
+  "approver1Name": zod.string().nullable(),
+  "approver2Name": zod.string().nullable(),
+  "enabled": zod.boolean().describe('True when at least a 1st approver is configured')
+})
+
+
+/**
+ * @summary Update the approval workflow (admin). Null approver1 disables approvals.
+ */
+export const UpdateApprovalWorkflowBody = zod.object({
+  "approver1Id": zod.string().nullable(),
+  "approver2Id": zod.string().nullable()
+})
+
+export const UpdateApprovalWorkflowResponse = zod.object({
+  "approver1Id": zod.string().nullable(),
+  "approver2Id": zod.string().nullable(),
+  "approver1Name": zod.string().nullable(),
+  "approver2Name": zod.string().nullable(),
+  "enabled": zod.boolean().describe('True when at least a 1st approver is configured')
+})
+
+
+/**
+ * @summary Pre-registrations awaiting the current user's approval
+ */
+export const ListPendingApprovalsResponseItem = zod.object({
+  "id": zod.number(),
+  "guestName": zod.string(),
+  "company": zod.string(),
+  "phone": zod.string().nullish(),
+  "email": zod.string().nullish(),
+  "hostName": zod.string(),
+  "purposeOfVisit": zod.string().nullish(),
+  "site": zod.string(),
+  "expectedArrival": zod.coerce.date(),
+  "expectedDeparture": zod.coerce.date().nullish(),
+  "status": zod.enum(['pending', 'converted', 'cancelled']),
+  "createdByClerkId": zod.string().nullish(),
+  "convertedGuestId": zod.number().nullish(),
+  "studios": zod.array(zod.string()).optional(),
+  "approvalStatus": zod.enum(['approved', 'pending', 'denied']).optional(),
+  "approvalStage": zod.number().nullish().describe('1 or 2 while approvalStatus is pending'),
+  "lateRegistration": zod.boolean().optional().describe('Registered less than 4 hours before expected arrival')
+})
+export const ListPendingApprovalsResponse = zod.array(ListPendingApprovalsResponseItem)
+
+
+/**
+ * @summary Approve or deny a pending pre-registration (current-stage approver only)
+ */
+export const DecideApprovalParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const DecideApprovalBody = zod.object({
+  "action": zod.enum(['approve', 'deny'])
+})
+
+export const DecideApprovalResponse = zod.object({
+  "id": zod.number(),
+  "guestName": zod.string(),
+  "company": zod.string(),
+  "phone": zod.string().nullish(),
+  "email": zod.string().nullish(),
+  "hostName": zod.string(),
+  "purposeOfVisit": zod.string().nullish(),
+  "site": zod.string(),
+  "expectedArrival": zod.coerce.date(),
+  "expectedDeparture": zod.coerce.date().nullish(),
+  "status": zod.enum(['pending', 'converted', 'cancelled']),
+  "createdByClerkId": zod.string().nullish(),
+  "convertedGuestId": zod.number().nullish(),
+  "studios": zod.array(zod.string()).optional(),
+  "approvalStatus": zod.enum(['approved', 'pending', 'denied']).optional(),
+  "approvalStage": zod.number().nullish().describe('1 or 2 while approvalStatus is pending'),
+  "lateRegistration": zod.boolean().optional().describe('Registered less than 4 hours before expected arrival')
+})
+
+
+/**
+ * @summary Look up a pending approval by email token (no authentication)
+ */
+export const GetApprovalByTokenParams = zod.object({
+  "token": zod.coerce.string()
+})
+
+export const GetApprovalByTokenResponse = zod.object({
+  "state": zod.enum(['pending', 'approved', 'denied', 'superseded']).describe('superseded = this stage was already decided or the token is no longer current'),
+  "stage": zod.number(),
+  "guestName": zod.string(),
+  "company": zod.string(),
+  "hostName": zod.string(),
+  "purposeOfVisit": zod.string().nullish(),
+  "expectedArrival": zod.coerce.date(),
+  "expectedDeparture": zod.coerce.date().nullish(),
+  "studios": zod.array(zod.string()),
+  "lateRegistration": zod.boolean()
+})
+
+
+/**
+ * @summary Approve or deny via email token (no authentication, single-use)
+ */
+export const DecideApprovalByTokenParams = zod.object({
+  "token": zod.coerce.string()
+})
+
+export const DecideApprovalByTokenBody = zod.object({
+  "action": zod.enum(['approve', 'deny'])
+})
+
+export const DecideApprovalByTokenResponse = zod.object({
+  "state": zod.enum(['pending', 'approved', 'denied', 'superseded']).describe('superseded = this stage was already decided or the token is no longer current'),
+  "stage": zod.number(),
+  "guestName": zod.string(),
+  "company": zod.string(),
+  "hostName": zod.string(),
+  "purposeOfVisit": zod.string().nullish(),
+  "expectedArrival": zod.coerce.date(),
+  "expectedDeparture": zod.coerce.date().nullish(),
+  "studios": zod.array(zod.string()),
+  "lateRegistration": zod.boolean()
 })
 
 
@@ -989,6 +1130,8 @@ export const ListRosterEmployeeVisitsResponseItem = zod.object({
   "purposeOfVisit": zod.string().nullish(),
   "studios": zod.array(zod.string()).optional(),
   "status": zod.enum(['expected', 'on_site', 'checked_out']),
+  "approvalStatus": zod.enum(['approved', 'pending', 'denied']).optional(),
+  "lateRegistration": zod.boolean().optional(),
   "expectedArrival": zod.coerce.date(),
   "checkinAt": zod.coerce.date().nullish(),
   "checkoutAt": zod.coerce.date().nullish()
@@ -1031,7 +1174,10 @@ export const ClientBulkPreregisterResponse = zod.object({
   "status": zod.enum(['pending', 'converted', 'cancelled']),
   "createdByClerkId": zod.string().nullish(),
   "convertedGuestId": zod.number().nullish(),
-  "studios": zod.array(zod.string()).optional()
+  "studios": zod.array(zod.string()).optional(),
+  "approvalStatus": zod.enum(['approved', 'pending', 'denied']).optional(),
+  "approvalStage": zod.number().nullish().describe('1 or 2 while approvalStatus is pending'),
+  "lateRegistration": zod.boolean().optional().describe('Registered less than 4 hours before expected arrival')
 }))
 })
 
@@ -1047,6 +1193,8 @@ export const ListClientVisitsTodayResponseItem = zod.object({
   "purposeOfVisit": zod.string().nullish(),
   "studios": zod.array(zod.string()).optional(),
   "status": zod.enum(['expected', 'on_site', 'checked_out']),
+  "approvalStatus": zod.enum(['approved', 'pending', 'denied']).optional(),
+  "lateRegistration": zod.boolean().optional(),
   "expectedArrival": zod.coerce.date(),
   "checkinAt": zod.coerce.date().nullish(),
   "checkoutAt": zod.coerce.date().nullish()
@@ -1071,7 +1219,7 @@ export const ListAuditLogQueryParams = zod.object({
 
 export const ListAuditLogResponseItem = zod.object({
   "id": zod.number(),
-  "eventType": zod.enum(['checkin', 'checkout', 'preregistration', 'watchlist_flag', 'watchlist_block', 'user_created', 'role_changed', 'password_reset', 'known_guest_vip', 'known_guest_edited', 'known_guest_deleted', 'client_employee_added', 'client_employee_edited', 'client_employee_deleted', 'client_employees_imported', 'badge_logo_updated', 'badge_logo_removed']),
+  "eventType": zod.enum(['checkin', 'checkout', 'preregistration', 'watchlist_flag', 'watchlist_block', 'user_created', 'role_changed', 'password_reset', 'known_guest_vip', 'known_guest_edited', 'known_guest_deleted', 'client_employee_added', 'client_employee_edited', 'client_employee_deleted', 'client_employees_imported', 'badge_logo_updated', 'badge_logo_removed', 'prereg_approved', 'prereg_denied', 'approval_workflow_updated']),
   "guestId": zod.number().nullable(),
   "guestName": zod.string(),
   "operatorClerkId": zod.string(),

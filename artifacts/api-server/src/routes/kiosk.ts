@@ -47,6 +47,7 @@ router.get("/kiosk/preregistrations", requireKioskAccess, async (req, res): Prom
     .where(
       and(
         eq(preregistrationsTable.status, "pending"),
+        eq(preregistrationsTable.approvalStatus, "approved"),
         gte(preregistrationsTable.expectedArrival, dayStart),
         lt(preregistrationsTable.expectedArrival, dayEnd),
         ilike(preregistrationsTable.guestName, `%${parsed.data.q}%`),
@@ -76,6 +77,13 @@ router.post("/kiosk/checkin", requireKioskAccess, async (req, res): Promise<void
 
   if (!preg || preg.status !== "pending") {
     res.status(404).json({ error: "Pre-registration not found or already checked in" });
+    return;
+  }
+
+  // Not-yet-approved (or denied) pre-registrations can't self check in.
+  // Generic message — don't reveal approval state to the guest.
+  if (preg.approvalStatus !== "approved") {
+    res.status(403).json({ error: "Please see the security desk to complete check-in." });
     return;
   }
 
@@ -119,6 +127,7 @@ router.post("/kiosk/checkin", requireKioskAccess, async (req, res): Promise<void
         and(
           eq(preregistrationsTable.id, preg.id),
           eq(preregistrationsTable.status, "pending"),
+          eq(preregistrationsTable.approvalStatus, "approved"),
         ),
       )
       .returning({ id: preregistrationsTable.id });

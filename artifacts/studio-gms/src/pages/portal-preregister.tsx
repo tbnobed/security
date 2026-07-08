@@ -107,9 +107,16 @@ export default function PortalPreregisterPage() {
         },
       });
       queryClient.invalidateQueries({ queryKey: ["/api/client/visits/today"] });
+      const pendingCount = result.preregistrations?.filter((p) => p.approvalStatus === "pending").length ?? 0;
+      const lateCount = result.preregistrations?.filter((p) => p.lateRegistration).length ?? 0;
       toast({
         title: "Pre-registration submitted",
-        description: `${result.created} ${result.created === 1 ? "visit" : "visits"} scheduled. Security will see them in the expected list.`,
+        description:
+          pendingCount > 0
+            ? `${result.created} ${result.created === 1 ? "visit" : "visits"} submitted for approval. ${
+                lateCount > 0 ? "Note: less than 4 hours before arrival — flagged as late. " : ""
+              }Guests can check in once approved.`
+            : `${result.created} ${result.created === 1 ? "visit" : "visits"} scheduled. Security will see them in the expected list.`,
       });
       setLocation("/portal");
     } catch {

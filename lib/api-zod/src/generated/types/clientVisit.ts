@@ -5,6 +5,7 @@
  * Studio Guest Management System API
  * OpenAPI spec version: 0.1.0
  */
+import type { ClientVisitApprovalStatus } from './clientVisitApprovalStatus';
 import type { ClientVisitStatus } from './clientVisitStatus';
 
 export interface ClientVisit {
@@ -18,6 +19,8 @@ export interface ClientVisit {
   purposeOfVisit?: string | null;
   studios?: string[];
   status: ClientVisitStatus;
+  approvalStatus?: ClientVisitApprovalStatus;
+  lateRegistration?: boolean;
   expectedArrival: Date;
   /** @nullable */
   checkinAt?: Date | null;

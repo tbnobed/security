@@ -102,7 +102,24 @@ export default function PortalPage() {
                       {v.checkoutAt ? format(new Date(v.checkoutAt), "h:mm a") : "—"}
                     </td>
                     <td className="px-4 py-3">
-                      <StatusPill status={v.status} />
+                      <div className="flex flex-wrap items-center gap-1.5">
+                        {v.approvalStatus === "pending" ? (
+                          <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium border bg-amber-500/15 text-amber-400 border-amber-500/30" data-testid={`pill-approval-${v.preregistrationId}`}>
+                            AWAITING APPROVAL
+                          </span>
+                        ) : v.approvalStatus === "denied" ? (
+                          <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium border bg-destructive/15 text-destructive border-destructive/30" data-testid={`pill-approval-${v.preregistrationId}`}>
+                            DENIED
+                          </span>
+                        ) : (
+                          <StatusPill status={v.status} />
+                        )}
+                        {v.lateRegistration && v.status === "expected" && (
+                          <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-amber-500/10 text-amber-500" title="Registered less than 4 hours before arrival">
+                            LATE
+                          </span>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 ))}

@@ -120,6 +120,15 @@ export const PreregistrationStatus = {
   cancelled: 'cancelled',
 } as const;
 
+export type PreregistrationApprovalStatus = typeof PreregistrationApprovalStatus[keyof typeof PreregistrationApprovalStatus];
+
+
+export const PreregistrationApprovalStatus = {
+  approved: 'approved',
+  pending: 'pending',
+  denied: 'denied',
+} as const;
+
 export interface Preregistration {
   id: number;
   guestName: string;
@@ -141,6 +150,75 @@ export interface Preregistration {
   /** @nullable */
   convertedGuestId?: number | null;
   studios?: string[];
+  approvalStatus?: PreregistrationApprovalStatus;
+  /**
+     * 1 or 2 while approvalStatus is pending
+     * @nullable
+     */
+  approvalStage?: number | null;
+  /** Registered less than 4 hours before expected arrival */
+  lateRegistration?: boolean;
+}
+
+export interface ApprovalWorkflow {
+  /** @nullable */
+  approver1Id: string | null;
+  /** @nullable */
+  approver2Id: string | null;
+  /** @nullable */
+  approver1Name: string | null;
+  /** @nullable */
+  approver2Name: string | null;
+  /** True when at least a 1st approver is configured */
+  enabled: boolean;
+}
+
+export interface ApprovalWorkflowInput {
+  /** @nullable */
+  approver1Id: string | null;
+  /** @nullable */
+  approver2Id: string | null;
+}
+
+export type ApprovalDecisionInputAction = typeof ApprovalDecisionInputAction[keyof typeof ApprovalDecisionInputAction];
+
+
+export const ApprovalDecisionInputAction = {
+  approve: 'approve',
+  deny: 'deny',
+} as const;
+
+export interface ApprovalDecisionInput {
+  action: ApprovalDecisionInputAction;
+}
+
+/**
+ * superseded = this stage was already decided or the token is no longer current
+ */
+export type ApprovalTokenInfoState = typeof ApprovalTokenInfoState[keyof typeof ApprovalTokenInfoState];
+
+
+export const ApprovalTokenInfoState = {
+  pending: 'pending',
+  approved: 'approved',
+  denied: 'denied',
+  superseded: 'superseded',
+} as const;
+
+export interface ApprovalTokenInfo {
+  /** superseded = this stage was already decided or the token is no longer current */
+  state: ApprovalTokenInfoState;
+  stage: number;
+  guestName: string;
+  company: string;
+  hostName: string;
+  /** @nullable */
+  purposeOfVisit?: string | null;
+  expectedArrival: string;
+  /** @nullable */
+  expectedDeparture?: string | null;
+  studios: string[];
+  lateRegistration: boolean;
 }
 
 export interface PreregistrationInput {
@@ -275,6 +353,9 @@ export const AuditEntryEventType = {
   client_employees_imported: 'client_employees_imported',
   badge_logo_updated: 'badge_logo_updated',
   badge_logo_removed: 'badge_logo_removed',
+  prereg_approved: 'prereg_approved',
+  prereg_denied: 'prereg_denied',
+  approval_workflow_updated: 'approval_workflow_updated',
 } as const;
 
 export interface AuditEntry {
@@ -464,6 +545,15 @@ export const ClientVisitStatus = {
   checked_out: 'checked_out',
 } as const;
 
+export type ClientVisitApprovalStatus = typeof ClientVisitApprovalStatus[keyof typeof ClientVisitApprovalStatus];
+
+
+export const ClientVisitApprovalStatus = {
+  approved: 'approved',
+  pending: 'pending',
+  denied: 'denied',
+} as const;
+
 export interface ClientVisit {
   preregistrationId: number;
   /** @nullable */
@@ -475,6 +565,8 @@ export interface ClientVisit {
   purposeOfVisit?: string | null;
   studios?: string[];
   status: ClientVisitStatus;
+  approvalStatus?: ClientVisitApprovalStatus;
+  lateRegistration?: boolean;
   expectedArrival: string;
   /** @nullable */
   checkinAt?: string | null;

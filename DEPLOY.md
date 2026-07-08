@@ -47,6 +47,9 @@ Optional:
 
 - `SENDGRID_API_KEY` + `SENDGRID_FROM_EMAIL` — enable email alerts (the from
   address must be a Verified Sender/domain in SendGrid).
+- `APP_BASE_URL` — public base URL of the app (e.g. `http://192.168.1.10`).
+  Used for one-click Approve/Deny links in pre-registration approval emails;
+  blank = emails direct approvers to the in-app Approvals page.
 - `HTTP_PORT` — host port to publish (default `80`).
 - `SESSION_COOKIE_SECURE` — see the HTTPS note below.
 

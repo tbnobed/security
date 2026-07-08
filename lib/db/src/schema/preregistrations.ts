@@ -1,4 +1,4 @@
-import { pgTable, text, serial, timestamp, integer } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, timestamp, integer, boolean } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
@@ -22,6 +22,21 @@ export const preregistrationsTable = pgTable("preregistrations", {
   clientEmployeeId: integer("client_employee_id"),
   convertedGuestId: integer("converted_guest_id"),
   studios: text("studios").array().notNull().default(sql`'{}'::text[]`),
+  // Approval workflow. "approved" (default — bypass when no workflow configured),
+  // "pending" (awaiting the stage-N approver), or "denied". Approvers are
+  // snapshotted at creation so config changes don't affect in-flight requests.
+  approvalStatus: text("approval_status").notNull().default("approved"),
+  approvalStage: integer("approval_stage"), // 1 | 2 while pending
+  approver1Id: text("approver1_id"),
+  approver2Id: text("approver2_id"),
+  // Unguessable single-use tokens for the email one-click approve/deny pages.
+  approval1Token: text("approval1_token"),
+  approval2Token: text("approval2_token"),
+  approval1DecidedAt: timestamp("approval1_decided_at", { withTimezone: true }),
+  approvalDecidedById: text("approval_decided_by_id"),
+  approvalDecidedAt: timestamp("approval_decided_at", { withTimezone: true }),
+  // Registered less than the pre-approval threshold (4h) before expected arrival.
+  lateRegistration: boolean("late_registration").notNull().default(false),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 

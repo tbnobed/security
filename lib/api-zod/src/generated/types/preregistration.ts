@@ -5,6 +5,7 @@
  * Studio Guest Management System API
  * OpenAPI spec version: 0.1.0
  */
+import type { PreregistrationApprovalStatus } from './preregistrationApprovalStatus';
 import type { PreregistrationStatus } from './preregistrationStatus';
 
 export interface Preregistration {
@@ -28,4 +29,12 @@ export interface Preregistration {
   /** @nullable */
   convertedGuestId?: number | null;
   studios?: string[];
+  approvalStatus?: PreregistrationApprovalStatus;
+  /**
+     * 1 or 2 while approvalStatus is pending
+     * @nullable
+     */
+  approvalStage?: number | null;
+  /** Registered less than 4 hours before expected arrival */
+  lateRegistration?: boolean;
 }

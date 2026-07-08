@@ -51,6 +51,7 @@ router.get("/dashboard/summary", requireOperator, async (req, res): Promise<void
     .where(
       and(
         eq(preregistrationsTable.status, "pending"),
+        eq(preregistrationsTable.approvalStatus, "approved"),
         gte(preregistrationsTable.expectedArrival, todayStart),
         lt(preregistrationsTable.expectedArrival, tomorrowStart),
       ),

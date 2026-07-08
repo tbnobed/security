@@ -19,6 +19,7 @@ import { getSessionUserId } from "../lib/auth";
 import { usersTable } from "@workspace/db";
 import { sendVisitorAlert, sendClientCheckinNotification } from "../lib/alerts";
 import { upsertKnownGuest } from "../lib/known-guests";
+import { getWorkflowConfig, buildApprovalFields, notifyStageApprover } from "../lib/approvals";
 
 const router = Router();
 
@@ -80,6 +81,9 @@ router.post("/preregistrations", requireOperator, async (req, res): Promise<void
 
   const clerkId = getSessionUserId(req) ?? "unknown";
 
+  const expectedArrival = new Date(parsed.data.expectedArrival);
+  const workflow = await getWorkflowConfig();
+
   const [preg] = await db
     .insert(preregistrationsTable)
     .values({
@@ -90,15 +94,20 @@ router.post("/preregistrations", requireOperator, async (req, res): Promise<void
       hostName: parsed.data.hostName,
       purposeOfVisit: parsed.data.purposeOfVisit ?? null,
       site: parsed.data.site,
-      expectedArrival: new Date(parsed.data.expectedArrival),
+      expectedArrival,
       expectedDeparture: parsed.data.expectedDeparture
         ? new Date(parsed.data.expectedDeparture)
         : null,
       studios: parsed.data.studios ?? [],
       createdByClerkId: clerkId,
       status: "pending",
+      ...buildApprovalFields(expectedArrival, workflow),
     })
     .returning();
+
+  if (preg.approvalStatus === "pending") {
+    void notifyStageApprover(preg, 1);
+  }
 
   const operatorName = await getOperatorName(clerkId);
   await db.insert(auditTable).values({
@@ -156,6 +165,15 @@ router.post("/preregistrations/:id/convert", requireOperator, async (req, res): 
   const body = ConvertPreregistrationBody.safeParse(req.body ?? {});
   if (!body.success) {
     res.status(400).json({ error: body.error.message });
+    return;
+  }
+
+  if (preg.approvalStatus === "pending") {
+    res.status(409).json({ error: "This pre-registration is still awaiting approval" });
+    return;
+  }
+  if (preg.approvalStatus === "denied") {
+    res.status(409).json({ error: "This pre-registration was denied and cannot be checked in" });
     return;
   }
 
@@ -263,6 +281,9 @@ router.post("/public/preregistrations", async (req, res): Promise<void> => {
     return;
   }
 
+  const expectedArrival = new Date(parsed.data.expectedArrival);
+  const workflow = await getWorkflowConfig();
+
   const [preg] = await db
     .insert(preregistrationsTable)
     .values({
@@ -273,15 +294,20 @@ router.post("/public/preregistrations", async (req, res): Promise<void> => {
       hostName: parsed.data.hostName,
       purposeOfVisit: parsed.data.purposeOfVisit ?? null,
       site: parsed.data.site,
-      expectedArrival: new Date(parsed.data.expectedArrival),
+      expectedArrival,
       expectedDeparture: parsed.data.expectedDeparture
         ? new Date(parsed.data.expectedDeparture)
         : null,
       studios: parsed.data.studios ?? [],
       createdByClerkId: null,
       status: "pending",
+      ...buildApprovalFields(expectedArrival, workflow),
     })
     .returning();
+
+  if (preg.approvalStatus === "pending") {
+    void notifyStageApprover(preg, 1);
+  }
 
   await db.insert(auditTable).values({
     eventType: "preregistration",

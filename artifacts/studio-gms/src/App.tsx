@@ -19,6 +19,8 @@ import BrandingPage from "@/pages/branding";
 import KnownGuestsPage from "@/pages/known-guests";
 import VisitLogPage from "@/pages/visit-log";
 import Preregister from "@/pages/preregister";
+import ApprovalsPage from "@/pages/approvals";
+import ApprovalDecisionPage from "@/pages/approval-decision";
 import ScanPage from "@/pages/scan";
 import PrivacyPage from "@/pages/privacy";
 import KioskPage from "@/pages/kiosk";
@@ -84,6 +86,7 @@ function AppRoutes() {
         <Route path="/preregister" component={Preregister} />
         <Route path="/scan/:id" component={ScanPage} />
         <Route path="/privacy" component={PrivacyPage} />
+        <Route path="/approval/:token" component={ApprovalDecisionPage} />
         <Route path="/sign-in" component={SignInPage} />
         <Route path="/sign-up">
           <Redirect to="/sign-in" />
@@ -99,6 +102,9 @@ function AppRoutes() {
         </Route>
         <Route path="/preregistrations">
           <ProtectedRoute component={Preregistrations} />
+        </Route>
+        <Route path="/approvals">
+          <ProtectedRoute component={ApprovalsPage} />
         </Route>
         <Route path="/known-guests">
           <ProtectedRoute component={KnownGuestsPage} />

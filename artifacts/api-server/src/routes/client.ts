@@ -26,6 +26,7 @@ import {
 } from "@workspace/api-zod";
 import { requireClient } from "../lib/auth";
 import { sendVisitorAlert } from "../lib/alerts";
+import { getWorkflowConfig, buildApprovalFields, notifyStageApprover } from "../lib/approvals";
 import type { AppUser } from "@workspace/db";
 
 const router = Router();
@@ -294,6 +295,8 @@ function toVisit(
     purposeOfVisit: p.purposeOfVisit ?? null,
     studios: p.studios,
     status,
+    approvalStatus: p.approvalStatus,
+    lateRegistration: p.lateRegistration,
     expectedArrival: p.expectedArrival.toISOString(),
     checkinAt: g?.checkinAt?.toISOString() ?? null,
     checkoutAt: g?.checkoutAt?.toISOString() ?? null,
@@ -387,12 +390,16 @@ router.post("/client/preregistrations/bulk", async (req, res): Promise<void> => 
     ? new Date(parsed.data.expectedDeparture)
     : null;
 
+  const workflow = await getWorkflowConfig();
+
   const created = await db
     .insert(preregistrationsTable)
     .values(
       uniqueIds.map((id) => {
         const emp = byId.get(id)!;
         return {
+          // Per-row: approval tokens must be unique per pre-registration.
+          ...buildApprovalFields(expectedArrival, workflow),
           guestName: emp.name,
           company: client.companyName ?? "",
           phone: emp.phone ?? null,
@@ -411,6 +418,12 @@ router.post("/client/preregistrations/bulk", async (req, res): Promise<void> => 
       }),
     )
     .returning();
+
+  for (const preg of created) {
+    if (preg.approvalStatus === "pending") {
+      void notifyStageApprover(preg, 1);
+    }
+  }
 
   await db.insert(auditTable).values(
     created.map((preg) => ({

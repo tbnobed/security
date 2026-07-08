@@ -13,6 +13,7 @@ tags:
   - name: guests
     description: Guest check-in/out operations
   - name: preregistrations
+  - name: approvals
     description: Pre-registration operations
   - name: watchlist
     description: Watchlist management
@@ -407,6 +408,120 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Preregistration"
+
+  /approval-workflow:
+    get:
+      operationId: getApprovalWorkflow
+      tags: [approvals]
+      summary: Get the pre-registration approval workflow configuration (admin)
+      responses:
+        "200":
+          description: Current workflow configuration
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApprovalWorkflow"
+    put:
+      operationId: updateApprovalWorkflow
+      tags: [approvals]
+      summary: Update the approval workflow (admin). Null approver1 disables approvals.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ApprovalWorkflowInput"
+      responses:
+        "200":
+          description: Updated workflow configuration
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApprovalWorkflow"
+
+  /approvals/pending:
+    get:
+      operationId: listPendingApprovals
+      tags: [approvals]
+      summary: Pre-registrations awaiting the current user's approval
+      responses:
+        "200":
+          description: Pending approvals for the signed-in approver
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Preregistration"
+
+  /approvals/{id}/decide:
+    post:
+      operationId: decideApproval
+      tags: [approvals]
+      summary: Approve or deny a pending pre-registration (current-stage approver only)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ApprovalDecisionInput"
+      responses:
+        "200":
+          description: Updated pre-registration
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Preregistration"
+
+  /approvals/token/{token}:
+    get:
+      operationId: getApprovalByToken
+      tags: [approvals]
+      summary: Look up a pending approval by email token (no authentication)
+      parameters:
+        - name: token
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Approval details for the token
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApprovalTokenInfo"
+
+  /approvals/token/{token}/decide:
+    post:
+      operationId: decideApprovalByToken
+      tags: [approvals]
+      summary: Approve or deny via email token (no authentication, single-use)
+      parameters:
+        - name: token
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ApprovalDecisionInput"
+      responses:
+        "200":
+          description: Decision recorded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApprovalTokenInfo"
 
   /studios:
     get:
@@ -1481,6 +1596,79 @@ components:
           type: array
           items:
             type: string
+        approvalStatus:
+          type: string
+          enum: [approved, pending, denied]
+        approvalStage:
+          type: ["integer", "null"]
+          description: 1 or 2 while approvalStatus is pending
+        lateRegistration:
+          type: boolean
+          description: Registered less than 4 hours before expected arrival
+
+    ApprovalWorkflow:
+      type: object
+      required: [approver1Id, approver2Id, approver1Name, approver2Name, enabled]
+      properties:
+        approver1Id:
+          type: ["string", "null"]
+        approver2Id:
+          type: ["string", "null"]
+        approver1Name:
+          type: ["string", "null"]
+        approver2Name:
+          type: ["string", "null"]
+        enabled:
+          type: boolean
+          description: True when at least a 1st approver is configured
+
+    ApprovalWorkflowInput:
+      type: object
+      required: [approver1Id, approver2Id]
+      properties:
+        approver1Id:
+          type: ["string", "null"]
+        approver2Id:
+          type: ["string", "null"]
+
+    ApprovalDecisionInput:
+      type: object
+      required: [action]
+      properties:
+        action:
+          type: string
+          enum: [approve, deny]
+
+    ApprovalTokenInfo:
+      type: object
+      required: [state, stage, guestName, company, hostName, expectedArrival, studios, lateRegistration]
+      properties:
+        state:
+          type: string
+          enum: [pending, approved, denied, superseded]
+          description: superseded = this stage was already decided or the token is no longer current
+        stage:
+          type: integer
+        guestName:
+          type: string
+        company:
+          type: string
+        hostName:
+          type: string
+        purposeOfVisit:
+          type: ["string", "null"]
+        expectedArrival:
+          type: string
+          format: date-time
+        expectedDeparture:
+          type: ["string", "null"]
+          format: date-time
+        studios:
+          type: array
+          items:
+            type: string
+        lateRegistration:
+          type: boolean
 
     PreregistrationInput:
       type: object
@@ -1693,7 +1881,7 @@ components:
           type: integer
         eventType:
           type: string
-          enum: [checkin, checkout, preregistration, watchlist_flag, watchlist_block, user_created, role_changed, password_reset, known_guest_vip, known_guest_edited, known_guest_deleted, client_employee_added, client_employee_edited, client_employee_deleted, client_employees_imported, badge_logo_updated, badge_logo_removed]
+          enum: [checkin, checkout, preregistration, watchlist_flag, watchlist_block, user_created, role_changed, password_reset, known_guest_vip, known_guest_edited, known_guest_deleted, client_employee_added, client_employee_edited, client_employee_deleted, client_employees_imported, badge_logo_updated, badge_logo_removed, prereg_approved, prereg_denied, approval_workflow_updated]
         guestId:
           type: ["integer", "null"]
         guestName:
@@ -1959,6 +2147,11 @@ components:
         status:
           type: string
           enum: [expected, on_site, checked_out]
+        approvalStatus:
+          type: string
+          enum: [approved, pending, denied]
+        lateRegistration:
+          type: boolean
         expectedArrival:
           type: string
           format: date-time

@@ -20,7 +20,7 @@ import { SITE_NAME } from "@/lib/site";
 import { PhotoCapture } from "@/components/photo-capture";
 import { VisitorBadge, type VisitorBadgeData } from "@/components/visitor-badge";
 import { printBadge } from "@/lib/print-badge";
-import { CalendarClock, LogIn, Plus, Printer, Trash2, UserPlus } from "lucide-react";
+import { AlertTriangle, CalendarClock, LogIn, Plus, Printer, Trash2, UserPlus } from "lucide-react";
 import { format } from "date-fns";
 
 type Preg = Preregistration;
@@ -268,13 +268,41 @@ export default function Preregistrations() {
                 <tbody className="divide-y divide-border">
                   {pending.map((p) => (
                     <tr key={p.id} className="hover:bg-muted/30 transition-colors">
-                      <td className="px-4 py-3 font-medium">{p.guestName}</td>
+                      <td className="px-4 py-3 font-medium">
+                        {p.guestName}
+                        {p.approvalStatus === "pending" && (
+                          <span className="ml-2 inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-amber-500/15 text-amber-600" data-testid={`pill-pending-${p.id}`}>
+                            AWAITING APPROVAL{p.approvalStage === 2 ? " (2ND)" : ""}
+                          </span>
+                        )}
+                        {p.approvalStatus === "denied" && (
+                          <span className="ml-2 inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-destructive/15 text-destructive" data-testid={`pill-denied-${p.id}`}>
+                            DENIED
+                          </span>
+                        )}
+                        {p.lateRegistration && p.approvalStatus !== "denied" && (
+                          <span className="ml-1.5 inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[10px] font-semibold bg-amber-500/10 text-amber-600" title="Registered less than 4 hours before arrival">
+                            <AlertTriangle className="w-2.5 h-2.5" /> LATE
+                          </span>
+                        )}
+                      </td>
                       <td className="px-4 py-3 text-muted-foreground">{p.company}</td>
                       <td className="px-4 py-3">{p.hostName}</td>
                       <td className="px-4 py-3 text-muted-foreground">{p.studios?.length ? p.studios.join(", ") : "—"}</td>
                       <td className="px-4 py-3 text-muted-foreground">{format(new Date(p.expectedArrival), "HH:mm")}</td>
                       <td className="px-4 py-3 text-right flex items-center justify-end gap-2">
-                        <Button size="sm" onClick={() => openConvert(p)}>
+                        <Button
+                          size="sm"
+                          onClick={() => openConvert(p)}
+                          disabled={p.approvalStatus === "pending" || p.approvalStatus === "denied"}
+                          title={
+                            p.approvalStatus === "pending"
+                              ? "Awaiting approval — cannot check in yet"
+                              : p.approvalStatus === "denied"
+                                ? "Denied — cannot check in"
+                                : undefined
+                          }
+                        >
                           <LogIn className="w-3 h-3 mr-1" />
                           Check In
                         </Button>

@@ -27,6 +27,10 @@ import type {
   AppUser,
   AppUserInput,
   AppUserUpdate,
+  ApprovalDecisionInput,
+  ApprovalTokenInfo,
+  ApprovalWorkflow,
+  ApprovalWorkflowInput,
   AuditEntry,
   BadgeData,
   BrandingSettings,
@@ -1313,6 +1317,449 @@ export const useCreatePublicPreregistration = <TError = ErrorType<unknown>,
         TContext
       > => {
       return useMutation(getCreatePublicPreregistrationMutationOptions(options));
+    }
+
+export const getGetApprovalWorkflowUrl = () => {
+
+
+
+
+  return `/api/approval-workflow`
+}
+
+/**
+ * @summary Get the pre-registration approval workflow configuration (admin)
+ */
+export const getApprovalWorkflow = async ( options?: RequestInit): Promise<ApprovalWorkflow> => {
+
+  return customFetch<ApprovalWorkflow>(getGetApprovalWorkflowUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetApprovalWorkflowQueryKey = () => {
+    return [
+    `/api/approval-workflow`
+    ] as const;
+    }
+
+
+export const getGetApprovalWorkflowQueryOptions = <TData = Awaited<ReturnType<typeof getApprovalWorkflow>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getApprovalWorkflow>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetApprovalWorkflowQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getApprovalWorkflow>>> = ({ signal }) => getApprovalWorkflow({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getApprovalWorkflow>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetApprovalWorkflowQueryResult = NonNullable<Awaited<ReturnType<typeof getApprovalWorkflow>>>
+export type GetApprovalWorkflowQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Get the pre-registration approval workflow configuration (admin)
+ */
+
+export function useGetApprovalWorkflow<TData = Awaited<ReturnType<typeof getApprovalWorkflow>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getApprovalWorkflow>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetApprovalWorkflowQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getUpdateApprovalWorkflowUrl = () => {
+
+
+
+
+  return `/api/approval-workflow`
+}
+
+/**
+ * @summary Update the approval workflow (admin). Null approver1 disables approvals.
+ */
+export const updateApprovalWorkflow = async (approvalWorkflowInput: ApprovalWorkflowInput, options?: RequestInit): Promise<ApprovalWorkflow> => {
+
+  return customFetch<ApprovalWorkflow>(getUpdateApprovalWorkflowUrl(),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(approvalWorkflowInput)
+  }
+);}
+
+
+
+
+export const getUpdateApprovalWorkflowMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateApprovalWorkflow>>, TError,{data: BodyType<ApprovalWorkflowInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateApprovalWorkflow>>, TError,{data: BodyType<ApprovalWorkflowInput>}, TContext> => {
+
+const mutationKey = ['updateApprovalWorkflow'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateApprovalWorkflow>>, {data: BodyType<ApprovalWorkflowInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  updateApprovalWorkflow(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateApprovalWorkflowMutationResult = NonNullable<Awaited<ReturnType<typeof updateApprovalWorkflow>>>
+    export type UpdateApprovalWorkflowMutationBody = BodyType<ApprovalWorkflowInput>
+    export type UpdateApprovalWorkflowMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Update the approval workflow (admin). Null approver1 disables approvals.
+ */
+export const useUpdateApprovalWorkflow = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateApprovalWorkflow>>, TError,{data: BodyType<ApprovalWorkflowInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updateApprovalWorkflow>>,
+        TError,
+        {data: BodyType<ApprovalWorkflowInput>},
+        TContext
+      > => {
+      return useMutation(getUpdateApprovalWorkflowMutationOptions(options));
+    }
+
+export const getListPendingApprovalsUrl = () => {
+
+
+
+
+  return `/api/approvals/pending`
+}
+
+/**
+ * @summary Pre-registrations awaiting the current user's approval
+ */
+export const listPendingApprovals = async ( options?: RequestInit): Promise<Preregistration[]> => {
+
+  return customFetch<Preregistration[]>(getListPendingApprovalsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListPendingApprovalsQueryKey = () => {
+    return [
+    `/api/approvals/pending`
+    ] as const;
+    }
+
+
+export const getListPendingApprovalsQueryOptions = <TData = Awaited<ReturnType<typeof listPendingApprovals>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listPendingApprovals>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListPendingApprovalsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listPendingApprovals>>> = ({ signal }) => listPendingApprovals({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listPendingApprovals>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListPendingApprovalsQueryResult = NonNullable<Awaited<ReturnType<typeof listPendingApprovals>>>
+export type ListPendingApprovalsQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Pre-registrations awaiting the current user's approval
+ */
+
+export function useListPendingApprovals<TData = Awaited<ReturnType<typeof listPendingApprovals>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listPendingApprovals>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListPendingApprovalsQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getDecideApprovalUrl = (id: number,) => {
+
+
+
+
+  return `/api/approvals/${id}/decide`
+}
+
+/**
+ * @summary Approve or deny a pending pre-registration (current-stage approver only)
+ */
+export const decideApproval = async (id: number,
+    approvalDecisionInput: ApprovalDecisionInput, options?: RequestInit): Promise<Preregistration> => {
+
+  return customFetch<Preregistration>(getDecideApprovalUrl(id),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(approvalDecisionInput)
+  }
+);}
+
+
+
+
+export const getDecideApprovalMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof decideApproval>>, TError,{id: number;data: BodyType<ApprovalDecisionInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof decideApproval>>, TError,{id: number;data: BodyType<ApprovalDecisionInput>}, TContext> => {
+
+const mutationKey = ['decideApproval'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof decideApproval>>, {id: number;data: BodyType<ApprovalDecisionInput>}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  decideApproval(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DecideApprovalMutationResult = NonNullable<Awaited<ReturnType<typeof decideApproval>>>
+    export type DecideApprovalMutationBody = BodyType<ApprovalDecisionInput>
+    export type DecideApprovalMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Approve or deny a pending pre-registration (current-stage approver only)
+ */
+export const useDecideApproval = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof decideApproval>>, TError,{id: number;data: BodyType<ApprovalDecisionInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof decideApproval>>,
+        TError,
+        {id: number;data: BodyType<ApprovalDecisionInput>},
+        TContext
+      > => {
+      return useMutation(getDecideApprovalMutationOptions(options));
+    }
+
+export const getGetApprovalByTokenUrl = (token: string,) => {
+
+
+
+
+  return `/api/approvals/token/${token}`
+}
+
+/**
+ * @summary Look up a pending approval by email token (no authentication)
+ */
+export const getApprovalByToken = async (token: string, options?: RequestInit): Promise<ApprovalTokenInfo> => {
+
+  return customFetch<ApprovalTokenInfo>(getGetApprovalByTokenUrl(token),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetApprovalByTokenQueryKey = (token: string,) => {
+    return [
+    `/api/approvals/token/${token}`
+    ] as const;
+    }
+
+
+export const getGetApprovalByTokenQueryOptions = <TData = Awaited<ReturnType<typeof getApprovalByToken>>, TError = ErrorType<unknown>>(token: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getApprovalByToken>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetApprovalByTokenQueryKey(token);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getApprovalByToken>>> = ({ signal }) => getApprovalByToken(token, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: token !== null && token !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getApprovalByToken>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetApprovalByTokenQueryResult = NonNullable<Awaited<ReturnType<typeof getApprovalByToken>>>
+export type GetApprovalByTokenQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Look up a pending approval by email token (no authentication)
+ */
+
+export function useGetApprovalByToken<TData = Awaited<ReturnType<typeof getApprovalByToken>>, TError = ErrorType<unknown>>(
+ token: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getApprovalByToken>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetApprovalByTokenQueryOptions(token,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getDecideApprovalByTokenUrl = (token: string,) => {
+
+
+
+
+  return `/api/approvals/token/${token}/decide`
+}
+
+/**
+ * @summary Approve or deny via email token (no authentication, single-use)
+ */
+export const decideApprovalByToken = async (token: string,
+    approvalDecisionInput: ApprovalDecisionInput, options?: RequestInit): Promise<ApprovalTokenInfo> => {
+
+  return customFetch<ApprovalTokenInfo>(getDecideApprovalByTokenUrl(token),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(approvalDecisionInput)
+  }
+);}
+
+
+
+
+export const getDecideApprovalByTokenMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof decideApprovalByToken>>, TError,{token: string;data: BodyType<ApprovalDecisionInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof decideApprovalByToken>>, TError,{token: string;data: BodyType<ApprovalDecisionInput>}, TContext> => {
+
+const mutationKey = ['decideApprovalByToken'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof decideApprovalByToken>>, {token: string;data: BodyType<ApprovalDecisionInput>}> = (props) => {
+          const {token,data} = props ?? {};
+
+          return  decideApprovalByToken(token,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DecideApprovalByTokenMutationResult = NonNullable<Awaited<ReturnType<typeof decideApprovalByToken>>>
+    export type DecideApprovalByTokenMutationBody = BodyType<ApprovalDecisionInput>
+    export type DecideApprovalByTokenMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Approve or deny via email token (no authentication, single-use)
+ */
+export const useDecideApprovalByToken = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof decideApprovalByToken>>, TError,{token: string;data: BodyType<ApprovalDecisionInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof decideApprovalByToken>>,
+        TError,
+        {token: string;data: BodyType<ApprovalDecisionInput>},
+        TContext
+      > => {
+      return useMutation(getDecideApprovalByTokenMutationOptions(options));
     }
 
 export const getListStudiosUrl = () => {

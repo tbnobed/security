@@ -27,4 +27,7 @@ export const AuditEntryEventType = {
   client_employees_imported: 'client_employees_imported',
   badge_logo_updated: 'badge_logo_updated',
   badge_logo_removed: 'badge_logo_removed',
+  prereg_approved: 'prereg_approved',
+  prereg_denied: 'prereg_denied',
+  approval_workflow_updated: 'approval_workflow_updated',
 } as const;
