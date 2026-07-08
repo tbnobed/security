@@ -1295,7 +1295,7 @@ export const LoginResponse = zod.object({
   "clerkId": zod.string(),
   "displayName": zod.string().nullish(),
   "email": zod.string().nullish(),
-  "role": zod.enum(['security', 'admin', 'kiosk', 'client']),
+  "role": zod.enum(['security', 'supervisor', 'admin', 'kiosk', 'client']),
   "companyName": zod.string().nullish().describe('Company the account belongs to (client role only)'),
   "notifyEmail": zod.string().nullish().describe('Email that receives check-in notifications (client role only)'),
   "createdAt": zod.coerce.date()
@@ -1315,7 +1315,7 @@ export const ListUsersResponseItem = zod.object({
   "clerkId": zod.string(),
   "displayName": zod.string().nullish(),
   "email": zod.string().nullish(),
-  "role": zod.enum(['security', 'admin', 'kiosk', 'client']),
+  "role": zod.enum(['security', 'supervisor', 'admin', 'kiosk', 'client']),
   "companyName": zod.string().nullish().describe('Company the account belongs to (client role only)'),
   "notifyEmail": zod.string().nullish().describe('Email that receives check-in notifications (client role only)'),
   "createdAt": zod.coerce.date()
@@ -1336,7 +1336,7 @@ export const CreateUserBody = zod.object({
   "email": zod.string().email().min(createUserBodyEmailMin).describe('Login email; must be unique (case-insensitive)'),
   "password": zod.string().min(createUserBodyPasswordMin).describe('Initial password for the operator'),
   "displayName": zod.string().optional(),
-  "role": zod.enum(['security', 'admin', 'kiosk', 'client']),
+  "role": zod.enum(['security', 'supervisor', 'admin', 'kiosk', 'client']),
   "companyName": zod.string().optional().describe('Required when role is client'),
   "notifyEmail": zod.string().email().optional().describe('Optional notification email for client accounts (defaults to login email)')
 })
@@ -1345,7 +1345,7 @@ export const CreateUserResponse = zod.object({
   "clerkId": zod.string(),
   "displayName": zod.string().nullish(),
   "email": zod.string().nullish(),
-  "role": zod.enum(['security', 'admin', 'kiosk', 'client']),
+  "role": zod.enum(['security', 'supervisor', 'admin', 'kiosk', 'client']),
   "companyName": zod.string().nullish().describe('Company the account belongs to (client role only)'),
   "notifyEmail": zod.string().nullish().describe('Email that receives check-in notifications (client role only)'),
   "createdAt": zod.coerce.date()
@@ -1359,7 +1359,7 @@ export const GetMeResponse = zod.object({
   "clerkId": zod.string(),
   "displayName": zod.string().nullish(),
   "email": zod.string().nullish(),
-  "role": zod.enum(['security', 'admin', 'kiosk', 'client']),
+  "role": zod.enum(['security', 'supervisor', 'admin', 'kiosk', 'client']),
   "companyName": zod.string().nullish().describe('Company the account belongs to (client role only)'),
   "notifyEmail": zod.string().nullish().describe('Email that receives check-in notifications (client role only)'),
   "createdAt": zod.coerce.date()
@@ -1377,7 +1377,7 @@ export const UpdateMeResponse = zod.object({
   "clerkId": zod.string(),
   "displayName": zod.string().nullish(),
   "email": zod.string().nullish(),
-  "role": zod.enum(['security', 'admin', 'kiosk', 'client']),
+  "role": zod.enum(['security', 'supervisor', 'admin', 'kiosk', 'client']),
   "companyName": zod.string().nullish().describe('Company the account belongs to (client role only)'),
   "notifyEmail": zod.string().nullish().describe('Email that receives check-in notifications (client role only)'),
   "createdAt": zod.coerce.date()
@@ -1392,14 +1392,14 @@ export const UpdateUserRoleParams = zod.object({
 })
 
 export const UpdateUserRoleBody = zod.object({
-  "role": zod.enum(['security', 'admin', 'kiosk', 'client'])
+  "role": zod.enum(['security', 'supervisor', 'admin', 'kiosk', 'client'])
 })
 
 export const UpdateUserRoleResponse = zod.object({
   "clerkId": zod.string(),
   "displayName": zod.string().nullish(),
   "email": zod.string().nullish(),
-  "role": zod.enum(['security', 'admin', 'kiosk', 'client']),
+  "role": zod.enum(['security', 'supervisor', 'admin', 'kiosk', 'client']),
   "companyName": zod.string().nullish().describe('Company the account belongs to (client role only)'),
   "notifyEmail": zod.string().nullish().describe('Email that receives check-in notifications (client role only)'),
   "createdAt": zod.coerce.date()
@@ -1425,7 +1425,7 @@ export const ResetUserPasswordResponse = zod.object({
   "clerkId": zod.string(),
   "displayName": zod.string().nullish(),
   "email": zod.string().nullish(),
-  "role": zod.enum(['security', 'admin', 'kiosk', 'client']),
+  "role": zod.enum(['security', 'supervisor', 'admin', 'kiosk', 'client']),
   "companyName": zod.string().nullish().describe('Company the account belongs to (client role only)'),
   "notifyEmail": zod.string().nullish().describe('Email that receives check-in notifications (client role only)'),
   "createdAt": zod.coerce.date()

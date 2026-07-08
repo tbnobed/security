@@ -74,8 +74,8 @@ router.put("/approval-workflow", requireAdmin, async (req, res): Promise<void> =
   for (const id of [approver1Id, approver2Id]) {
     if (!id) continue;
     const [user] = await db.select().from(usersTable).where(eq(usersTable.clerkId, id));
-    if (!user || (user.role !== "security" && user.role !== "admin")) {
-      res.status(400).json({ error: "Approvers must be existing security or admin users" });
+    if (!user || (user.role !== "security" && user.role !== "supervisor" && user.role !== "admin")) {
+      res.status(400).json({ error: "Approvers must be existing security, supervisor, or admin users" });
       return;
     }
   }

@@ -9,7 +9,7 @@ import {
   CheckWatchlistQueryParams,
   CheckWatchlistResponse,
 } from "@workspace/api-zod";
-import { requireOperator, requireAdmin } from "../lib/auth";
+import { requireOperator, requireSupervisor } from "../lib/auth";
 import { getSessionUserId } from "../lib/auth";
 import { usersTable } from "@workspace/db";
 
@@ -29,7 +29,7 @@ async function getOperatorName(clerkId: string): Promise<string> {
   return user?.displayName ?? user?.email ?? clerkId;
 }
 
-router.get("/watchlist", requireAdmin, async (req, res): Promise<void> => {
+router.get("/watchlist", requireSupervisor, async (req, res): Promise<void> => {
   const entries = await db
     .select()
     .from(watchlistTable)
@@ -38,7 +38,7 @@ router.get("/watchlist", requireAdmin, async (req, res): Promise<void> => {
   res.json(ListWatchlistResponse.parse(entries.map(toWatchlistResponse)));
 });
 
-router.post("/watchlist", requireAdmin, async (req, res): Promise<void> => {
+router.post("/watchlist", requireSupervisor, async (req, res): Promise<void> => {
   const parsed = CreateWatchlistEntryBody.safeParse(req.body);
   if (!parsed.success) {
     res.status(400).json({ error: parsed.error.message });
@@ -71,7 +71,7 @@ router.post("/watchlist", requireAdmin, async (req, res): Promise<void> => {
   res.status(201).json(CreateWatchlistEntryResponse.parse(toWatchlistResponse(entry)));
 });
 
-router.delete("/watchlist/:id", requireAdmin, async (req, res): Promise<void> => {
+router.delete("/watchlist/:id", requireSupervisor, async (req, res): Promise<void> => {
   const params = DeleteWatchlistEntryParams.safeParse(req.params);
   if (!params.success) {
     res.status(400).json({ error: params.error.message });

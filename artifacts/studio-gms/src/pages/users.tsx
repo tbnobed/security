@@ -24,7 +24,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Shield, Users, UserPlus, KeyRound, Loader2 } from "lucide-react";
 import { format } from "date-fns";
 
-type Role = "security" | "admin" | "kiosk" | "client";
+type Role = "security" | "supervisor" | "admin" | "kiosk" | "client";
 
 export default function UsersPage() {
   const { toast } = useToast();
@@ -155,7 +155,8 @@ export default function UsersPage() {
           <div className="text-sm text-muted-foreground">
             <span className="font-medium text-foreground">Roles: </span>
             <strong>Security</strong> — can check guests in/out and view the dashboard.
-            {" "}<strong>Admin</strong> — all security permissions plus watchlist, audit log, and user management.
+            {" "}<strong>Security Supervisor</strong> — all security permissions plus watchlist and audit log.
+            {" "}<strong>Admin</strong> — all supervisor permissions plus user management and app settings.
             {" "}<strong>Kiosk</strong> — locked to the self-service check-in screen only (use for the lobby tablet).
             {" "}<strong>Client</strong> — external client account locked to the client portal (roster + pre-registration for their company).
             Operators are created here by an administrator with an email and initial password.
@@ -218,6 +219,7 @@ export default function UsersPage() {
                           </SelectTrigger>
                           <SelectContent>
                             <SelectItem value="security">Security</SelectItem>
+                            <SelectItem value="supervisor">Security Supervisor</SelectItem>
                             <SelectItem value="admin">Admin</SelectItem>
                             <SelectItem value="kiosk">Kiosk</SelectItem>
                             {user.role === "client" && <SelectItem value="client">Client</SelectItem>}
@@ -289,6 +291,7 @@ export default function UsersPage() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="security">Security</SelectItem>
+                    <SelectItem value="supervisor">Security Supervisor</SelectItem>
                     <SelectItem value="admin">Admin</SelectItem>
                     <SelectItem value="kiosk">Kiosk</SelectItem>
                     <SelectItem value="client">Client</SelectItem>

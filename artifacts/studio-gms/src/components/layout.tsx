@@ -14,6 +14,7 @@ export function Layout({ children }: LayoutProps) {
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
 
   const isAdmin = me?.role === "admin";
+  const isSupervisor = me?.role === "supervisor";
 
   const basePath = import.meta.env.BASE_URL.replace(/\/$/, "");
 
@@ -32,13 +33,22 @@ export function Layout({ children }: LayoutProps) {
     { href: "/visits", label: "Visit Log", icon: History },
   ];
 
-  const adminItems = [
+  // Supervisors get watchlist + audit log; admins get everything.
+  const supervisorItems = [
     { href: "/watchlist", label: "Watchlist", icon: ShieldAlert },
     { href: "/audit", label: "Audit Log", icon: FileText },
+  ];
+
+  const adminOnlyItems = [
     { href: "/users", label: "Users", icon: Users },
     { href: "/studios", label: "Studios", icon: Building2 },
     { href: "/alerts", label: "Email Alerts", icon: Bell },
     { href: "/branding", label: "Badge Logo", icon: ImageIcon },
+  ];
+
+  const adminItems = [
+    ...supervisorItems,
+    ...(isAdmin ? adminOnlyItems : []),
   ];
 
   const sidebarContent = (
@@ -69,10 +79,10 @@ export function Layout({ children }: LayoutProps) {
           </Link>
         ))}
 
-        {isAdmin && (
+        {(isAdmin || isSupervisor) && (
           <>
             <div className="mt-6 mb-2 px-3">
-              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Administration</p>
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">{isAdmin ? "Administration" : "Supervision"}</p>
             </div>
             {adminItems.map((item) => (
               <Link key={item.href} href={item.href} onClick={() => setMobileNavOpen(false)} className={`flex items-center gap-3 px-3 py-2.5 md:py-2 text-sm rounded-md transition-colors ${location === item.href ? "bg-primary/10 text-primary font-medium" : "text-muted-foreground hover:text-foreground hover:bg-muted"}`}>

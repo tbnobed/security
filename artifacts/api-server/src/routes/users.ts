@@ -32,7 +32,7 @@ function toUserResponse(u: typeof usersTable.$inferSelect) {
     clerkId: u.clerkId,
     displayName: u.displayName ?? null,
     email: u.email ?? null,
-    role: u.role as "security" | "admin" | "kiosk" | "client",
+    role: u.role as "security" | "supervisor" | "admin" | "kiosk" | "client",
     companyName: u.companyName ?? null,
     notifyEmail: u.notifyEmail ?? null,
     createdAt: u.createdAt.toISOString(),

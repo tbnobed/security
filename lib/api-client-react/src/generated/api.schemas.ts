@@ -406,6 +406,7 @@ export type AppUserRole = typeof AppUserRole[keyof typeof AppUserRole];
 
 export const AppUserRole = {
   security: 'security',
+  supervisor: 'supervisor',
   admin: 'admin',
   kiosk: 'kiosk',
   client: 'client',
@@ -436,6 +437,7 @@ export type AppUserInputRole = typeof AppUserInputRole[keyof typeof AppUserInput
 
 export const AppUserInputRole = {
   security: 'security',
+  supervisor: 'supervisor',
   admin: 'admin',
   kiosk: 'kiosk',
   client: 'client',
@@ -474,6 +476,7 @@ export type RoleUpdateRole = typeof RoleUpdateRole[keyof typeof RoleUpdateRole];
 
 export const RoleUpdateRole = {
   security: 'security',
+  supervisor: 'supervisor',
   admin: 'admin',
   kiosk: 'kiosk',
   client: 'client',

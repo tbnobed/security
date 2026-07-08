@@ -42,7 +42,7 @@ function AdminWorkflowConfig() {
     }
   }, [workflow]);
 
-  const eligible = (users ?? []).filter((u) => u.role === "security" || u.role === "admin");
+  const eligible = (users ?? []).filter((u) => u.role === "security" || u.role === "supervisor" || u.role === "admin");
 
   const handleSave = async () => {
     try {

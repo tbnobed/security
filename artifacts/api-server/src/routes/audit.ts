@@ -6,7 +6,7 @@ import {
   ListAuditLogResponse,
   ExportAuditLogQueryParams,
 } from "@workspace/api-zod";
-import { requireAdmin } from "../lib/auth";
+import { requireSupervisor } from "../lib/auth";
 
 const router = Router();
 
@@ -19,7 +19,7 @@ function toAuditResponse(a: typeof auditTable.$inferSelect) {
   };
 }
 
-router.get("/audit", requireAdmin, async (req, res): Promise<void> => {
+router.get("/audit", requireSupervisor, async (req, res): Promise<void> => {
   const parsed = ListAuditLogQueryParams.safeParse(req.query);
   if (!parsed.success) {
     res.status(400).json({ error: parsed.error.message });
@@ -52,7 +52,7 @@ router.get("/audit", requireAdmin, async (req, res): Promise<void> => {
   res.json(ListAuditLogResponse.parse(entries.map(toAuditResponse)));
 });
 
-router.get("/audit/export", requireAdmin, async (req, res): Promise<void> => {
+router.get("/audit/export", requireSupervisor, async (req, res): Promise<void> => {
   const parsed = ExportAuditLogQueryParams.safeParse(req.query);
   if (!parsed.success) {
     res.status(400).json({ error: parsed.error.message });

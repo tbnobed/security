@@ -50,8 +50,11 @@ export function requireAuth(req: Request, res: Response, next: NextFunction): vo
   next();
 }
 
+/** Staff roles allowed to operate the security desk screens. */
+const OPERATOR_ROLES = new Set(["security", "supervisor", "admin"]);
+
 /**
- * Requires an authenticated user whose role is security or admin.
+ * Requires an authenticated user whose role is security, supervisor, or admin.
  * Kiosk accounts are rejected — they may only use the kiosk endpoints.
  */
 export async function requireOperator(
@@ -65,8 +68,31 @@ export async function requireOperator(
     return;
   }
   const [user] = await db.select().from(usersTable).where(eq(usersTable.clerkId, userId));
-  if (!user || (user.role !== "security" && user.role !== "admin")) {
+  if (!user || !OPERATOR_ROLES.has(user.role)) {
     res.status(403).json({ error: "Operator access required" });
+    return;
+  }
+  learnOriginFromTrustedRequest(req);
+  next();
+}
+
+/**
+ * Requires an authenticated user whose role is supervisor or admin.
+ * Grants access to the watchlist and audit log without full admin rights.
+ */
+export async function requireSupervisor(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+): Promise<void> {
+  const userId = req.session?.userId;
+  if (!userId) {
+    res.status(401).json({ error: "Unauthorized" });
+    return;
+  }
+  const [user] = await db.select().from(usersTable).where(eq(usersTable.clerkId, userId));
+  if (!user || (user.role !== "supervisor" && user.role !== "admin")) {
+    res.status(403).json({ error: "Supervisor access required" });
     return;
   }
   learnOriginFromTrustedRequest(req);
@@ -89,7 +115,7 @@ export async function requireKioskAccess(
     return;
   }
   const [user] = await db.select().from(usersTable).where(eq(usersTable.clerkId, userId));
-  if (!user || (user.role !== "kiosk" && user.role !== "security" && user.role !== "admin")) {
+  if (!user || (user.role !== "kiosk" && !OPERATOR_ROLES.has(user.role))) {
     res.status(403).json({ error: "Kiosk access required" });
     return;
   }

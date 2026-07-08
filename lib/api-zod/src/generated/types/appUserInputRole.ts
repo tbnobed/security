@@ -11,6 +11,7 @@ export type AppUserInputRole = typeof AppUserInputRole[keyof typeof AppUserInput
 
 export const AppUserInputRole = {
   security: 'security',
+  supervisor: 'supervisor',
   admin: 'admin',
   kiosk: 'kiosk',
   client: 'client',
