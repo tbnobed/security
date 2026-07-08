@@ -5,6 +5,8 @@
  * Studio Guest Management System API
  * OpenAPI spec version: 0.1.0
  */
+import type { ListGuestHistorySortBy } from './listGuestHistorySortBy';
+import type { ListGuestHistorySortDir } from './listGuestHistorySortDir';
 import type { ListGuestHistoryStatus } from './listGuestHistoryStatus';
 
 export type ListGuestHistoryParams = {
@@ -26,6 +28,14 @@ from?: string;
  * @pattern ^\d{4}-\d{2}-\d{2}$
  */
 to?: string;
+/**
+ * Column to sort by (default checkinAt)
+ */
+sortBy?: ListGuestHistorySortBy;
+/**
+ * Sort direction (default desc)
+ */
+sortDir?: ListGuestHistorySortDir;
 /**
  * 1-based page number
  * @minimum 1

@@ -640,6 +640,14 @@ from?: string;
  */
 to?: string;
 /**
+ * Column to sort by (default checkinAt)
+ */
+sortBy?: ListGuestHistorySortBy;
+/**
+ * Sort direction (default desc)
+ */
+sortDir?: ListGuestHistorySortDir;
+/**
  * 1-based page number
  * @minimum 1
  */
@@ -659,6 +667,26 @@ export const ListGuestHistoryStatus = {
   active: 'active',
   checked_out: 'checked_out',
   all: 'all',
+} as const;
+
+export type ListGuestHistorySortBy = typeof ListGuestHistorySortBy[keyof typeof ListGuestHistorySortBy];
+
+
+export const ListGuestHistorySortBy = {
+  name: 'name',
+  company: 'company',
+  hostName: 'hostName',
+  badgeId: 'badgeId',
+  checkinAt: 'checkinAt',
+  checkoutAt: 'checkoutAt',
+} as const;
+
+export type ListGuestHistorySortDir = typeof ListGuestHistorySortDir[keyof typeof ListGuestHistorySortDir];
+
+
+export const ListGuestHistorySortDir = {
+  asc: 'asc',
+  desc: 'desc',
 } as const;
 
 export type ListPreregistrationsParams = {

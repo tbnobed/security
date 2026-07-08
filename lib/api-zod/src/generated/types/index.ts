@@ -49,6 +49,8 @@ export * from './knownGuestList';
 export * from './knownGuestUpdate';
 export * from './listAuditLogParams';
 export * from './listGuestHistoryParams';
+export * from './listGuestHistorySortBy';
+export * from './listGuestHistorySortDir';
 export * from './listGuestHistoryStatus';
 export * from './listGuestsParams';
 export * from './listGuestsStatus';

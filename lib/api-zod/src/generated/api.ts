@@ -307,6 +307,8 @@ export const SearchGuestsResponse = zod.array(SearchGuestsResponseItem)
  */
 export const listGuestHistoryQueryFromRegExp = new RegExp('^\\d{4}-\\d{2}-\\d{2}$');
 export const listGuestHistoryQueryToRegExp = new RegExp('^\\d{4}-\\d{2}-\\d{2}$');
+export const listGuestHistoryQuerySortByDefault = `checkinAt`;
+export const listGuestHistoryQuerySortDirDefault = `desc`;
 export const listGuestHistoryQueryPageDefault = 1;
 
 export const listGuestHistoryQueryPageSizeDefault = 25;
@@ -319,6 +321,8 @@ export const ListGuestHistoryQueryParams = zod.object({
   "status": zod.enum(['active', 'checked_out', 'all']).optional().describe('Filter by visit status (default all)'),
   "from": zod.coerce.string().regex(listGuestHistoryQueryFromRegExp).optional().describe('Only visits checked in on or after this date (YYYY-MM-DD)'),
   "to": zod.coerce.string().regex(listGuestHistoryQueryToRegExp).optional().describe('Only visits checked in on or before this date (YYYY-MM-DD)'),
+  "sortBy": zod.enum(['name', 'company', 'hostName', 'badgeId', 'checkinAt', 'checkoutAt']).default(listGuestHistoryQuerySortByDefault).describe('Column to sort by (default checkinAt)'),
+  "sortDir": zod.enum(['asc', 'desc']).default(listGuestHistoryQuerySortDirDefault).describe('Sort direction (default desc)'),
   "page": zod.coerce.number().min(1).default(listGuestHistoryQueryPageDefault).describe('1-based page number'),
   "pageSize": zod.coerce.number().min(1).max(listGuestHistoryQueryPageSizeMax).default(listGuestHistoryQueryPageSizeDefault).describe('Number of items per page')
 })

@@ -239,7 +239,7 @@ router.get("/guests/history", requireOperator, async (req, res): Promise<void> =
     res.status(400).json({ error: parsed.error.message });
     return;
   }
-  const { q, status, from, to, page, pageSize } = parsed.data;
+  const { q, status, from, to, sortBy, sortDir, page, pageSize } = parsed.data;
 
   const conditions = [];
   if (status && status !== "all") {
@@ -289,11 +289,25 @@ router.get("/guests/history", requireOperator, async (req, res): Promise<void> =
     .from(guestsTable)
     .where(where);
 
+  const sortColumns = {
+    name: guestsTable.name,
+    company: guestsTable.company,
+    hostName: guestsTable.hostName,
+    badgeId: guestsTable.badgeId,
+    checkinAt: guestsTable.checkinAt,
+    checkoutAt: guestsTable.checkoutAt,
+  } as const;
+  const sortColumn = sortColumns[sortBy];
+  const primaryOrder =
+    sortDir === "asc"
+      ? sql`${sortColumn} ASC NULLS LAST`
+      : sql`${sortColumn} DESC NULLS LAST`;
+
   const guests = await db
     .select()
     .from(guestsTable)
     .where(where)
-    .orderBy(desc(guestsTable.checkinAt))
+    .orderBy(primaryOrder, desc(guestsTable.checkinAt))
     .limit(pageSize)
     .offset((page - 1) * pageSize);
 

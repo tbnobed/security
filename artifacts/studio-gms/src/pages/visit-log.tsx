@@ -22,11 +22,59 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { GuestAvatar } from "@/components/guest-avatar";
-import { Search, Loader2, ChevronLeft, ChevronRight, X } from "lucide-react";
+import {
+  Search,
+  Loader2,
+  ChevronLeft,
+  ChevronRight,
+  X,
+  ArrowUp,
+  ArrowDown,
+  ChevronsUpDown,
+} from "lucide-react";
 
 const PAGE_SIZE = 25;
 
 type StatusFilter = "all" | "active" | "checked_out";
+type SortBy = "name" | "company" | "hostName" | "badgeId" | "checkinAt" | "checkoutAt";
+type SortDir = "asc" | "desc";
+
+function SortableHead({
+  column,
+  label,
+  sortBy,
+  sortDir,
+  onSort,
+}: {
+  column: SortBy;
+  label: string;
+  sortBy: SortBy;
+  sortDir: SortDir;
+  onSort: (column: SortBy) => void;
+}) {
+  const active = sortBy === column;
+  return (
+    <TableHead aria-sort={active ? (sortDir === "asc" ? "ascending" : "descending") : "none"}>
+      <button
+        type="button"
+        className={`flex items-center gap-1 hover:text-foreground ${active ? "text-foreground font-semibold" : ""}`}
+        onClick={() => onSort(column)}
+        title={`Sort by ${label}`}
+      >
+        {label}
+        {active ? (
+          sortDir === "asc" ? (
+            <ArrowUp className="w-3.5 h-3.5" />
+          ) : (
+            <ArrowDown className="w-3.5 h-3.5" />
+          )
+        ) : (
+          <ChevronsUpDown className="w-3.5 h-3.5 opacity-40" />
+        )}
+      </button>
+    </TableHead>
+  );
+}
 
 function formatDuration(minutes: number): string {
   if (minutes < 60) return `${minutes}m`;
@@ -41,12 +89,23 @@ export default function VisitLogPage() {
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
   const [page, setPage] = useState(1);
+  const [sortBy, setSortBy] = useState<SortBy>("checkinAt");
+  const [sortDir, setSortDir] = useState<SortDir>("desc");
 
   const trimmedSearch = search.trim();
 
   useEffect(() => {
     setPage(1);
-  }, [trimmedSearch, status, from, to]);
+  }, [trimmedSearch, status, from, to, sortBy, sortDir]);
+
+  const toggleSort = (column: SortBy) => {
+    if (sortBy === column) {
+      setSortDir((d) => (d === "asc" ? "desc" : "asc"));
+    } else {
+      setSortBy(column);
+      setSortDir(column === "checkinAt" || column === "checkoutAt" ? "desc" : "asc");
+    }
+  };
 
   const { data, isLoading } = useListGuestHistory(
     {
@@ -54,6 +113,8 @@ export default function VisitLogPage() {
       status,
       from: from || undefined,
       to: to || undefined,
+      sortBy,
+      sortDir,
       page,
       pageSize: PAGE_SIZE,
     },
@@ -137,13 +198,13 @@ export default function VisitLogPage() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Guest</TableHead>
-                <TableHead>Company</TableHead>
-                <TableHead>Host</TableHead>
+                <SortableHead column="name" label="Guest" sortBy={sortBy} sortDir={sortDir} onSort={toggleSort} />
+                <SortableHead column="company" label="Company" sortBy={sortBy} sortDir={sortDir} onSort={toggleSort} />
+                <SortableHead column="hostName" label="Host" sortBy={sortBy} sortDir={sortDir} onSort={toggleSort} />
                 <TableHead>Purpose</TableHead>
-                <TableHead>Badge</TableHead>
-                <TableHead>Checked In</TableHead>
-                <TableHead>Checked Out</TableHead>
+                <SortableHead column="badgeId" label="Badge" sortBy={sortBy} sortDir={sortDir} onSort={toggleSort} />
+                <SortableHead column="checkinAt" label="Checked In" sortBy={sortBy} sortDir={sortDir} onSort={toggleSort} />
+                <SortableHead column="checkoutAt" label="Checked Out" sortBy={sortBy} sortDir={sortDir} onSort={toggleSort} />
                 <TableHead>Duration</TableHead>
                 <TableHead>Status</TableHead>
               </TableRow>
