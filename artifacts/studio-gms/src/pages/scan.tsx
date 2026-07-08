@@ -62,6 +62,8 @@ export default function ScanPage() {
   const [insecureContext, setInsecureContext] = useState(false);
   const [scannerError, setScannerError] = useState(false);
   const [camRes, setCamRes] = useState("");
+  const [zoomLevel, setZoomLevel] = useState(1);
+  const [zoomMax, setZoomMax] = useState(1);
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -69,6 +71,17 @@ export default function ScanPage() {
   const scanningRef = useRef(false);
 
   const { mutateAsync: submitScan } = useSubmitScanResult();
+
+  const applyZoom = useCallback(async (level: number) => {
+    const track = streamRef.current?.getVideoTracks()[0];
+    if (!track) return;
+    try {
+      await track.applyConstraints({ advanced: [{ zoom: level } as MediaTrackConstraintSet] });
+      setZoomLevel(level);
+    } catch {
+      /* zoom rejected — leave as-is */
+    }
+  }, []);
 
   const stopCamera = useCallback(() => {
     scanningRef.current = false;
@@ -111,6 +124,22 @@ export default function ScanPage() {
       if (track) {
         const s = track.getSettings();
         if (s.width && s.height) setCamRes(`${s.width}×${s.height}`);
+        // Detect optical/digital zoom support — zooming in is the single most
+        // effective fix for dense PDF417 barcodes: the guest can hold the
+        // license at a distance the lens can actually focus at while keeping
+        // plenty of pixels on the barcode.
+        try {
+          const caps = track.getCapabilities?.() as { zoom?: { min?: number; max?: number } } | undefined;
+          const z = caps?.zoom;
+          if (z && typeof z.max === "number" && z.max > 1) {
+            setZoomMax(Math.min(z.max, 5));
+            setZoomLevel(1);
+          } else {
+            setZoomMax(1);
+          }
+        } catch {
+          setZoomMax(1);
+        }
       }
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
@@ -194,45 +223,64 @@ export default function ScanPage() {
       // case they hold the license further away).
       let frameNo = 0;
       let consecutiveDecodeErrors = 0;
+      // Consecutive native-detector frames with no result. Some devices
+      // nominally support pdf417 but never actually detect a dense license
+      // barcode — after ~2s of misses, start interleaving zxing-wasm attempts
+      // instead of trusting the native detector forever.
+      let nativeMisses = 0;
 
       const tick = async () => {
         if (cancelled || !scanningRef.current) return;
         const video = videoRef.current;
         const canvas = canvasRef.current;
         if (video && canvas && video.videoWidth > 0) {
-          const vw = video.videoWidth;
-          const vh = video.videoHeight;
-          const useCrop = frameNo % 2 === 0;
-          frameNo += 1;
-          // Center crop ≈ the on-screen guide box (80% × 60% of the frame).
-          const sw = useCrop ? Math.round(vw * 0.8) : vw;
-          const sh = useCrop ? Math.round(vh * 0.6) : vh;
-          const sx = Math.round((vw - sw) / 2);
-          const sy = Math.round((vh - sh) / 2);
-          // Keep more detail on the crop pass — PDF417 modules are tiny.
-          const longEdgeCap = useCrop ? 2016 : 1600;
-          const scale = Math.min(1, longEdgeCap / Math.max(sw, sh));
-          canvas.width = Math.round(sw * scale);
-          canvas.height = Math.round(sh * scale);
-          const ctx = canvas.getContext("2d", { willReadFrequently: true })!;
-          ctx.drawImage(video, sx, sy, sw, sh, 0, 0, canvas.width, canvas.height);
           try {
             let text: string | undefined;
             if (nativeDetector) {
               try {
-                const detections = await nativeDetector.detect(canvas);
+                // Feed the native detector the RAW full-resolution video frame —
+                // it is hardware-backed and handles 4K fine. Downscaling first
+                // (what we used to do) destroys exactly the pixel density a
+                // dense PDF417 needs.
+                const detections = await nativeDetector.detect(video);
                 text = detections[0]?.rawValue;
+                nativeMisses = text === undefined ? nativeMisses + 1 : 0;
               } catch {
                 // Native detector broken on this device — fall back to WASM.
                 nativeDetector = null;
                 if (!readBarcodes) throw new Error("no decoder");
               }
             }
-            if (text === undefined && !nativeDetector && readBarcodes) {
+            // zxing runs when there is no (working) native detector, or as an
+            // interleaved second opinion (every other frame) once the native
+            // detector has gone ~2s without detecting anything.
+            const wasmTurn =
+              !nativeDetector || (nativeMisses >= 8 && nativeMisses % 2 === 0);
+            if (text === undefined && readBarcodes && wasmTurn) {
+              const vw = video.videoWidth;
+              const vh = video.videoHeight;
+              const useCrop = frameNo % 2 === 0;
+              frameNo += 1;
+              // Center crop ≈ the on-screen guide box (80% × 60% of the frame).
+              const sw = useCrop ? Math.round(vw * 0.8) : vw;
+              const sh = useCrop ? Math.round(vh * 0.6) : vh;
+              const sx = Math.round((vw - sw) / 2);
+              const sy = Math.round((vh - sh) / 2);
+              // Keep full detail on the crop pass (a 3072×1296 RGBA buffer is
+              // ~16MB — fine) — PDF417 modules are tiny and downscaling is the
+              // main reason dense barcodes fail to decode.
+              const longEdgeCap = useCrop ? 3200 : 1920;
+              const scale = Math.min(1, longEdgeCap / Math.max(sw, sh));
+              canvas.width = Math.round(sw * scale);
+              canvas.height = Math.round(sh * scale);
+              const ctx = canvas.getContext("2d", { willReadFrequently: true })!;
+              ctx.drawImage(video, sx, sy, sw, sh, 0, 0, canvas.width, canvas.height);
               const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
               const results = await readBarcodes(imageData, {
                 formats: ["PDF417"],
                 tryHarder: true,
+                tryRotate: true,
+                tryInvert: true,
                 maxNumberOfSymbols: 1,
               });
               text = results[0]?.text;
@@ -341,6 +389,25 @@ export default function ScanPage() {
                 <div className="w-full aspect-[4/3] bg-muted rounded-md overflow-hidden relative">
                   <video ref={videoRef} autoPlay muted playsInline className="w-full h-full object-cover" />
                   <div className="absolute inset-6 border-2 border-primary/60 rounded pointer-events-none" />
+                  {zoomMax > 1 && !cameraError && !scannerError && (
+                    <div className="absolute bottom-2 left-0 right-0 flex justify-center gap-2">
+                      {[1, 2, ...(zoomMax >= 3 ? [3] : [])].map((z) => (
+                        <button
+                          key={z}
+                          type="button"
+                          onClick={() => void applyZoom(z)}
+                          data-testid={`button-zoom-${z}`}
+                          className={`px-3 py-1 rounded-full text-xs font-medium backdrop-blur-sm transition-colors ${
+                            zoomLevel === z
+                              ? "bg-primary text-primary-foreground"
+                              : "bg-background/60 text-foreground"
+                          }`}
+                        >
+                          {z}×
+                        </button>
+                      ))}
+                    </div>
+                  )}
                 </div>
                 {insecureContext ? (
                   <div className="text-sm text-destructive text-center space-y-2" data-testid="text-insecure-context">
@@ -365,8 +432,10 @@ export default function ScanPage() {
                       <Loader2 className="w-3 h-3 animate-spin" /> Scanning… only the name is read from the ID.
                     </p>
                     <p className="text-xs text-muted-foreground">
-                      Fill the frame with the barcode, hold steady, and avoid glare — move slightly
-                      closer or farther until it focuses.
+                      Fill the frame with the barcode, hold steady, and avoid glare.
+                      {zoomMax > 1
+                        ? " If it looks blurry up close, tap 2× and hold the license a bit farther away."
+                        : " Move slightly closer or farther until it focuses."}
                     </p>
                     {camRes && (
                       <p className="text-[10px] text-muted-foreground/60" data-testid="text-cam-res">
