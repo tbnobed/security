@@ -1353,6 +1353,19 @@ paths:
                 $ref: "#/components/schemas/ScanSessionState"
         "404":
           description: Unknown or expired session
+    delete:
+      operationId: cancelScanSession
+      tags: [scan]
+      summary: Cancel a scan session, invalidating its QR token (operator; idempotent)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "204":
+          description: Session cancelled (or already gone)
 
   /scan-sessions/{id}/submit:
     post:

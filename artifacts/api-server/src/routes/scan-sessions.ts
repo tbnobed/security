@@ -55,6 +55,15 @@ router.get("/scan-sessions/:id", requireOperator, (req, res): void => {
   );
 });
 
+// Idempotent cancel — the desk dialog calls this when it closes, unmounts, or
+// the page unloads, so a displayed-but-abandoned QR token can't be used later.
+router.delete("/scan-sessions/:id", requireOperator, (req, res): void => {
+  if (sessions.delete(req.params.id as string)) {
+    req.log.info({ scanSessionId: req.params.id }, "scan session cancelled");
+  }
+  res.status(204).end();
+});
+
 // Simple per-IP rate limit for the unauthenticated submit endpoint.
 const RATE_LIMIT = 30;
 const RATE_WINDOW_MS = 60 * 1000;

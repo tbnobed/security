@@ -5044,6 +5044,76 @@ export function useGetScanSession<TData = Awaited<ReturnType<typeof getScanSessi
 
 
 
+export const getCancelScanSessionUrl = (id: string,) => {
+
+
+
+
+  return `/api/scan-sessions/${id}`
+}
+
+/**
+ * @summary Cancel a scan session, invalidating its QR token (operator; idempotent)
+ */
+export const cancelScanSession = async (id: string, options?: RequestInit): Promise<void> => {
+
+  return customFetch<void>(getCancelScanSessionUrl(id),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+export const getCancelScanSessionMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof cancelScanSession>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof cancelScanSession>>, TError,{id: string}, TContext> => {
+
+const mutationKey = ['cancelScanSession'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof cancelScanSession>>, {id: string}> = (props) => {
+          const {id} = props ?? {};
+
+          return  cancelScanSession(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CancelScanSessionMutationResult = NonNullable<Awaited<ReturnType<typeof cancelScanSession>>>
+
+    export type CancelScanSessionMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Cancel a scan session, invalidating its QR token (operator; idempotent)
+ */
+export const useCancelScanSession = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof cancelScanSession>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof cancelScanSession>>,
+        TError,
+        {id: string},
+        TContext
+      > => {
+      return useMutation(getCancelScanSessionMutationOptions(options));
+    }
+
 export const getSubmitScanResultUrl = (id: string,) => {
 
 

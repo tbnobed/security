@@ -1,6 +1,6 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import QRCode from "react-qr-code";
-import { useCreateScanSession, useGetScanSession } from "@workspace/api-client-react";
+import { getCancelScanSessionUrl, useCreateScanSession, useGetScanSession } from "@workspace/api-client-react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Loader2, RefreshCw, Smartphone } from "lucide-react";
@@ -21,14 +21,52 @@ export function ScanIdDialog({ open, onOpenChange, onScanned }: ScanIdDialogProp
   const [expiresAt, setExpiresAt] = useState<number | null>(null);
   const [expired, setExpired] = useState(false);
   const appliedRef = useRef(false);
+  // Mirrors sessionId so unload/unmount handlers can cancel without stale closures.
+  const activeSessionRef = useRef<string | null>(null);
+  // Bumped on every close/cancel so an in-flight create that resolves late
+  // knows its session is already unwanted and cancels it immediately.
+  const generationRef = useRef(0);
 
   const { mutateAsync: createSession, isPending: creating } = useCreateScanSession();
 
+  // Fire-and-forget DELETE for a specific session id. keepalive lets the
+  // request survive a page refresh/navigation; idempotent on the server.
+  const cancelById = useCallback((id: string) => {
+    try {
+      void fetch(getCancelScanSessionUrl(id), {
+        method: "DELETE",
+        credentials: "same-origin",
+        keepalive: true,
+      }).catch(() => undefined);
+    } catch {
+      /* best-effort */
+    }
+  }, []);
+
+  // Invalidate the currently-active QR token (if any) and obsolete any
+  // in-flight session creation.
+  const cancelSession = useCallback(() => {
+    generationRef.current += 1;
+    const id = activeSessionRef.current;
+    if (!id) return;
+    activeSessionRef.current = null;
+    cancelById(id);
+  }, [cancelById]);
+
   const startSession = async () => {
+    cancelSession();
+    const generation = generationRef.current;
     appliedRef.current = false;
     setExpired(false);
     try {
       const session = await createSession();
+      if (generation !== generationRef.current) {
+        // Dialog closed / page navigated away while the create was in flight —
+        // this token was never shown and must not stay valid.
+        cancelById(session.id);
+        return;
+      }
+      activeSessionRef.current = session.id;
       setSessionId(session.id);
       setExpiresAt(new Date(session.expiresAt).getTime());
     } catch {
@@ -40,6 +78,7 @@ export function ScanIdDialog({ open, onOpenChange, onScanned }: ScanIdDialogProp
     if (open) {
       void startSession();
     } else {
+      cancelSession();
       setSessionId(null);
       setExpiresAt(null);
       setExpired(false);
@@ -47,6 +86,22 @@ export function ScanIdDialog({ open, onOpenChange, onScanned }: ScanIdDialogProp
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
+
+  // Refresh / tab close / navigation away while the QR is showing → invalidate
+  // the token immediately instead of letting it live out its server-side TTL.
+  useEffect(() => {
+    if (!open) return;
+    const handler = () => cancelSession();
+    window.addEventListener("pagehide", handler);
+    window.addEventListener("beforeunload", handler);
+    return () => {
+      window.removeEventListener("pagehide", handler);
+      window.removeEventListener("beforeunload", handler);
+    };
+  }, [open, cancelSession]);
+
+  // Component unmount (SPA navigation away from the check-in page).
+  useEffect(() => () => cancelSession(), [cancelSession]);
 
   // Local expiry countdown → show "generate new code"
   useEffect(() => {

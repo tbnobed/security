@@ -1535,6 +1535,16 @@ export const GetScanSessionResponse = zod.object({
 
 
 /**
+ * @summary Cancel a scan session, invalidating its QR token (operator; idempotent)
+ */
+export const CancelScanSessionParams = zod.object({
+  "id": zod.coerce.string()
+})
+
+export const CancelScanSessionResponse = zod.void()
+
+
+/**
  * @summary Submit scanned ID data from the paired phone (token-authenticated by session id)
  */
 export const SubmitScanResultParams = zod.object({
