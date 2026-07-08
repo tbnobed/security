@@ -6,6 +6,12 @@ import { Camera, CameraOff, RefreshCw, XCircle } from "lucide-react";
 interface PhotoCaptureProps {
   /** Current captured photo as a data URL, or null. */
   photo: string | null;
+  /**
+   * Already-uploaded photo URL to display when no local capture exists
+   * (e.g. transferred from the phone ID-scan or a known-guest prefill).
+   * Cleared via onChange(null) / retake like a local capture.
+   */
+  photoUrl?: string | null;
   /** Called with the captured data URL, or null when cleared. */
   onChange: (photo: string | null) => void;
 }
@@ -14,7 +20,7 @@ interface PhotoCaptureProps {
  * Reusable webcam capture panel. Emits a JPEG data URL via onChange.
  * Used by both the manual check-in form and the pre-registration convert flow.
  */
-export function PhotoCapture({ photo, onChange }: PhotoCaptureProps) {
+export function PhotoCapture({ photo, photoUrl, onChange }: PhotoCaptureProps) {
   const { toast } = useToast();
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -53,21 +59,25 @@ export function PhotoCapture({ photo, onChange }: PhotoCaptureProps) {
 
   useEffect(() => () => stopCamera(), [stopCamera]);
 
+  // A local capture wins; otherwise show the already-uploaded photo (but not
+  // while the camera is live for a retake).
+  const displayed = photo ?? (cameraOn ? null : (photoUrl ?? null));
+
   return (
     <div>
       <div className="aspect-square bg-muted rounded-md overflow-hidden mb-3 flex items-center justify-center relative">
-        {photo ? (
-          <img src={photo} alt="Captured" className="w-full h-full object-cover" />
+        {displayed ? (
+          <img src={displayed} alt="Captured" className="w-full h-full object-cover" data-testid="img-photo-preview" />
         ) : (
           <video ref={videoRef} autoPlay muted className={`w-full h-full object-cover ${cameraOn ? "" : "hidden"}`} />
         )}
-        {!photo && !cameraOn && (
+        {!displayed && !cameraOn && (
           <div className="text-center text-muted-foreground p-4">
             <CameraOff className="w-8 h-8 mx-auto mb-2" />
             <p className="text-xs">No photo</p>
           </div>
         )}
-        {photo && (
+        {displayed && (
           <button
             type="button"
             onClick={() => onChange(null)}
@@ -79,7 +89,7 @@ export function PhotoCapture({ photo, onChange }: PhotoCaptureProps) {
       </div>
       <canvas ref={canvasRef} className="hidden" />
       <div className="flex gap-2">
-        {!cameraOn && !photo && (
+        {!cameraOn && !displayed && (
           <Button type="button" variant="outline" size="sm" className="flex-1" onClick={startCamera}>
             <Camera className="w-4 h-4 mr-1" /> Start Camera
           </Button>
@@ -94,7 +104,7 @@ export function PhotoCapture({ photo, onChange }: PhotoCaptureProps) {
             </Button>
           </>
         )}
-        {photo && (
+        {displayed && (
           <Button
             type="button"
             variant="outline"

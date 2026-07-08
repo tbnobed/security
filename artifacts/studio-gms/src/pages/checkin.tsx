@@ -347,7 +347,7 @@ export default function CheckIn() {
             <div className="space-y-4">
               <div className="bg-card border border-border rounded-md p-4">
                 <h3 className="text-sm font-medium mb-3">Photo Capture</h3>
-                <PhotoCapture photo={photo} onChange={(p) => { setPhoto(p); setPhotoUrl(null); }} />
+                <PhotoCapture photo={photo} photoUrl={photoUrl} onChange={(p) => { setPhoto(p); setPhotoUrl(null); }} />
               </div>
             </div>
           </form>
