@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { and, desc, eq, ilike, isNull, lte, or, sql } from "drizzle-orm";
+import { and, desc, eq, gte, ilike, isNull, lt, lte, or, sql } from "drizzle-orm";
 import { db, guestsTable, auditTable, watchlistTable } from "@workspace/db";
 import {
   ListGuestsQueryParams,
@@ -10,6 +10,8 @@ import {
   CheckoutGuestParams,
   GetGuestBadgeParams,
   SearchGuestsQueryParams,
+  ListGuestHistoryQueryParams,
+  ListGuestHistoryResponse,
   CreateGuestResponse,
   GetGuestResponse,
   ListGuestsResponse,
@@ -229,6 +231,80 @@ router.get("/guests/search", requireOperator, async (req, res): Promise<void> =>
     .limit(20);
 
   res.json(SearchGuestsResponse.parse(guests.map(toGuestResponse)));
+});
+
+router.get("/guests/history", requireOperator, async (req, res): Promise<void> => {
+  const parsed = ListGuestHistoryQueryParams.safeParse(req.query);
+  if (!parsed.success) {
+    res.status(400).json({ error: parsed.error.message });
+    return;
+  }
+  const { q, status, from, to, page, pageSize } = parsed.data;
+
+  const conditions = [];
+  if (status && status !== "all") {
+    conditions.push(eq(guestsTable.status, status));
+  }
+  if (q) {
+    conditions.push(
+      or(
+        ilike(guestsTable.name, `%${q}%`),
+        ilike(guestsTable.badgeId, `%${q}%`),
+        ilike(guestsTable.company, `%${q}%`),
+      )!,
+    );
+  }
+  const parseDay = (value: string): Date | null => {
+    const d = new Date(`${value}T00:00:00.000Z`);
+    return Number.isNaN(d.getTime()) || d.toISOString().slice(0, 10) !== value ? null : d;
+  };
+  let fromDate: Date | null = null;
+  let toDateExclusive: Date | null = null;
+  if (from) {
+    fromDate = parseDay(from);
+    if (!fromDate) {
+      res.status(400).json({ error: `Invalid "from" date: ${from}` });
+      return;
+    }
+  }
+  if (to) {
+    const toDate = parseDay(to);
+    if (!toDate) {
+      res.status(400).json({ error: `Invalid "to" date: ${to}` });
+      return;
+    }
+    toDateExclusive = new Date(toDate.getTime() + 24 * 60 * 60 * 1000);
+  }
+  if (fromDate) {
+    conditions.push(gte(guestsTable.checkinAt, fromDate));
+  }
+  if (toDateExclusive) {
+    conditions.push(lt(guestsTable.checkinAt, toDateExclusive));
+  }
+
+  const where = conditions.length > 0 ? and(...conditions) : undefined;
+
+  const [{ total }] = await db
+    .select({ total: sql<number>`count(*)::int` })
+    .from(guestsTable)
+    .where(where);
+
+  const guests = await db
+    .select()
+    .from(guestsTable)
+    .where(where)
+    .orderBy(desc(guestsTable.checkinAt))
+    .limit(pageSize)
+    .offset((page - 1) * pageSize);
+
+  res.json(
+    ListGuestHistoryResponse.parse({
+      items: guests.map(toGuestResponse),
+      total,
+      page,
+      pageSize,
+    }),
+  );
 });
 
 router.get("/guests/overdue", requireOperator, async (req, res): Promise<void> => {

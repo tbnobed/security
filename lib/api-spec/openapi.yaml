@@ -229,6 +229,58 @@ paths:
                 items:
                   $ref: "#/components/schemas/Guest"
 
+  /guests/history:
+    get:
+      operationId: listGuestHistory
+      tags: [guests]
+      summary: Paginated log of all visits (check-ins and check-outs)
+      parameters:
+        - name: q
+          in: query
+          description: Search by guest name, badge ID, or company
+          schema:
+            type: string
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [active, checked_out, all]
+          description: Filter by visit status (default all)
+        - name: from
+          in: query
+          description: Only visits checked in on or after this date (YYYY-MM-DD)
+          schema:
+            type: string
+            pattern: '^\d{4}-\d{2}-\d{2}$'
+        - name: to
+          in: query
+          description: Only visits checked in on or before this date (YYYY-MM-DD)
+          schema:
+            type: string
+            pattern: '^\d{4}-\d{2}-\d{2}$'
+        - name: page
+          in: query
+          description: 1-based page number
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: pageSize
+          in: query
+          description: Number of items per page
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 25
+      responses:
+        "200":
+          description: Paginated visit history
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GuestHistoryList"
+
   /guests/overdue:
     get:
       operationId: listOverdueGuests
@@ -1392,6 +1444,25 @@ components:
         createdAt:
           type: string
           format: date-time
+
+    GuestHistoryList:
+      type: object
+      required:
+        - items
+        - total
+        - page
+        - pageSize
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/Guest"
+        total:
+          type: integer
+        page:
+          type: integer
+        pageSize:
+          type: integer
 
     KnownGuestList:
       type: object

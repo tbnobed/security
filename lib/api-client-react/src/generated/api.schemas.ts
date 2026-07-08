@@ -181,6 +181,13 @@ export interface KnownGuest {
   createdAt: string;
 }
 
+export interface GuestHistoryList {
+  items: Guest[];
+  total: number;
+  page: number;
+  pageSize: number;
+}
+
 export interface KnownGuestList {
   items: KnownGuest[];
   total: number;
@@ -612,6 +619,47 @@ export const ListGuestsStatus = {
 export type SearchGuestsParams = {
 q: string;
 };
+
+export type ListGuestHistoryParams = {
+/**
+ * Search by guest name, badge ID, or company
+ */
+q?: string;
+/**
+ * Filter by visit status (default all)
+ */
+status?: ListGuestHistoryStatus;
+/**
+ * Only visits checked in on or after this date (YYYY-MM-DD)
+ * @pattern ^\d{4}-\d{2}-\d{2}$
+ */
+from?: string;
+/**
+ * Only visits checked in on or before this date (YYYY-MM-DD)
+ * @pattern ^\d{4}-\d{2}-\d{2}$
+ */
+to?: string;
+/**
+ * 1-based page number
+ * @minimum 1
+ */
+page?: number;
+/**
+ * Number of items per page
+ * @minimum 1
+ * @maximum 100
+ */
+pageSize?: number;
+};
+
+export type ListGuestHistoryStatus = typeof ListGuestHistoryStatus[keyof typeof ListGuestHistoryStatus];
+
+
+export const ListGuestHistoryStatus = {
+  active: 'active',
+  checked_out: 'checked_out',
+  all: 'all',
+} as const;
 
 export type ListPreregistrationsParams = {
 /**

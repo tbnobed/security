@@ -16,6 +16,7 @@ import UsersPage from "@/pages/users";
 import StudiosPage from "@/pages/studios";
 import AlertsPage from "@/pages/alerts";
 import KnownGuestsPage from "@/pages/known-guests";
+import VisitLogPage from "@/pages/visit-log";
 import Preregister from "@/pages/preregister";
 import KioskPage from "@/pages/kiosk";
 import PortalPage from "@/pages/portal";
@@ -96,6 +97,9 @@ function AppRoutes() {
         </Route>
         <Route path="/known-guests">
           <ProtectedRoute component={KnownGuestsPage} />
+        </Route>
+        <Route path="/visits">
+          <ProtectedRoute component={VisitLogPage} />
         </Route>
         <Route path="/watchlist">
           <ProtectedRoute component={Watchlist} />

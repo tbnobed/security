@@ -43,6 +43,7 @@ import type {
   ExportAuditLogParams,
   GetRecentActivityParams,
   Guest,
+  GuestHistoryList,
   GuestInput,
   GuestUpdate,
   HealthStatus,
@@ -53,6 +54,7 @@ import type {
   KnownGuestList,
   KnownGuestUpdate,
   ListAuditLogParams,
+  ListGuestHistoryParams,
   ListGuestsParams,
   ListKnownGuestsParams,
   ListPreregistrationsParams,
@@ -771,6 +773,90 @@ export function useSearchGuests<TData = Awaited<ReturnType<typeof searchGuests>>
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
   const queryOptions = getSearchGuestsQueryOptions(params,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getListGuestHistoryUrl = (params?: ListGuestHistoryParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/guests/history?${stringifiedParams}` : `/api/guests/history`
+}
+
+/**
+ * @summary Paginated log of all visits (check-ins and check-outs)
+ */
+export const listGuestHistory = async (params?: ListGuestHistoryParams, options?: RequestInit): Promise<GuestHistoryList> => {
+
+  return customFetch<GuestHistoryList>(getListGuestHistoryUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListGuestHistoryQueryKey = (params?: ListGuestHistoryParams,) => {
+    return [
+    `/api/guests/history`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getListGuestHistoryQueryOptions = <TData = Awaited<ReturnType<typeof listGuestHistory>>, TError = ErrorType<unknown>>(params?: ListGuestHistoryParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listGuestHistory>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListGuestHistoryQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listGuestHistory>>> = ({ signal }) => listGuestHistory(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listGuestHistory>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListGuestHistoryQueryResult = NonNullable<Awaited<ReturnType<typeof listGuestHistory>>>
+export type ListGuestHistoryQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Paginated log of all visits (check-ins and check-outs)
+ */
+
+export function useListGuestHistory<TData = Awaited<ReturnType<typeof listGuestHistory>>, TError = ErrorType<unknown>>(
+ params?: ListGuestHistoryParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listGuestHistory>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListGuestHistoryQueryOptions(params,options)
 
   const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
 

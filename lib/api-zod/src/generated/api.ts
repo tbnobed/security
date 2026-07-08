@@ -303,6 +303,58 @@ export const SearchGuestsResponse = zod.array(SearchGuestsResponseItem)
 
 
 /**
+ * @summary Paginated log of all visits (check-ins and check-outs)
+ */
+export const listGuestHistoryQueryFromRegExp = new RegExp('^\\d{4}-\\d{2}-\\d{2}$');
+export const listGuestHistoryQueryToRegExp = new RegExp('^\\d{4}-\\d{2}-\\d{2}$');
+export const listGuestHistoryQueryPageDefault = 1;
+
+export const listGuestHistoryQueryPageSizeDefault = 25;
+export const listGuestHistoryQueryPageSizeMax = 100;
+
+
+
+export const ListGuestHistoryQueryParams = zod.object({
+  "q": zod.coerce.string().optional().describe('Search by guest name, badge ID, or company'),
+  "status": zod.enum(['active', 'checked_out', 'all']).optional().describe('Filter by visit status (default all)'),
+  "from": zod.coerce.string().regex(listGuestHistoryQueryFromRegExp).optional().describe('Only visits checked in on or after this date (YYYY-MM-DD)'),
+  "to": zod.coerce.string().regex(listGuestHistoryQueryToRegExp).optional().describe('Only visits checked in on or before this date (YYYY-MM-DD)'),
+  "page": zod.coerce.number().min(1).default(listGuestHistoryQueryPageDefault).describe('1-based page number'),
+  "pageSize": zod.coerce.number().min(1).max(listGuestHistoryQueryPageSizeMax).default(listGuestHistoryQueryPageSizeDefault).describe('Number of items per page')
+})
+
+export const ListGuestHistoryResponse = zod.object({
+  "items": zod.array(zod.object({
+  "id": zod.number(),
+  "badgeId": zod.string(),
+  "name": zod.string(),
+  "company": zod.string(),
+  "phone": zod.string().nullish(),
+  "email": zod.string().nullish(),
+  "hostName": zod.string(),
+  "purposeOfVisit": zod.string(),
+  "site": zod.string().describe('Dallas\/The Plex, Tustin, Nashville'),
+  "status": zod.enum(['active', 'checked_out']),
+  "checkinAt": zod.coerce.date(),
+  "checkoutAt": zod.coerce.date().nullish(),
+  "expectedDeparture": zod.coerce.date().nullish(),
+  "photoUrl": zod.string().nullish(),
+  "checkedInByClerkId": zod.string().nullish(),
+  "checkedOutByClerkId": zod.string().nullish(),
+  "preregistrationId": zod.number().nullish(),
+  "studios": zod.array(zod.string()).optional(),
+  "checkinSource": zod.enum(['desk', 'kiosk']).optional().describe('Where the check-in originated: \'desk\' (operator) or \'kiosk\' (guest self check-in).'),
+  "badgePrintedAt": zod.coerce.date().nullish().describe('When the badge was printed at the security desk; null means it still needs printing.'),
+  "timeOnSiteMinutes": zod.number().nullish(),
+  "isOverdue": zod.boolean().optional()
+})),
+  "total": zod.number(),
+  "page": zod.number(),
+  "pageSize": zod.number()
+})
+
+
+/**
  * @summary List guests past their expected departure time
  */
 export const ListOverdueGuestsResponseItem = zod.object({
