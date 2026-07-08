@@ -101,27 +101,35 @@ export default function BrandingPage() {
         <div className="border border-border rounded-lg p-6 space-y-5">
           <div>
             <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
-              Preview (badge header)
+              Preview (badge)
             </p>
-            <div
-              className="flex items-center justify-between rounded-md px-4 py-2 text-white"
-              style={{ background: "#0b0e1a" }}
-            >
-              <span className="text-xs font-bold uppercase tracking-[0.18em]">Visitor Pass</span>
-              {isLoading ? (
-                <Loader2 className="w-4 h-4 animate-spin text-gray-400" />
-              ) : effectiveUrl ? (
-                <img
-                  src={effectiveUrl}
-                  alt="Badge logo"
-                  className="h-6 w-auto max-w-32 rounded-sm bg-white object-contain p-0.5"
-                />
-              ) : (
-                <span className="flex items-center gap-1.5 text-xs text-gray-400">
-                  <ImageIcon className="w-4 h-4" />
-                  No logo
-                </span>
-              )}
+            <div className="overflow-hidden rounded-md border border-gray-300 bg-white">
+              <div
+                className="flex items-center justify-between px-4 py-1.5 text-white"
+                style={{ background: "#0b0e1a" }}
+              >
+                <span className="text-xs font-bold uppercase tracking-[0.18em]">Visitor Pass</span>
+              </div>
+              <div className="flex items-start justify-between gap-3 px-4 py-3">
+                <div>
+                  <div className="text-sm font-bold text-gray-900">Guest Name</div>
+                  <div className="text-xs font-medium text-gray-800">Company</div>
+                </div>
+                {isLoading ? (
+                  <Loader2 className="w-4 h-4 animate-spin text-gray-400" />
+                ) : effectiveUrl ? (
+                  <img
+                    src={effectiveUrl}
+                    alt="Badge logo"
+                    className="h-9 w-auto max-w-32 object-contain"
+                  />
+                ) : (
+                  <span className="flex items-center gap-1.5 text-xs text-gray-400">
+                    <ImageIcon className="w-4 h-4" />
+                    No logo
+                  </span>
+                )}
+              </div>
             </div>
             <p className="mt-2 text-xs text-muted-foreground">
               {badgeLogoUrl

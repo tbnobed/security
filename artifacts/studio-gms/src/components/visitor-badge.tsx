@@ -53,17 +53,8 @@ export const VisitorBadge = forwardRef<HTMLDivElement, { data: VisitorBadgeData 
           style={{ background: "#0b0e1a" }}
         >
           <span className="text-[9px] font-bold uppercase tracking-[0.18em]">Visitor Pass</span>
-          <span className="flex min-w-0 items-center gap-1.5">
-            <span className="max-w-[1.3in] truncate text-[8px] font-medium uppercase tracking-wider text-gray-300">
-              {site}
-            </span>
-            {logoUrl && (
-              <img
-                src={logoUrl}
-                alt=""
-                className="h-[0.16in] w-auto max-w-[0.6in] shrink-0 rounded-[2px] bg-white object-contain p-[1px]"
-              />
-            )}
+          <span className="max-w-[1.5in] truncate text-[8px] font-medium uppercase tracking-wider text-gray-300">
+            {site}
           </span>
         </div>
 
@@ -80,8 +71,19 @@ export const VisitorBadge = forwardRef<HTMLDivElement, { data: VisitorBadgeData 
 
           {/* Details */}
           <div className="flex min-w-0 flex-1 flex-col justify-center leading-tight">
-            <div className="truncate text-[13px] font-bold text-gray-900">{data.name}</div>
-            <div className="truncate text-[9px] font-medium text-gray-800">{data.company}</div>
+            <div className="flex items-start justify-between gap-1.5">
+              <div className="min-w-0">
+                <div className="truncate text-[13px] font-bold text-gray-900">{data.name}</div>
+                <div className="truncate text-[9px] font-medium text-gray-800">{data.company}</div>
+              </div>
+              {logoUrl && (
+                <img
+                  src={logoUrl}
+                  alt=""
+                  className="h-[0.38in] w-auto max-w-[0.85in] shrink-0 object-contain"
+                />
+              )}
+            </div>
             <div className="mt-1 space-y-0.5 text-[8px] font-medium text-black">
               <div className="truncate">
                 <span className="font-bold uppercase tracking-wide text-gray-900">Host </span>
