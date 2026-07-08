@@ -7,13 +7,15 @@ import {
   ApiError,
 } from "@workspace/api-client-react";
 import type { KioskPreregistration } from "@workspace/api-client-react";
-import { Loader2, UserCheck, Camera, ShieldAlert, RotateCcw } from "lucide-react";
+import { Loader2, Camera, ShieldAlert, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { PhotoCapture } from "@/components/photo-capture";
 import { VisitorBadge, type VisitorBadgeData } from "@/components/visitor-badge";
-import { SITE_NAME } from "@/lib/site";
+import { SITE_NAME, CLIENT_LOGO_URL } from "@/lib/site";
 import logoUrl from "/logo.svg";
+
+const clientLogoSrc = CLIENT_LOGO_URL || logoUrl;
 
 type Step = "welcome" | "search" | "photo" | "badge" | "desk";
 
@@ -118,7 +120,12 @@ export default function KioskPage() {
       <main className="flex-1 flex flex-col items-center justify-center p-6 w-full max-w-2xl mx-auto">
         {step === "welcome" && (
           <div className="text-center space-y-8">
-            <UserCheck className="w-24 h-24 mx-auto text-primary" />
+            <img
+              src={clientLogoSrc}
+              alt=""
+              className="max-h-28 w-auto max-w-[70%] mx-auto"
+              data-testid="kiosk-client-logo"
+            />
             <div className="space-y-2">
               <h2 className="text-3xl font-bold">Welcome!</h2>
               <p className="text-lg text-muted-foreground">
