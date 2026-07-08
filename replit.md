@@ -46,6 +46,7 @@ A web-based guest management system for broadcast studio security desks — chec
 - `artifacts/api-server/src/routes/auth.ts` — login / logout route handlers
 - `artifacts/studio-gms/src/` — React frontend (pages, components, auth context in `src/lib/auth.tsx`)
 - `artifacts/studio-gms/src/lib/site.ts` — reads `VITE_SITE_NAME` and exports the static `SITE_NAME`
+- `artifacts/studio-gms/src/lib/purposes.ts` — shared `PURPOSES` list backing the Purpose of Visit dropdown on check-in, internal prereg, public `/preregister`, and portal bulk prereg forms
 - `artifacts/studio-gms/src/pages/studios.tsx` — admin studios CRUD; `preregister.tsx` — public self-registration page
 - `lib/db/src/schema/studios.ts` — studios table (id/name/createdAt, uniqueIndex on `lower(name)`)
 

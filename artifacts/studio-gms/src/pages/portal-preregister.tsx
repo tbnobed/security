@@ -10,6 +10,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { PURPOSES } from "@/lib/purposes";
 import { useToast } from "@/hooks/use-toast";
 import { SITE_NAME } from "@/lib/site";
 import { useLocation } from "wouter";
@@ -198,12 +200,14 @@ export default function PortalPreregisterPage() {
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="purpose">Purpose of visit</Label>
-              <Input
-                id="purpose"
-                value={purpose}
-                onChange={(e) => setPurpose(e.target.value)}
-                placeholder="e.g. Studio production"
-              />
+              <Select value={purpose} onValueChange={setPurpose}>
+                <SelectTrigger id="purpose" data-testid="select-purpose">
+                  <SelectValue placeholder="Select purpose" />
+                </SelectTrigger>
+                <SelectContent>
+                  {PURPOSES.map((p) => <SelectItem key={p} value={p}>{p}</SelectItem>)}
+                </SelectContent>
+              </Select>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-1.5">

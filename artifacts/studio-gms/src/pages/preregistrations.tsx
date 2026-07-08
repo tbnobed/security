@@ -14,6 +14,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { PURPOSES } from "@/lib/purposes";
 import { useToast } from "@/hooks/use-toast";
 import { useListStudios } from "@workspace/api-client-react";
 import { SITE_NAME } from "@/lib/site";
@@ -205,7 +207,14 @@ export default function Preregistrations() {
                   </div>
                   <div>
                     <Label>Purpose</Label>
-                    <Input className="mt-1" value={form.purposeOfVisit} onChange={(e) => setForm((f) => ({ ...f, purposeOfVisit: e.target.value }))} placeholder="Optional" />
+                    <Select value={form.purposeOfVisit} onValueChange={(v) => setForm((f) => ({ ...f, purposeOfVisit: v }))}>
+                      <SelectTrigger className="mt-1" data-testid="select-purpose">
+                        <SelectValue placeholder="Select purpose" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {PURPOSES.map((p) => <SelectItem key={p} value={p}>{p}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
                   </div>
                   <div>
                     <Label>Expected Arrival *</Label>

@@ -5,6 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { PURPOSES } from "@/lib/purposes";
 import { SITE_NAME, CLIENT_NAME, CLIENT_LOGO_URL } from "@/lib/site";
 import { CheckCircle2, ClipboardCheck } from "lucide-react";
 
@@ -137,7 +139,14 @@ export default function Preregister() {
             </div>
             <div className="sm:col-span-2">
               <Label htmlFor="purpose">Purpose of Visit</Label>
-              <Input id="purpose" className="mt-1" value={form.purposeOfVisit} onChange={(e) => setForm((f) => ({ ...f, purposeOfVisit: e.target.value }))} placeholder="e.g. Production meeting" />
+              <Select value={form.purposeOfVisit} onValueChange={(v) => setForm((f) => ({ ...f, purposeOfVisit: v }))}>
+                <SelectTrigger id="purpose" className="mt-1" data-testid="select-purpose">
+                  <SelectValue placeholder="Select purpose" />
+                </SelectTrigger>
+                <SelectContent>
+                  {PURPOSES.map((p) => <SelectItem key={p} value={p}>{p}</SelectItem>)}
+                </SelectContent>
+              </Select>
             </div>
             <div>
               <Label htmlFor="arrival">Expected Arrival *</Label>

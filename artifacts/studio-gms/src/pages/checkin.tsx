@@ -17,16 +17,7 @@ import { Link } from "wouter";
 import { VisitorBadge, type VisitorBadgeData } from "@/components/visitor-badge";
 import { printBadge } from "@/lib/print-badge";
 import { AlertTriangle, Printer, UserPlus, Star, ScanLine } from "lucide-react";
-
-const PURPOSES = [
-  "Production meeting",
-  "Vendor demo",
-  "Studio tour",
-  "Contract discussion",
-  "Equipment service",
-  "Executive walkthrough",
-  "Other",
-];
+import { PURPOSES } from "@/lib/purposes";
 
 export default function CheckIn() {
   const { toast } = useToast();
