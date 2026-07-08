@@ -1,5 +1,5 @@
 import { forwardRef } from "react";
-import { SITE_NAME } from "@/lib/site";
+import { CLIENT_LOGO_URL, SITE_NAME } from "@/lib/site";
 
 export interface VisitorBadgeData {
   badgeId: string;
@@ -50,8 +50,17 @@ export const VisitorBadge = forwardRef<HTMLDivElement, { data: VisitorBadgeData 
           style={{ background: "#0b0e1a" }}
         >
           <span className="text-[9px] font-bold uppercase tracking-[0.18em]">Visitor Pass</span>
-          <span className="max-w-[1.6in] truncate text-[8px] font-medium uppercase tracking-wider text-gray-300">
-            {site}
+          <span className="flex min-w-0 items-center gap-1.5">
+            <span className="max-w-[1.3in] truncate text-[8px] font-medium uppercase tracking-wider text-gray-300">
+              {site}
+            </span>
+            {CLIENT_LOGO_URL && (
+              <img
+                src={CLIENT_LOGO_URL}
+                alt=""
+                className="h-[0.16in] w-auto max-w-[0.6in] shrink-0 rounded-[2px] bg-white object-contain p-[1px]"
+              />
+            )}
           </span>
         </div>
 
@@ -69,21 +78,21 @@ export const VisitorBadge = forwardRef<HTMLDivElement, { data: VisitorBadgeData 
           {/* Details */}
           <div className="flex min-w-0 flex-1 flex-col justify-center leading-tight">
             <div className="truncate text-[13px] font-bold text-gray-900">{data.name}</div>
-            <div className="truncate text-[9px] text-gray-600">{data.company}</div>
-            <div className="mt-1 space-y-0.5 text-[8px] text-gray-700">
+            <div className="truncate text-[9px] font-medium text-gray-800">{data.company}</div>
+            <div className="mt-1 space-y-0.5 text-[8px] font-medium text-black">
               <div className="truncate">
-                <span className="text-gray-400">Host </span>
+                <span className="font-bold uppercase tracking-wide text-gray-900">Host </span>
                 {data.host}
               </div>
               {data.purpose && (
                 <div className="truncate">
-                  <span className="text-gray-400">Purpose </span>
+                  <span className="font-bold uppercase tracking-wide text-gray-900">Purpose </span>
                   {data.purpose}
                 </div>
               )}
               {data.studios.length > 0 && (
                 <div className="truncate">
-                  <span className="text-gray-400">Studios </span>
+                  <span className="font-bold uppercase tracking-wide text-gray-900">Studios </span>
                   {data.studios.join(", ")}
                 </div>
               )}
@@ -99,7 +108,7 @@ export const VisitorBadge = forwardRef<HTMLDivElement, { data: VisitorBadgeData 
           <span className="font-mono text-[13px] font-bold tracking-wider" style={{ color: "#0f766e" }}>
             {data.badgeId}
           </span>
-          <div className="text-right text-[7px] leading-tight text-gray-600">
+          <div className="text-right text-[9px] font-semibold leading-tight text-black">
             <div>In {timeLabel(data.checkinAt)}</div>
             <div>Out {timeLabel(data.expectedDeparture)}</div>
           </div>
