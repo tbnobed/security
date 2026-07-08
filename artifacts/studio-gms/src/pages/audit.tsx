@@ -39,8 +39,8 @@ export default function Audit() {
 
   return (
     <Layout>
-      <div className="p-6 max-w-6xl mx-auto">
-        <div className="mb-6 flex items-center justify-between">
+      <div className="p-4 md:p-6 max-w-6xl mx-auto">
+        <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
           <div>
             <h2 className="text-2xl font-bold tracking-tight">Audit Log</h2>
             <p className="text-muted-foreground">Immutable record of all security events.</p>

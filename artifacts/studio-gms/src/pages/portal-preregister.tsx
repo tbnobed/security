@@ -119,7 +119,7 @@ export default function PortalPreregisterPage() {
 
   return (
     <ClientLayout>
-      <div className="p-6 max-w-5xl mx-auto">
+      <div className="p-4 md:p-6 max-w-5xl mx-auto">
         <div className="mb-6">
           <h2 className="text-2xl font-bold tracking-tight">Pre-Register Employees</h2>
           <p className="text-muted-foreground">
@@ -198,7 +198,7 @@ export default function PortalPreregisterPage() {
                 placeholder="e.g. Studio production"
               />
             </div>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-1.5">
                 <Label htmlFor="arrival">Expected arrival</Label>
                 <Input

@@ -92,13 +92,13 @@ export default function Dashboard() {
 
   return (
     <Layout>
-      <div className="p-6 space-y-6">
+      <div className="p-4 md:p-6 space-y-6">
         <div>
           <h2 className="text-2xl font-bold tracking-tight">Active Visitor Dashboard</h2>
           <p className="text-muted-foreground">Live overview of studio operations.</p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-3 md:gap-4">
           <Card className="bg-card">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">Active On-Site</CardTitle>

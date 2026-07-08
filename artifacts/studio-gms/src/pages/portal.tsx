@@ -31,8 +31,8 @@ export default function PortalPage() {
 
   return (
     <ClientLayout>
-      <div className="p-6 max-w-5xl mx-auto">
-        <div className="mb-6 flex items-start justify-between gap-4">
+      <div className="p-4 md:p-6 max-w-5xl mx-auto">
+        <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
           <div>
             <h2 className="text-2xl font-bold tracking-tight">Today's Visits</h2>
             <p className="text-muted-foreground">Live status of your pre-registered employees.</p>
@@ -45,7 +45,7 @@ export default function PortalPage() {
           </Link>
         </div>
 
-        <div className="grid grid-cols-3 gap-4 mb-6">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
           {[
             { label: "Expected", value: expected },
             { label: "On Site", value: onSite },
@@ -72,7 +72,7 @@ export default function PortalPage() {
               </p>
             </div>
           ) : (
-            <table className="w-full text-sm">
+            <div className="overflow-x-auto"><table className="w-full text-sm">
               <thead className="bg-muted/50 text-muted-foreground text-xs uppercase border-b border-border">
                 <tr>
                   <th className="px-4 py-3 text-left font-medium">Employee</th>
@@ -107,7 +107,7 @@ export default function PortalPage() {
                   </tr>
                 ))}
               </tbody>
-            </table>
+            </table></div>
           )}
         </div>
       </div>

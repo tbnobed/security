@@ -161,8 +161,8 @@ export default function Preregistrations() {
 
   return (
     <Layout>
-      <div className="p-6 max-w-5xl mx-auto">
-        <div className="mb-6 flex items-center justify-between">
+      <div className="p-4 md:p-6 max-w-5xl mx-auto">
+        <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
           <div>
             <h2 className="text-2xl font-bold tracking-tight">Pre-Registrations</h2>
             <p className="text-muted-foreground">Expected guests for a given day.</p>
@@ -176,8 +176,8 @@ export default function Preregistrations() {
                 <DialogTitle>New Pre-Registration</DialogTitle>
               </DialogHeader>
               <form onSubmit={handleCreate} className="space-y-4 mt-2">
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="col-span-2">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="sm:col-span-2">
                     <Label>Guest Name *</Label>
                     <Input className="mt-1" value={form.guestName} onChange={(e) => setForm((f) => ({ ...f, guestName: e.target.value }))} placeholder="Full name" required />
                   </div>
@@ -216,7 +216,7 @@ export default function Preregistrations() {
                     <Input className="mt-1" type="datetime-local" value={form.expectedDeparture} onChange={(e) => setForm((f) => ({ ...f, expectedDeparture: e.target.value }))} />
                   </div>
                   {(studioList?.length ?? 0) > 0 && (
-                    <div className="col-span-2">
+                    <div className="sm:col-span-2">
                       <Label>Studios</Label>
                       <div className="mt-2 grid grid-cols-2 gap-2">
                         {studioList?.map((s) => (
@@ -254,7 +254,7 @@ export default function Preregistrations() {
             ) : pending.length === 0 ? (
               <div className="p-8 text-center text-muted-foreground">No pending pre-registrations for this date.</div>
             ) : (
-              <table className="w-full text-sm">
+              <div className="overflow-x-auto"><table className="w-full text-sm">
                 <thead className="bg-muted/50 text-muted-foreground text-xs uppercase border-b border-border">
                   <tr>
                     <th className="px-4 py-3 text-left font-medium">Name</th>
@@ -285,7 +285,7 @@ export default function Preregistrations() {
                     </tr>
                   ))}
                 </tbody>
-              </table>
+              </table></div>
             )}
           </div>
 
@@ -294,7 +294,7 @@ export default function Preregistrations() {
               <div className="p-4 border-b border-border">
                 <h3 className="font-medium text-muted-foreground">Converted ({converted.length})</h3>
               </div>
-              <table className="w-full text-sm">
+              <div className="overflow-x-auto"><table className="w-full text-sm">
                 <tbody className="divide-y divide-border">
                   {converted.map((p) => (
                     <tr key={p.id}>
@@ -308,7 +308,7 @@ export default function Preregistrations() {
                     </tr>
                   ))}
                 </tbody>
-              </table>
+              </table></div>
             </div>
           )}
         </div>

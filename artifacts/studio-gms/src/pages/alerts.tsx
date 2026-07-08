@@ -96,7 +96,7 @@ export default function AlertsPage() {
 
   return (
     <Layout>
-      <div className="p-6 max-w-4xl mx-auto">
+      <div className="p-4 md:p-6 max-w-4xl mx-auto">
         <div className="mb-6">
           <h2 className="text-2xl font-bold tracking-tight flex items-center gap-2">
             <Bell className="w-6 h-6 text-primary" />

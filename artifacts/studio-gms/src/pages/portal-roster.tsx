@@ -247,8 +247,8 @@ export default function PortalRosterPage() {
 
   return (
     <ClientLayout>
-      <div className="p-6 max-w-5xl mx-auto">
-        <div className="mb-6 flex items-start justify-between gap-4">
+      <div className="p-4 md:p-6 max-w-5xl mx-auto">
+        <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
           <div>
             <h2 className="text-2xl font-bold tracking-tight">Employee Roster</h2>
             <p className="text-muted-foreground">
@@ -302,7 +302,7 @@ export default function PortalRosterPage() {
               )}
             </div>
           ) : (
-            <table className="w-full text-sm">
+            <div className="overflow-x-auto"><table className="w-full text-sm">
               <thead className="bg-muted/50 text-muted-foreground text-xs uppercase border-b border-border">
                 <tr>
                   <th className="px-4 py-3 text-left font-medium">Name</th>
@@ -351,7 +351,7 @@ export default function PortalRosterPage() {
                   </tr>
                 ))}
               </tbody>
-            </table>
+            </table></div>
           )}
         </div>
       </div>
@@ -386,7 +386,7 @@ export default function PortalRosterPage() {
                   placeholder="Producer"
                 />
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-1.5">
                   <Label htmlFor="emp-phone">Phone</Label>
                   <Input
@@ -466,7 +466,7 @@ export default function PortalRosterPage() {
           {csvError ? (
             <p className="text-sm text-destructive py-2">{csvError}</p>
           ) : (
-            <div className="max-h-72 overflow-y-auto border border-border rounded-md">
+            <div className="max-h-72 overflow-y-auto overflow-x-auto border border-border rounded-md">
               <table className="w-full text-sm">
                 <thead className="bg-muted/50 text-muted-foreground text-xs uppercase border-b border-border sticky top-0">
                   <tr>
@@ -524,7 +524,7 @@ export default function PortalRosterPage() {
           ) : !visits || visits.length === 0 ? (
             <p className="text-sm text-muted-foreground py-4">No visits on record.</p>
           ) : (
-            <div className="max-h-72 overflow-y-auto border border-border rounded-md">
+            <div className="max-h-72 overflow-y-auto overflow-x-auto border border-border rounded-md">
               <table className="w-full text-sm">
                 <thead className="bg-muted/50 text-muted-foreground text-xs uppercase border-b border-border sticky top-0">
                   <tr>

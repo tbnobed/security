@@ -65,8 +65,8 @@ export default function Watchlist() {
 
   return (
     <Layout>
-      <div className="p-6 max-w-5xl mx-auto">
-        <div className="mb-6 flex items-center justify-between">
+      <div className="p-4 md:p-6 max-w-5xl mx-auto">
+        <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
           <div>
             <h2 className="text-2xl font-bold tracking-tight">Watchlist</h2>
             <p className="text-muted-foreground">Manage blocked and flagged individuals.</p>
@@ -158,7 +158,7 @@ function WatchlistSection({ title, icon, entries, isLoading, onDelete, deleting,
       ) : entries.length === 0 ? (
         <div className="p-8 text-center text-muted-foreground">{emptyMsg}</div>
       ) : (
-        <table className="w-full text-sm">
+        <div className="overflow-x-auto"><table className="w-full text-sm">
           <thead className="bg-muted/50 text-muted-foreground text-xs uppercase border-b border-border">
             <tr>
               <th className="px-4 py-3 text-left font-medium">Name</th>
@@ -189,7 +189,7 @@ function WatchlistSection({ title, icon, entries, isLoading, onDelete, deleting,
               </tr>
             ))}
           </tbody>
-        </table>
+        </table></div>
       )}
     </div>
   );

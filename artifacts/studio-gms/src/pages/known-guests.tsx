@@ -282,7 +282,7 @@ export default function KnownGuestsPage() {
 
   return (
     <Layout>
-      <div className="p-6 max-w-6xl mx-auto">
+      <div className="p-4 md:p-6 max-w-6xl mx-auto">
         <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
           <div>
             <h2 className="text-2xl font-bold tracking-tight">Known Guests</h2>
@@ -290,14 +290,14 @@ export default function KnownGuestsPage() {
               Returning visitors with history, plus VIP designations.
             </p>
           </div>
-          <div className="flex items-center gap-3">
-            <div className="relative">
+          <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto">
+            <div className="relative flex-1 min-w-48">
               <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Search name or company"
-                className="pl-8 w-64"
+                className="pl-8 w-full sm:w-64"
                 data-testid="input-search-known-guests"
               />
             </div>

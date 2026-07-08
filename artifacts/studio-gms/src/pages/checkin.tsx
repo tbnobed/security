@@ -184,7 +184,7 @@ export default function CheckIn() {
 
   return (
     <Layout>
-      <div className="p-6 max-w-5xl mx-auto">
+      <div className="p-4 md:p-6 max-w-5xl mx-auto">
         <div className="mb-6">
           <h2 className="text-2xl font-bold tracking-tight">Guest Check-In</h2>
           <p className="text-muted-foreground">Register a new visitor and issue a badge.</p>
@@ -212,8 +212,8 @@ export default function CheckIn() {
                 </div>
               )}
 
-              <div className="grid grid-cols-2 gap-4">
-                <div className="col-span-2 relative">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="sm:col-span-2 relative">
                   <Label htmlFor="name">Full Name *</Label>
                   <Input
                     id="name"
@@ -290,7 +290,7 @@ export default function CheckIn() {
                   <Input id="departure" type="datetime-local" value={form.expectedDeparture} onChange={(e) => setForm((f) => ({ ...f, expectedDeparture: e.target.value }))} className="mt-1" />
                 </div>
                 {(studioList?.length ?? 0) > 0 && (
-                  <div className="col-span-2">
+                  <div className="sm:col-span-2">
                     <Label>Studios</Label>
                     <div className="mt-2 grid grid-cols-2 gap-2">
                       {studioList?.map((s) => (

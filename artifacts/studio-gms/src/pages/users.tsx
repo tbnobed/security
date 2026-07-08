@@ -138,8 +138,8 @@ export default function UsersPage() {
 
   return (
     <Layout>
-      <div className="p-6 max-w-4xl mx-auto">
-        <div className="mb-6 flex items-start justify-between gap-4">
+      <div className="p-4 md:p-6 max-w-4xl mx-auto">
+        <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
           <div>
             <h2 className="text-2xl font-bold tracking-tight">User Management</h2>
             <p className="text-muted-foreground">Manage operators, roles, and access levels.</p>
@@ -171,7 +171,7 @@ export default function UsersPage() {
               <p>No operators yet. Use “Add Operator” to create one.</p>
             </div>
           ) : (
-            <table className="w-full text-sm">
+            <div className="overflow-x-auto"><table className="w-full text-sm">
               <thead className="bg-muted/50 text-muted-foreground text-xs uppercase border-b border-border">
                 <tr>
                   <th className="px-4 py-3 text-left font-medium">User</th>
@@ -243,7 +243,7 @@ export default function UsersPage() {
                   </tr>
                 ))}
               </tbody>
-            </table>
+            </table></div>
           )}
         </div>
       </div>

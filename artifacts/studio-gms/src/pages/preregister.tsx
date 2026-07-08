@@ -106,8 +106,8 @@ export default function Preregister() {
             </div>
           )}
 
-          <div className="grid grid-cols-2 gap-4">
-            <div className="col-span-2">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="sm:col-span-2">
               <Label htmlFor="guestName">Full Name *</Label>
               <Input id="guestName" className="mt-1" value={form.guestName} onChange={(e) => setForm((f) => ({ ...f, guestName: e.target.value }))} placeholder="First Last" required />
             </div>
@@ -127,7 +127,7 @@ export default function Preregister() {
               <Label htmlFor="email">Email</Label>
               <Input id="email" type="email" className="mt-1" value={form.email} onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))} placeholder="you@example.com" />
             </div>
-            <div className="col-span-2">
+            <div className="sm:col-span-2">
               <Label htmlFor="purpose">Purpose of Visit</Label>
               <Input id="purpose" className="mt-1" value={form.purposeOfVisit} onChange={(e) => setForm((f) => ({ ...f, purposeOfVisit: e.target.value }))} placeholder="e.g. Production meeting" />
             </div>

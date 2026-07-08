@@ -47,7 +47,7 @@ export default function CheckOut() {
 
   return (
     <Layout>
-      <div className="p-6 max-w-3xl mx-auto">
+      <div className="p-4 md:p-6 max-w-3xl mx-auto">
         <div className="mb-6">
           <h2 className="text-2xl font-bold tracking-tight">Guest Check-Out</h2>
           <p className="text-muted-foreground">Search by name or badge ID to check out a guest.</p>

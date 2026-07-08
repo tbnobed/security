@@ -61,7 +61,7 @@ export default function Studios() {
 
   return (
     <Layout>
-      <div className="p-6 max-w-3xl mx-auto">
+      <div className="p-4 md:p-6 max-w-3xl mx-auto">
         <div className="mb-6">
           <h2 className="text-2xl font-bold tracking-tight">Studios</h2>
           <p className="text-muted-foreground">
@@ -69,7 +69,7 @@ export default function Studios() {
           </p>
         </div>
 
-        <form onSubmit={handleCreate} className="mb-6 flex items-end gap-3 bg-card border border-border rounded-md p-4">
+        <form onSubmit={handleCreate} className="mb-6 flex flex-wrap items-end gap-3 bg-card border border-border rounded-md p-4">
           <div className="flex-1">
             <Label htmlFor="studio-name">New Studio Name</Label>
             <Input
