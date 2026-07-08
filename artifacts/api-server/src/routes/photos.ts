@@ -35,7 +35,16 @@ router.get("/photos/:filename", (req, res): void => {
     return;
   }
 
-  res.setHeader("Content-Type", "image/jpeg");
+  const contentTypes: Record<string, string> = {
+    ".png": "image/png",
+    ".webp": "image/webp",
+    ".jpg": "image/jpeg",
+    ".jpeg": "image/jpeg",
+  };
+  res.setHeader(
+    "Content-Type",
+    contentTypes[path.extname(filename).toLowerCase()] ?? "image/jpeg",
+  );
   res.sendFile(filepath);
 });
 

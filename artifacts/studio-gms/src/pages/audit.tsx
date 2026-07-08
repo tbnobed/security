@@ -15,6 +15,8 @@ const EVENT_LABELS: Record<string, { label: string; className: string }> = {
   denied_entry: { label: "DENIED", className: "bg-destructive/20 text-destructive border-destructive/30" },
   user_created: { label: "USER", className: "bg-muted text-muted-foreground border-border" },
   role_changed: { label: "ROLE CHG", className: "bg-purple-500/20 text-purple-400 border-purple-500/30" },
+  badge_logo_updated: { label: "BADGE LOGO", className: "bg-muted text-muted-foreground border-border" },
+  badge_logo_removed: { label: "BADGE LOGO", className: "bg-muted text-muted-foreground border-border" },
 };
 
 const today = () => new Date().toISOString().slice(0, 10);

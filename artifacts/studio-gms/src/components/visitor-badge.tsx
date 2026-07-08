@@ -1,4 +1,5 @@
 import { forwardRef } from "react";
+import { useGetBrandingSettings } from "@workspace/api-client-react";
 import { CLIENT_LOGO_URL, SITE_NAME } from "@/lib/site";
 
 export interface VisitorBadgeData {
@@ -38,6 +39,8 @@ function timeLabel(value?: string | null): string {
 export const VisitorBadge = forwardRef<HTMLDivElement, { data: VisitorBadgeData }>(
   function VisitorBadge({ data }, ref) {
     const site = data.site || SITE_NAME;
+    const { data: branding } = useGetBrandingSettings();
+    const logoUrl = branding?.badgeLogoUrl || CLIENT_LOGO_URL;
     return (
       <div
         id="print-badge"
@@ -54,9 +57,9 @@ export const VisitorBadge = forwardRef<HTMLDivElement, { data: VisitorBadgeData 
             <span className="max-w-[1.3in] truncate text-[8px] font-medium uppercase tracking-wider text-gray-300">
               {site}
             </span>
-            {CLIENT_LOGO_URL && (
+            {logoUrl && (
               <img
-                src={CLIENT_LOGO_URL}
+                src={logoUrl}
                 alt=""
                 className="h-[0.16in] w-auto max-w-[0.6in] shrink-0 rounded-[2px] bg-white object-contain p-[1px]"
               />

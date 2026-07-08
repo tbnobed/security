@@ -15,6 +15,7 @@ import Audit from "@/pages/audit";
 import UsersPage from "@/pages/users";
 import StudiosPage from "@/pages/studios";
 import AlertsPage from "@/pages/alerts";
+import BrandingPage from "@/pages/branding";
 import KnownGuestsPage from "@/pages/known-guests";
 import VisitLogPage from "@/pages/visit-log";
 import Preregister from "@/pages/preregister";
@@ -112,6 +113,9 @@ function AppRoutes() {
         </Route>
         <Route path="/studios">
           <ProtectedRoute component={StudiosPage} />
+        </Route>
+        <Route path="/branding">
+          <ProtectedRoute component={BrandingPage} />
         </Route>
         <Route path="/alerts">
           <ProtectedRoute component={AlertsPage} />

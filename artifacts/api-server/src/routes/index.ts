@@ -14,6 +14,7 @@ import alertsRouter from "./alerts";
 import knownGuestsRouter from "./known-guests";
 import kioskRouter from "./kiosk";
 import clientRouter from "./client";
+import settingsRouter from "./settings";
 
 const router: IRouter = Router();
 
@@ -32,5 +33,6 @@ router.use(alertsRouter);
 router.use(knownGuestsRouter);
 router.use(kioskRouter);
 router.use(clientRouter);
+router.use(settingsRouter);
 
 export default router;

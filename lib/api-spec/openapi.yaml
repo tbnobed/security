@@ -1149,6 +1149,45 @@ paths:
                 items:
                   $ref: "#/components/schemas/ProductionBooking"
 
+  /settings/branding:
+    get:
+      operationId: getBrandingSettings
+      tags: [settings]
+      summary: Get app branding settings (badge logo)
+      responses:
+        "200":
+          description: Branding settings
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BrandingSettings"
+
+  /settings/badge-logo:
+    put:
+      operationId: updateBadgeLogo
+      tags: [settings]
+      summary: Upload/replace the badge logo (admin only, base64 image)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PhotoUpload"
+      responses:
+        "200":
+          description: Badge logo updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BrandingSettings"
+    delete:
+      operationId: deleteBadgeLogo
+      tags: [settings]
+      summary: Remove the uploaded badge logo (admin only)
+      responses:
+        "204":
+          description: Badge logo removed
+
   /photos:
     post:
       operationId: uploadPhoto
@@ -1595,7 +1634,7 @@ components:
           type: integer
         eventType:
           type: string
-          enum: [checkin, checkout, preregistration, watchlist_flag, watchlist_block, user_created, role_changed, password_reset, known_guest_vip, known_guest_edited, known_guest_deleted, client_employee_added, client_employee_edited, client_employee_deleted, client_employees_imported]
+          enum: [checkin, checkout, preregistration, watchlist_flag, watchlist_block, user_created, role_changed, password_reset, known_guest_vip, known_guest_edited, known_guest_deleted, client_employee_added, client_employee_edited, client_employee_deleted, client_employees_imported, badge_logo_updated, badge_logo_removed]
         guestId:
           type: ["integer", "null"]
         guestName:
@@ -2013,6 +2052,15 @@ components:
       properties:
         photoUrl:
           type: string
+
+    BrandingSettings:
+      type: object
+      required:
+        - badgeLogoUrl
+      properties:
+        badgeLogoUrl:
+          type: ["string", "null"]
+          description: URL of the uploaded badge logo, or null if none uploaded
 
     Studio:
       type: object

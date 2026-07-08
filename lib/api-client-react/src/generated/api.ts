@@ -29,6 +29,7 @@ import type {
   AppUserUpdate,
   AuditEntry,
   BadgeData,
+  BrandingSettings,
   CheckWatchlistParams,
   ClientBulkPreregisterRequest,
   ClientBulkPreregisterResult,
@@ -4149,6 +4150,223 @@ export function useGetProductionsToday<TData = Awaited<ReturnType<typeof getProd
 
 
 
+
+export const getGetBrandingSettingsUrl = () => {
+
+
+
+
+  return `/api/settings/branding`
+}
+
+/**
+ * @summary Get app branding settings (badge logo)
+ */
+export const getBrandingSettings = async ( options?: RequestInit): Promise<BrandingSettings> => {
+
+  return customFetch<BrandingSettings>(getGetBrandingSettingsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetBrandingSettingsQueryKey = () => {
+    return [
+    `/api/settings/branding`
+    ] as const;
+    }
+
+
+export const getGetBrandingSettingsQueryOptions = <TData = Awaited<ReturnType<typeof getBrandingSettings>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getBrandingSettings>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetBrandingSettingsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getBrandingSettings>>> = ({ signal }) => getBrandingSettings({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getBrandingSettings>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetBrandingSettingsQueryResult = NonNullable<Awaited<ReturnType<typeof getBrandingSettings>>>
+export type GetBrandingSettingsQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Get app branding settings (badge logo)
+ */
+
+export function useGetBrandingSettings<TData = Awaited<ReturnType<typeof getBrandingSettings>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getBrandingSettings>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetBrandingSettingsQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getUpdateBadgeLogoUrl = () => {
+
+
+
+
+  return `/api/settings/badge-logo`
+}
+
+/**
+ * @summary Upload/replace the badge logo (admin only, base64 image)
+ */
+export const updateBadgeLogo = async (photoUpload: PhotoUpload, options?: RequestInit): Promise<BrandingSettings> => {
+
+  return customFetch<BrandingSettings>(getUpdateBadgeLogoUrl(),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(photoUpload)
+  }
+);}
+
+
+
+
+export const getUpdateBadgeLogoMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateBadgeLogo>>, TError,{data: BodyType<PhotoUpload>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateBadgeLogo>>, TError,{data: BodyType<PhotoUpload>}, TContext> => {
+
+const mutationKey = ['updateBadgeLogo'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateBadgeLogo>>, {data: BodyType<PhotoUpload>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  updateBadgeLogo(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateBadgeLogoMutationResult = NonNullable<Awaited<ReturnType<typeof updateBadgeLogo>>>
+    export type UpdateBadgeLogoMutationBody = BodyType<PhotoUpload>
+    export type UpdateBadgeLogoMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Upload/replace the badge logo (admin only, base64 image)
+ */
+export const useUpdateBadgeLogo = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateBadgeLogo>>, TError,{data: BodyType<PhotoUpload>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updateBadgeLogo>>,
+        TError,
+        {data: BodyType<PhotoUpload>},
+        TContext
+      > => {
+      return useMutation(getUpdateBadgeLogoMutationOptions(options));
+    }
+
+export const getDeleteBadgeLogoUrl = () => {
+
+
+
+
+  return `/api/settings/badge-logo`
+}
+
+/**
+ * @summary Remove the uploaded badge logo (admin only)
+ */
+export const deleteBadgeLogo = async ( options?: RequestInit): Promise<void> => {
+
+  return customFetch<void>(getDeleteBadgeLogoUrl(),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+export const getDeleteBadgeLogoMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteBadgeLogo>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteBadgeLogo>>, TError,void, TContext> => {
+
+const mutationKey = ['deleteBadgeLogo'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteBadgeLogo>>, void> = () => {
+
+
+          return  deleteBadgeLogo(requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteBadgeLogoMutationResult = NonNullable<Awaited<ReturnType<typeof deleteBadgeLogo>>>
+
+    export type DeleteBadgeLogoMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Remove the uploaded badge logo (admin only)
+ */
+export const useDeleteBadgeLogo = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteBadgeLogo>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof deleteBadgeLogo>>,
+        TError,
+        void,
+        TContext
+      > => {
+      return useMutation(getDeleteBadgeLogoMutationOptions(options));
+    }
 
 export const getUploadPhotoUrl = () => {
 

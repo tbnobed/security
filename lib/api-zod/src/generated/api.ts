@@ -1071,7 +1071,7 @@ export const ListAuditLogQueryParams = zod.object({
 
 export const ListAuditLogResponseItem = zod.object({
   "id": zod.number(),
-  "eventType": zod.enum(['checkin', 'checkout', 'preregistration', 'watchlist_flag', 'watchlist_block', 'user_created', 'role_changed', 'password_reset', 'known_guest_vip', 'known_guest_edited', 'known_guest_deleted', 'client_employee_added', 'client_employee_edited', 'client_employee_deleted', 'client_employees_imported']),
+  "eventType": zod.enum(['checkin', 'checkout', 'preregistration', 'watchlist_flag', 'watchlist_block', 'user_created', 'role_changed', 'password_reset', 'known_guest_vip', 'known_guest_edited', 'known_guest_deleted', 'client_employee_added', 'client_employee_edited', 'client_employee_deleted', 'client_employees_imported', 'badge_logo_updated', 'badge_logo_removed']),
   "guestId": zod.number().nullable(),
   "guestName": zod.string(),
   "operatorClerkId": zod.string(),
@@ -1302,6 +1302,32 @@ export const GetProductionsTodayResponseItem = zod.object({
   "color": zod.string().nullish()
 })
 export const GetProductionsTodayResponse = zod.array(GetProductionsTodayResponseItem)
+
+
+/**
+ * @summary Get app branding settings (badge logo)
+ */
+export const GetBrandingSettingsResponse = zod.object({
+  "badgeLogoUrl": zod.string().nullable().describe('URL of the uploaded badge logo, or null if none uploaded')
+})
+
+
+/**
+ * @summary Upload/replace the badge logo (admin only, base64 image)
+ */
+export const UpdateBadgeLogoBody = zod.object({
+  "imageData": zod.string().describe('Base64-encoded image data')
+})
+
+export const UpdateBadgeLogoResponse = zod.object({
+  "badgeLogoUrl": zod.string().nullable().describe('URL of the uploaded badge logo, or null if none uploaded')
+})
+
+
+/**
+ * @summary Remove the uploaded badge logo (admin only)
+ */
+export const DeleteBadgeLogoResponse = zod.void()
 
 
 /**

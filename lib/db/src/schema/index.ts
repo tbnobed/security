@@ -8,3 +8,4 @@ export * from "./studios";
 export * from "./notifications";
 export * from "./known-guests";
 export * from "./client-employees";
+export * from "./settings";

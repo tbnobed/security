@@ -273,6 +273,8 @@ export const AuditEntryEventType = {
   client_employee_edited: 'client_employee_edited',
   client_employee_deleted: 'client_employee_deleted',
   client_employees_imported: 'client_employees_imported',
+  badge_logo_updated: 'badge_logo_updated',
+  badge_logo_removed: 'badge_logo_removed',
 } as const;
 
 export interface AuditEntry {
@@ -539,6 +541,14 @@ export interface PhotoUpload {
 
 export interface PhotoResult {
   photoUrl: string;
+}
+
+export interface BrandingSettings {
+  /**
+     * URL of the uploaded badge logo, or null if none uploaded
+     * @nullable
+     */
+  badgeLogoUrl: string | null;
 }
 
 export interface Studio {
