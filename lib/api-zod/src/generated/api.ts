@@ -581,7 +581,7 @@ export const UpdateApprovalWorkflowResponse = zod.object({
 
 
 /**
- * @summary Pre-registrations awaiting the current user's approval
+ * @summary All pre-registrations awaiting approval (any operator may view)
  */
 export const ListPendingApprovalsResponseItem = zod.object({
   "id": zod.number(),
@@ -601,7 +601,10 @@ export const ListPendingApprovalsResponseItem = zod.object({
   "approvalStatus": zod.enum(['approved', 'pending', 'denied']).optional(),
   "approvalStage": zod.number().nullish().describe('1 or 2 while approvalStatus is pending'),
   "lateRegistration": zod.boolean().optional().describe('Registered less than 4 hours before expected arrival')
-})
+}).and(zod.object({
+  "canDecide": zod.boolean().describe('True when the signed-in user is the current-stage approver'),
+  "awaitingApproverName": zod.string().nullable().describe('Display name of the approver this request is currently waiting on')
+}))
 export const ListPendingApprovalsResponse = zod.array(ListPendingApprovalsResponseItem)
 
 

@@ -66,6 +66,7 @@ export * from './listKnownGuestsParams';
 export * from './listPreregistrationsParams';
 export * from './listRosterEmployeesParams';
 export * from './loginInput';
+export * from './pendingApproval';
 export * from './photoResult';
 export * from './photoUpload';
 export * from './preregistration';

@@ -158,7 +158,7 @@ export default function ApprovalsPage() {
       <div className="p-4 md:p-6 max-w-5xl mx-auto space-y-6">
         <div>
           <h2 className="text-2xl font-bold tracking-tight">Approvals</h2>
-          <p className="text-muted-foreground">Pre-registrations awaiting your decision.</p>
+          <p className="text-muted-foreground">Pre-registrations awaiting approval.</p>
         </div>
 
         {user?.role === "admin" && <AdminWorkflowConfig />}
@@ -166,13 +166,13 @@ export default function ApprovalsPage() {
         <div className="bg-card border border-border rounded-md">
           <div className="p-4 border-b border-border flex items-center gap-2">
             <CheckCircle2 className="w-4 h-4 text-primary" />
-            <h3 className="font-medium">Awaiting My Approval ({pending?.length ?? 0})</h3>
+            <h3 className="font-medium">Pending Approvals ({pending?.length ?? 0})</h3>
           </div>
           {isLoading ? (
             <div className="p-8 text-center text-muted-foreground">Loading...</div>
           ) : !pending || pending.length === 0 ? (
             <div className="p-8 text-center text-muted-foreground" data-testid="text-no-pending">
-              Nothing waiting on you. 🎉
+              No pending approvals. 🎉
             </div>
           ) : (
             <div className="overflow-x-auto">
@@ -207,25 +207,36 @@ export default function ApprovalsPage() {
                       </td>
                       <td className="px-4 py-3 text-muted-foreground">Step {p.approvalStage ?? 1}</td>
                       <td className="px-4 py-3 text-right whitespace-nowrap">
-                        <Button
-                          size="sm"
-                          className="mr-2"
-                          onClick={() => handleDecide(p.id, "approve")}
-                          disabled={deciding === p.id}
-                          data-testid={`button-approve-${p.id}`}
-                        >
-                          <CheckCircle2 className="w-3 h-3 mr-1" /> Approve
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="text-destructive hover:text-destructive"
-                          onClick={() => handleDecide(p.id, "deny")}
-                          disabled={deciding === p.id}
-                          data-testid={`button-deny-${p.id}`}
-                        >
-                          <XCircle className="w-3 h-3 mr-1" /> Deny
-                        </Button>
+                        {p.canDecide ? (
+                          <>
+                            <Button
+                              size="sm"
+                              className="mr-2"
+                              onClick={() => handleDecide(p.id, "approve")}
+                              disabled={deciding === p.id}
+                              data-testid={`button-approve-${p.id}`}
+                            >
+                              <CheckCircle2 className="w-3 h-3 mr-1" /> Approve
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="text-destructive hover:text-destructive"
+                              onClick={() => handleDecide(p.id, "deny")}
+                              disabled={deciding === p.id}
+                              data-testid={`button-deny-${p.id}`}
+                            >
+                              <XCircle className="w-3 h-3 mr-1" /> Deny
+                            </Button>
+                          </>
+                        ) : (
+                          <span
+                            className="text-xs text-muted-foreground"
+                            data-testid={`text-awaiting-${p.id}`}
+                          >
+                            Waiting on {p.awaitingApproverName ?? "approver"}
+                          </span>
+                        )}
                       </td>
                     </tr>
                   ))}

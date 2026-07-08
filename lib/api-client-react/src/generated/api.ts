@@ -65,6 +65,7 @@ import type {
   ListPreregistrationsParams,
   ListRosterEmployeesParams,
   LoginInput,
+  PendingApproval,
   PhotoResult,
   PhotoUpload,
   Preregistration,
@@ -1475,11 +1476,11 @@ export const getListPendingApprovalsUrl = () => {
 }
 
 /**
- * @summary Pre-registrations awaiting the current user's approval
+ * @summary All pre-registrations awaiting approval (any operator may view)
  */
-export const listPendingApprovals = async ( options?: RequestInit): Promise<Preregistration[]> => {
+export const listPendingApprovals = async ( options?: RequestInit): Promise<PendingApproval[]> => {
 
-  return customFetch<Preregistration[]>(getListPendingApprovalsUrl(),
+  return customFetch<PendingApproval[]>(getListPendingApprovalsUrl(),
   {
     ...options,
     method: 'GET'
@@ -1522,7 +1523,7 @@ export type ListPendingApprovalsQueryError = ErrorType<unknown>
 
 
 /**
- * @summary Pre-registrations awaiting the current user's approval
+ * @summary All pre-registrations awaiting approval (any operator may view)
  */
 
 export function useListPendingApprovals<TData = Awaited<ReturnType<typeof listPendingApprovals>>, TError = ErrorType<unknown>>(

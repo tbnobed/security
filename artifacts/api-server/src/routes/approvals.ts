@@ -105,20 +105,26 @@ router.get("/approvals/pending", requireOperator, async (req, res): Promise<void
       and(
         eq(preregistrationsTable.approvalStatus, "pending"),
         eq(preregistrationsTable.status, "pending"),
-        or(
-          and(
-            eq(preregistrationsTable.approvalStage, 1),
-            eq(preregistrationsTable.approver1Id, userId),
-          ),
-          and(
-            eq(preregistrationsTable.approvalStage, 2),
-            eq(preregistrationsTable.approver2Id, userId),
-          ),
-        ),
       ),
     )
     .orderBy(preregistrationsTable.expectedArrival);
-  res.json(ListPendingApprovalsResponse.parse(rows.map(toPreregResponse)));
+
+  const stageApproverOf = (p: Prereg) => (p.approvalStage === 2 ? p.approver2Id : p.approver1Id);
+  const uniqueIds = [...new Set(rows.map(stageApproverOf).filter((id): id is string => !!id))];
+  const approverNames = new Map<string, string | null>();
+  for (const id of uniqueIds) {
+    approverNames.set(id, await getApproverName(id));
+  }
+
+  const items = rows.map((p) => {
+    const stageApproverId = stageApproverOf(p);
+    return {
+      ...toPreregResponse(p),
+      canDecide: !!stageApproverId && stageApproverId === userId,
+      awaitingApproverName: stageApproverId ? (approverNames.get(stageApproverId) ?? null) : null,
+    };
+  });
+  res.json(ListPendingApprovalsResponse.parse(items));
 });
 
 router.post("/approvals/:id/decide", requireOperator, async (req, res): Promise<void> => {

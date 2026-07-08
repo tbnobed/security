@@ -443,16 +443,18 @@ paths:
     get:
       operationId: listPendingApprovals
       tags: [approvals]
-      summary: Pre-registrations awaiting the current user's approval
+      summary: All pre-registrations awaiting approval (any operator may view)
       responses:
         "200":
-          description: Pending approvals for the signed-in approver
+          description: >
+            All pending approvals. `canDecide` is true only on rows whose
+            current-stage approver is the signed-in user.
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: "#/components/schemas/Preregistration"
+                  $ref: "#/components/schemas/PendingApproval"
 
   /approvals/{id}/decide:
     post:
@@ -1605,6 +1607,19 @@ components:
         lateRegistration:
           type: boolean
           description: Registered less than 4 hours before expected arrival
+
+    PendingApproval:
+      allOf:
+        - $ref: "#/components/schemas/Preregistration"
+        - type: object
+          required: [canDecide, awaitingApproverName]
+          properties:
+            canDecide:
+              type: boolean
+              description: True when the signed-in user is the current-stage approver
+            awaitingApproverName:
+              type: ["string", "null"]
+              description: Display name of the approver this request is currently waiting on
 
     ApprovalWorkflow:
       type: object

@@ -160,6 +160,16 @@ export interface Preregistration {
   lateRegistration?: boolean;
 }
 
+export type PendingApproval = Preregistration & ({
+  /** True when the signed-in user is the current-stage approver */
+  canDecide: boolean;
+  /**
+     * Display name of the approver this request is currently waiting on
+     * @nullable
+     */
+  awaitingApproverName: string | null;
+});
+
 export interface ApprovalWorkflow {
   /** @nullable */
   approver1Id: string | null;
