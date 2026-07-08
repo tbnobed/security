@@ -530,7 +530,9 @@ export type ClientEmployeeImportResultErrorsItem = {
 
 export interface ClientEmployeeImportResult {
   imported: number;
-  /** Rows skipped because an employee with the same name already exists */
+  /** Rows merged into an existing employee with the same name (new non-empty fields win) */
+  merged: number;
+  /** Deprecated — merge now happens instead of skipping; kept for compatibility (always 0) */
   skipped: number;
   errors: ClientEmployeeImportResultErrorsItem[];
 }
@@ -592,6 +594,11 @@ export interface ClientVisit {
   checkinAt?: string | null;
   /** @nullable */
   checkoutAt?: string | null;
+  /**
+     * Badge ID issued at check-in (null while the visit is still expected)
+     * @nullable
+     */
+  badgeId?: string | null;
 }
 
 export interface KioskPreregistration {

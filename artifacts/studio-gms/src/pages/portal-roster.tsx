@@ -235,7 +235,7 @@ export default function PortalRosterPage() {
       refresh();
       toast({
         title: "Import complete",
-        description: `${result.imported} added, ${result.skipped} already on roster${result.errors.length > 0 ? `, ${result.errors.length} failed` : ""}.`,
+        description: `${result.imported} added, ${result.merged} merged with existing${result.errors.length > 0 ? `, ${result.errors.length} failed` : ""}.`,
       });
       setCsvRows(null);
       setCsvError(null);
@@ -460,7 +460,7 @@ export default function PortalRosterPage() {
             <DialogDescription>
               {csvError
                 ? csvFileName
-                : `${csvFileName} — ${csvRows?.length ?? 0} employees found. Duplicates already on your roster will be skipped.`}
+                : `${csvFileName} — ${csvRows?.length ?? 0} employees found. Rows matching an existing employee will be merged (new details fill in blanks).`}
             </DialogDescription>
           </DialogHeader>
           {csvError ? (
@@ -530,6 +530,8 @@ export default function PortalRosterPage() {
                   <tr>
                     <th className="px-3 py-2 text-left font-medium">Date</th>
                     <th className="px-3 py-2 text-left font-medium">Host</th>
+                    <th className="px-3 py-2 text-left font-medium">Purpose</th>
+                    <th className="px-3 py-2 text-left font-medium">Badge</th>
                     <th className="px-3 py-2 text-left font-medium">In</th>
                     <th className="px-3 py-2 text-left font-medium">Out</th>
                     <th className="px-3 py-2 text-left font-medium">Status</th>
@@ -540,6 +542,10 @@ export default function PortalRosterPage() {
                     <tr key={v.preregistrationId}>
                       <td className="px-3 py-2">{format(new Date(v.expectedArrival), "MMM d, yyyy")}</td>
                       <td className="px-3 py-2 text-muted-foreground">{v.hostName ?? "—"}</td>
+                      <td className="px-3 py-2 text-muted-foreground max-w-[10rem] truncate" title={v.purposeOfVisit ?? undefined}>
+                        {v.purposeOfVisit ?? "—"}
+                      </td>
+                      <td className="px-3 py-2 text-muted-foreground font-mono text-xs">{v.badgeId ?? "—"}</td>
                       <td className="px-3 py-2 text-muted-foreground">
                         {v.checkinAt ? format(new Date(v.checkinAt), "h:mm a") : "—"}
                       </td>

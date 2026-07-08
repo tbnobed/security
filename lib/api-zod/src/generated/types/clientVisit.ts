@@ -26,4 +26,9 @@ export interface ClientVisit {
   checkinAt?: Date | null;
   /** @nullable */
   checkoutAt?: Date | null;
+  /**
+     * Badge ID issued at check-in (null while the visit is still expected)
+     * @nullable
+     */
+  badgeId?: string | null;
 }

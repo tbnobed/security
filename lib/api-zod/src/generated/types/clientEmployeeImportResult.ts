@@ -9,7 +9,9 @@ import type { ClientEmployeeImportResultErrorsItem } from './clientEmployeeImpor
 
 export interface ClientEmployeeImportResult {
   imported: number;
-  /** Rows skipped because an employee with the same name already exists */
+  /** Rows merged into an existing employee with the same name (new non-empty fields win) */
+  merged: number;
+  /** Deprecated — merge now happens instead of skipping; kept for compatibility (always 0) */
   skipped: number;
   errors: ClientEmployeeImportResultErrorsItem[];
 }

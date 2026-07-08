@@ -129,7 +129,7 @@ router.post("/client/employees/import", async (req, res): Promise<void> => {
   const client = getClientUser(res);
 
   let imported = 0;
-  let skipped = 0;
+  let merged = 0;
   const errors: { row: number; message: string }[] = [];
 
   for (let i = 0; i < parsed.data.rows.length; i++) {
@@ -139,37 +139,55 @@ router.post("/client/employees/import", async (req, res): Promise<void> => {
       errors.push({ row: i + 1, message: "Name is required" });
       continue;
     }
+    const title = row.title?.trim() || null;
+    const phone = row.phone?.trim() || null;
+    const email = row.email?.trim() || null;
     try {
       const inserted = await db
         .insert(clientEmployeesTable)
-        .values({
-          clientUserId: client.clerkId,
-          name,
-          title: row.title?.trim() || null,
-          phone: row.phone?.trim() || null,
-          email: row.email?.trim() || null,
-        })
+        .values({ clientUserId: client.clerkId, name, title, phone, email })
         .onConflictDoNothing()
         .returning({ id: clientEmployeesTable.id });
-      if (inserted.length > 0) imported++;
-      else skipped++;
+      if (inserted.length > 0) {
+        imported++;
+      } else {
+        // Row matches an existing employee (unique on clientUserId +
+        // lower(name)): MERGE — new non-empty fields win, existing values
+        // are kept where the CSV cell is blank.
+        const updates: Partial<typeof clientEmployeesTable.$inferInsert> = {};
+        if (title !== null) updates.title = title;
+        if (phone !== null) updates.phone = phone;
+        if (email !== null) updates.email = email;
+        if (Object.keys(updates).length > 0) {
+          await db
+            .update(clientEmployeesTable)
+            .set(updates)
+            .where(
+              and(
+                eq(clientEmployeesTable.clientUserId, client.clerkId),
+                sql`lower(${clientEmployeesTable.name}) = lower(${name})`,
+              ),
+            );
+        }
+        merged++;
+      }
     } catch (err) {
       errors.push({ row: i + 1, message: err instanceof Error ? err.message : "Insert failed" });
     }
   }
 
-  if (imported > 0) {
+  if (imported > 0 || merged > 0) {
     await db.insert(auditTable).values({
       eventType: "client_employees_imported",
       guestId: null,
-      guestName: `${imported} employees`,
+      guestName: `${imported + merged} employees`,
       operatorClerkId: client.clerkId,
       operatorName: clientOperatorName(client),
-      metadata: JSON.stringify({ company: client.companyName, imported, skipped }),
+      metadata: JSON.stringify({ company: client.companyName, imported, merged }),
     });
   }
 
-  res.json(ImportRosterEmployeesResponse.parse({ imported, skipped, errors }));
+  res.json(ImportRosterEmployeesResponse.parse({ imported, merged, skipped: 0, errors }));
 });
 
 router.patch("/client/employees/:id", async (req, res): Promise<void> => {
@@ -300,6 +318,7 @@ function toVisit(
     expectedArrival: p.expectedArrival.toISOString(),
     checkinAt: g?.checkinAt?.toISOString() ?? null,
     checkoutAt: g?.checkoutAt?.toISOString() ?? null,
+    badgeId: g?.badgeId ?? null,
   };
 }
 

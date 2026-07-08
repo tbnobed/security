@@ -2110,14 +2110,18 @@ components:
       type: object
       required:
         - imported
+        - merged
         - skipped
         - errors
       properties:
         imported:
           type: integer
+        merged:
+          type: integer
+          description: Rows merged into an existing employee with the same name (new non-empty fields win)
         skipped:
           type: integer
-          description: Rows skipped because an employee with the same name already exists
+          description: Deprecated — merge now happens instead of skipping; kept for compatibility (always 0)
         errors:
           type: array
           items:
@@ -2217,6 +2221,9 @@ components:
         checkoutAt:
           type: ["string", "null"]
           format: date-time
+        badgeId:
+          type: ["string", "null"]
+          description: Badge ID issued at check-in (null while the visit is still expected)
 
     KioskPreregistration:
       type: object

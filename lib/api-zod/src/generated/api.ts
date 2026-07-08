@@ -1101,7 +1101,8 @@ export const ImportRosterEmployeesBody = zod.object({
 
 export const ImportRosterEmployeesResponse = zod.object({
   "imported": zod.number(),
-  "skipped": zod.number().describe('Rows skipped because an employee with the same name already exists'),
+  "merged": zod.number().describe('Rows merged into an existing employee with the same name (new non-empty fields win)'),
+  "skipped": zod.number().describe('Deprecated — merge now happens instead of skipping; kept for compatibility (always 0)'),
   "errors": zod.array(zod.object({
   "row": zod.number().describe('1-based index into the submitted rows'),
   "message": zod.string()
@@ -1165,7 +1166,8 @@ export const ListRosterEmployeeVisitsResponseItem = zod.object({
   "lateRegistration": zod.boolean().optional(),
   "expectedArrival": zod.coerce.date(),
   "checkinAt": zod.coerce.date().nullish(),
-  "checkoutAt": zod.coerce.date().nullish()
+  "checkoutAt": zod.coerce.date().nullish(),
+  "badgeId": zod.string().nullish().describe('Badge ID issued at check-in (null while the visit is still expected)')
 })
 export const ListRosterEmployeeVisitsResponse = zod.array(ListRosterEmployeeVisitsResponseItem)
 
@@ -1228,7 +1230,8 @@ export const ListClientVisitsTodayResponseItem = zod.object({
   "lateRegistration": zod.boolean().optional(),
   "expectedArrival": zod.coerce.date(),
   "checkinAt": zod.coerce.date().nullish(),
-  "checkoutAt": zod.coerce.date().nullish()
+  "checkoutAt": zod.coerce.date().nullish(),
+  "badgeId": zod.string().nullish().describe('Badge ID issued at check-in (null while the visit is still expected)')
 })
 export const ListClientVisitsTodayResponse = zod.array(ListClientVisitsTodayResponseItem)
 
