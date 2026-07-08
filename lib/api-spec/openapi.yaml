@@ -456,6 +456,21 @@ paths:
                 items:
                   $ref: "#/components/schemas/PendingApproval"
 
+  /approvals/denied:
+    get:
+      operationId: listDeniedApprovals
+      tags: [approvals]
+      summary: Recently denied pre-registrations (any operator may view)
+      responses:
+        "200":
+          description: Denied pre-registrations, most recent decision first (max 50)
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/DeniedApproval"
+
   /approvals/{id}/decide:
     post:
       operationId: decideApproval
@@ -1620,6 +1635,19 @@ components:
             awaitingApproverName:
               type: ["string", "null"]
               description: Display name of the approver this request is currently waiting on
+
+    DeniedApproval:
+      allOf:
+        - $ref: "#/components/schemas/Preregistration"
+        - type: object
+          required: [deniedByName, deniedAt]
+          properties:
+            deniedByName:
+              type: ["string", "null"]
+              description: Display name of the approver who denied the request
+            deniedAt:
+              type: ["string", "null"]
+              format: date-time
 
     ApprovalWorkflow:
       type: object

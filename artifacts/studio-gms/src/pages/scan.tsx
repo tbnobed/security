@@ -61,6 +61,7 @@ export default function ScanPage() {
   const [manualEntry, setManualEntry] = useState(false);
   const [insecureContext, setInsecureContext] = useState(false);
   const [scannerError, setScannerError] = useState(false);
+  const [camRes, setCamRes] = useState("");
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -107,6 +108,10 @@ export default function ScanPage() {
           /* focus constraint unsupported — fine */
         }
       }
+      if (track) {
+        const s = track.getSettings();
+        if (s.width && s.height) setCamRes(`${s.width}×${s.height}`);
+      }
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
         await videoRef.current.play().catch(() => undefined);
@@ -127,7 +132,30 @@ export default function ScanPage() {
     (async () => {
       const ok = await startCamera();
       if (!ok || cancelled) return;
-      let readBarcodes: typeof import("zxing-wasm/reader").readBarcodes;
+
+      // Prefer the browser's native BarcodeDetector when it supports PDF417
+      // (Chrome/Android — hardware-backed and far better at dense barcodes
+      // than a WASM decoder). Falls back to zxing-wasm elsewhere (iOS).
+      type NativeDetector = { detect: (src: CanvasImageSource) => Promise<{ rawValue: string }[]> };
+      let nativeDetector: NativeDetector | null = null;
+      try {
+        const BD = (
+          window as unknown as {
+            BarcodeDetector?: {
+              new (opts: { formats: string[] }): NativeDetector;
+              getSupportedFormats?: () => Promise<string[]>;
+            };
+          }
+        ).BarcodeDetector;
+        if (BD?.getSupportedFormats) {
+          const fmts = await BD.getSupportedFormats();
+          if (fmts.includes("pdf417")) nativeDetector = new BD({ formats: ["pdf417"] });
+        }
+      } catch {
+        nativeDetector = null;
+      }
+
+      let readBarcodes: typeof import("zxing-wasm/reader").readBarcodes | null = null;
       try {
         // Serve the WASM binary from our own origin instead of the default
         // jsDelivr CDN — required for self-hosted/offline deploys and iOS
@@ -142,11 +170,14 @@ export default function ScanPage() {
               path.endsWith(".wasm") ? wasm.default : prefix + path,
           },
         });
-        readBarcodes = mod.readBarcodes;
         // Warm-up decode: forces WASM instantiation NOW so a broken module
         // surfaces as a visible error instead of silently failing every frame.
-        await readBarcodes(new ImageData(2, 2), { formats: ["PDF417"] });
+        await mod.readBarcodes(new ImageData(2, 2), { formats: ["PDF417"] });
+        readBarcodes = mod.readBarcodes;
       } catch {
+        readBarcodes = null;
+      }
+      if (!nativeDetector && !readBarcodes) {
         if (!cancelled) {
           setScannerError(true);
           stopCamera();
@@ -161,7 +192,6 @@ export default function ScanPage() {
       // Alternate between the center guide-box region (best pixel density
       // when the guest fills the frame) and the full frame downscaled (in
       // case they hold the license further away).
-      const DECODE_LONG_EDGE = 1600;
       let frameNo = 0;
       let consecutiveDecodeErrors = 0;
 
@@ -179,20 +209,35 @@ export default function ScanPage() {
           const sh = useCrop ? Math.round(vh * 0.6) : vh;
           const sx = Math.round((vw - sw) / 2);
           const sy = Math.round((vh - sh) / 2);
-          const scale = Math.min(1, DECODE_LONG_EDGE / Math.max(sw, sh));
+          // Keep more detail on the crop pass — PDF417 modules are tiny.
+          const longEdgeCap = useCrop ? 2016 : 1600;
+          const scale = Math.min(1, longEdgeCap / Math.max(sw, sh));
           canvas.width = Math.round(sw * scale);
           canvas.height = Math.round(sh * scale);
           const ctx = canvas.getContext("2d", { willReadFrequently: true })!;
           ctx.drawImage(video, sx, sy, sw, sh, 0, 0, canvas.width, canvas.height);
           try {
-            const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-            const results = await readBarcodes(imageData, {
-              formats: ["PDF417"],
-              tryHarder: true,
-              maxNumberOfSymbols: 1,
-            });
+            let text: string | undefined;
+            if (nativeDetector) {
+              try {
+                const detections = await nativeDetector.detect(canvas);
+                text = detections[0]?.rawValue;
+              } catch {
+                // Native detector broken on this device — fall back to WASM.
+                nativeDetector = null;
+                if (!readBarcodes) throw new Error("no decoder");
+              }
+            }
+            if (text === undefined && !nativeDetector && readBarcodes) {
+              const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+              const results = await readBarcodes(imageData, {
+                formats: ["PDF417"],
+                tryHarder: true,
+                maxNumberOfSymbols: 1,
+              });
+              text = results[0]?.text;
+            }
             consecutiveDecodeErrors = 0;
-            const text = results[0]?.text;
             if (text && !cancelled) {
               const parsed = parseAamvaName(text);
               if (parsed) {
@@ -323,6 +368,11 @@ export default function ScanPage() {
                       Fill the frame with the barcode, hold steady, and avoid glare — move slightly
                       closer or farther until it focuses.
                     </p>
+                    {camRes && (
+                      <p className="text-[10px] text-muted-foreground/60" data-testid="text-cam-res">
+                        Camera {camRes}
+                      </p>
+                    )}
                   </div>
                 )}
                 <p className="text-xs text-muted-foreground text-center">

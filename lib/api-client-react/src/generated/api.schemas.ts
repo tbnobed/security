@@ -170,6 +170,16 @@ export type PendingApproval = Preregistration & ({
   awaitingApproverName: string | null;
 });
 
+export type DeniedApproval = Preregistration & ({
+  /**
+     * Display name of the approver who denied the request
+     * @nullable
+     */
+  deniedByName: string | null;
+  /** @nullable */
+  deniedAt: string | null;
+});
+
 export interface ApprovalWorkflow {
   /** @nullable */
   approver1Id: string | null;

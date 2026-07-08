@@ -71,18 +71,9 @@ export const VisitorBadge = forwardRef<HTMLDivElement, { data: VisitorBadgeData 
 
           {/* Details */}
           <div className="flex min-w-0 flex-1 flex-col justify-center leading-tight">
-            <div className="flex items-start justify-between gap-1.5">
-              <div className="min-w-0">
-                <div className="truncate text-[13px] font-bold text-gray-900">{data.name}</div>
-                <div className="truncate text-[9px] font-medium text-gray-800">{data.company}</div>
-              </div>
-              {logoUrl && (
-                <img
-                  src={logoUrl}
-                  alt=""
-                  className="h-[0.38in] w-auto max-w-[0.85in] shrink-0 object-contain"
-                />
-              )}
+            <div className="min-w-0">
+              <div className="truncate text-[13px] font-bold text-gray-900">{data.name}</div>
+              <div className="truncate text-[9px] font-medium text-gray-800">{data.company}</div>
             </div>
             <div className="mt-1 space-y-0.5 text-[8px] font-medium text-black">
               <div className="truncate">
@@ -103,6 +94,13 @@ export const VisitorBadge = forwardRef<HTMLDivElement, { data: VisitorBadgeData 
               )}
             </div>
           </div>
+
+          {/* Logo — its own fixed column so it can never crowd the name */}
+          {logoUrl && (
+            <div className="flex w-[0.6in] shrink-0 items-start justify-end pt-0.5">
+              <img src={logoUrl} alt="" className="max-h-[0.35in] w-full object-contain object-right-top" />
+            </div>
+          )}
         </div>
 
         {/* Footer / badge id band */}

@@ -1,11 +1,12 @@
 import { Router } from "express";
-import { and, eq, or } from "drizzle-orm";
+import { and, desc, eq, or } from "drizzle-orm";
 import { db, preregistrationsTable, usersTable, auditTable } from "@workspace/db";
 import {
   GetApprovalWorkflowResponse,
   UpdateApprovalWorkflowBody,
   UpdateApprovalWorkflowResponse,
   ListPendingApprovalsResponse,
+  ListDeniedApprovalsResponse,
   DecideApprovalParams,
   DecideApprovalBody,
   DecideApprovalResponse,
@@ -125,6 +126,35 @@ router.get("/approvals/pending", requireOperator, async (req, res): Promise<void
     };
   });
   res.json(ListPendingApprovalsResponse.parse(items));
+});
+
+router.get("/approvals/denied", requireOperator, async (_req, res): Promise<void> => {
+  const rows = await db
+    .select()
+    .from(preregistrationsTable)
+    .where(
+      and(
+        eq(preregistrationsTable.approvalStatus, "denied"),
+        eq(preregistrationsTable.status, "pending"),
+      ),
+    )
+    .orderBy(desc(preregistrationsTable.approvalDecidedAt))
+    .limit(50);
+
+  const uniqueIds = [
+    ...new Set(rows.map((p) => p.approvalDecidedById).filter((id): id is string => !!id)),
+  ];
+  const deciderNames = new Map<string, string | null>();
+  for (const id of uniqueIds) {
+    deciderNames.set(id, await getApproverName(id));
+  }
+
+  const items = rows.map((p) => ({
+    ...toPreregResponse(p),
+    deniedByName: p.approvalDecidedById ? (deciderNames.get(p.approvalDecidedById) ?? null) : null,
+    deniedAt: p.approvalDecidedAt ? p.approvalDecidedAt.toISOString() : null,
+  }));
+  res.json(ListDeniedApprovalsResponse.parse(items));
 });
 
 router.post("/approvals/:id/decide", requireOperator, async (req, res): Promise<void> => {

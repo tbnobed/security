@@ -609,6 +609,34 @@ export const ListPendingApprovalsResponse = zod.array(ListPendingApprovalsRespon
 
 
 /**
+ * @summary Recently denied pre-registrations (any operator may view)
+ */
+export const ListDeniedApprovalsResponseItem = zod.object({
+  "id": zod.number(),
+  "guestName": zod.string(),
+  "company": zod.string(),
+  "phone": zod.string().nullish(),
+  "email": zod.string().nullish(),
+  "hostName": zod.string(),
+  "purposeOfVisit": zod.string().nullish(),
+  "site": zod.string(),
+  "expectedArrival": zod.coerce.date(),
+  "expectedDeparture": zod.coerce.date().nullish(),
+  "status": zod.enum(['pending', 'converted', 'cancelled']),
+  "createdByClerkId": zod.string().nullish(),
+  "convertedGuestId": zod.number().nullish(),
+  "studios": zod.array(zod.string()).optional(),
+  "approvalStatus": zod.enum(['approved', 'pending', 'denied']).optional(),
+  "approvalStage": zod.number().nullish().describe('1 or 2 while approvalStatus is pending'),
+  "lateRegistration": zod.boolean().optional().describe('Registered less than 4 hours before expected arrival')
+}).and(zod.object({
+  "deniedByName": zod.string().nullable().describe('Display name of the approver who denied the request'),
+  "deniedAt": zod.coerce.date().nullable()
+}))
+export const ListDeniedApprovalsResponse = zod.array(ListDeniedApprovalsResponseItem)
+
+
+/**
  * @summary Approve or deny a pending pre-registration (current-stage approver only)
  */
 export const DecideApprovalParams = zod.object({

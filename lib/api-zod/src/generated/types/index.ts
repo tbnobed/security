@@ -40,6 +40,7 @@ export * from './clientVisitApprovalStatus';
 export * from './clientVisitStatus';
 export * from './convertPreregistrationInput';
 export * from './dashboardSummary';
+export * from './deniedApproval';
 export * from './exportAuditLogParams';
 export * from './getRecentActivityParams';
 export * from './guest';

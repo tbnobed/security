@@ -45,6 +45,9 @@ services:
       SESSION_SECRET: ${SESSION_SECRET:?set SESSION_SECRET in .env}
       # Set to "true" only when the app is served over HTTPS (TLS in front).
       SESSION_COOKIE_SECURE: ${SESSION_COOKIE_SECURE:-false}
+      # Timezone used for email timestamps and "today" windows (kiosk,
+      # Productions Today, client portal). IANA name, e.g. America/Chicago.
+      TZ: ${TZ:-UTC}
       # Optional email alerts (leave blank to disable).
       SENDGRID_API_KEY: ${SENDGRID_API_KEY:-}
       SENDGRID_FROM_EMAIL: ${SENDGRID_FROM_EMAIL:-}

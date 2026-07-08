@@ -6,19 +6,18 @@ const router = Router();
 
 const DEFAULT_BOOKINGS_API_URL = "https://plex.bookstud.io/api/public/bookings";
 
-function todayUtcRange(): { start: string; end: string } {
+function todayRange(): { start: string; end: string } {
+  // "Today" in the server's local timezone (set TZ on the api container;
+  // defaults to UTC when unset).
   const now = new Date();
-  const y = now.getUTCFullYear();
-  const m = now.getUTCMonth();
-  const d = now.getUTCDate();
-  const start = new Date(Date.UTC(y, m, d, 0, 0, 0, 0));
-  const end = new Date(Date.UTC(y, m, d, 23, 59, 59, 999));
+  const start = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
+  const end = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
   return { start: start.toISOString(), end: end.toISOString() };
 }
 
 router.get("/productions/today", requireOperator, async (req, res): Promise<void> => {
   const baseUrl = process.env.BOOKINGS_API_URL ?? DEFAULT_BOOKINGS_API_URL;
-  const { start, end } = todayUtcRange();
+  const { start, end } = todayRange();
 
   let upstream: URL;
   try {
@@ -86,7 +85,7 @@ router.get("/productions/today", requireOperator, async (req, res): Promise<void
         typeof b.status === "string",
     )
     .filter((b) => {
-      // Keep only bookings that actually overlap today's UTC window
+      // Keep only bookings that actually overlap today (server-local TZ) window
       // (the upstream API returns some out-of-range items).
       const bStart = new Date(b.start as string).getTime();
       const bEnd = new Date(b.end as string).getTime();

@@ -343,8 +343,9 @@ router.get("/client/employees/:id/visits", async (req, res): Promise<void> => {
 router.get("/client/visits/today", async (req, res): Promise<void> => {
   const client = getClientUser(res);
 
+  // "Today" in the server's local timezone (set TZ on the api container).
   const now = new Date();
-  const dayStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
+  const dayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   const dayEnd = new Date(dayStart.getTime() + 24 * 60 * 60 * 1000);
 
   const rows = await db

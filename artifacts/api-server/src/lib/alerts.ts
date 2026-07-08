@@ -32,7 +32,15 @@ function fmt(iso: string | null | undefined): string | null {
   if (!iso) return null;
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return null;
-  return d.toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" });
+  // Server-local timezone — controlled by the TZ env var on the api container.
+  return d.toLocaleString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+    timeZoneName: "short",
+  });
 }
 
 function buildBody(eventType: AlertEventType, ctx: AlertContext): { subject: string; text: string; html: string } {

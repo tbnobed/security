@@ -45,6 +45,7 @@ import type {
   ClientVisit,
   ConvertPreregistrationInput,
   DashboardSummary,
+  DeniedApproval,
   ExportAuditLogParams,
   GetRecentActivityParams,
   Guest,
@@ -1532,6 +1533,83 @@ export function useListPendingApprovals<TData = Awaited<ReturnType<typeof listPe
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
   const queryOptions = getListPendingApprovalsQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getListDeniedApprovalsUrl = () => {
+
+
+
+
+  return `/api/approvals/denied`
+}
+
+/**
+ * @summary Recently denied pre-registrations (any operator may view)
+ */
+export const listDeniedApprovals = async ( options?: RequestInit): Promise<DeniedApproval[]> => {
+
+  return customFetch<DeniedApproval[]>(getListDeniedApprovalsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListDeniedApprovalsQueryKey = () => {
+    return [
+    `/api/approvals/denied`
+    ] as const;
+    }
+
+
+export const getListDeniedApprovalsQueryOptions = <TData = Awaited<ReturnType<typeof listDeniedApprovals>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listDeniedApprovals>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListDeniedApprovalsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listDeniedApprovals>>> = ({ signal }) => listDeniedApprovals({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listDeniedApprovals>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListDeniedApprovalsQueryResult = NonNullable<Awaited<ReturnType<typeof listDeniedApprovals>>>
+export type ListDeniedApprovalsQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Recently denied pre-registrations (any operator may view)
+ */
+
+export function useListDeniedApprovals<TData = Awaited<ReturnType<typeof listDeniedApprovals>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listDeniedApprovals>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListDeniedApprovalsQueryOptions(options)
 
   const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
 

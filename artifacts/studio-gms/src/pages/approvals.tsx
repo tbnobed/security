@@ -4,6 +4,7 @@ import {
   useGetApprovalWorkflow,
   useUpdateApprovalWorkflow,
   useListPendingApprovals,
+  useListDeniedApprovals,
   useDecideApproval,
   useListUsers,
 } from "@workspace/api-client-react";
@@ -134,6 +135,9 @@ export default function ApprovalsPage() {
   const { data: pending, isLoading } = useListPendingApprovals({
     query: { refetchInterval: 30000 } as any,
   });
+  const { data: denied } = useListDeniedApprovals({
+    query: { refetchInterval: 30000 } as any,
+  });
   const { mutateAsync: decide } = useDecideApproval();
   const [deciding, setDeciding] = useState<number | null>(null);
 
@@ -142,6 +146,7 @@ export default function ApprovalsPage() {
     try {
       await decide({ id, data: { action } });
       queryClient.invalidateQueries({ queryKey: ["/api/approvals/pending"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/approvals/denied"] });
       queryClient.invalidateQueries({ queryKey: ["/api/preregistrations"] });
       queryClient.invalidateQueries({ queryKey: ["/api/dashboard/summary"] });
       toast({ title: action === "approve" ? "Approved" : "Denied" });
@@ -237,6 +242,54 @@ export default function ApprovalsPage() {
                             Waiting on {p.awaitingApproverName ?? "approver"}
                           </span>
                         )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+
+        <div className="bg-card border border-border rounded-md">
+          <div className="p-4 border-b border-border flex items-center gap-2">
+            <XCircle className="w-4 h-4 text-destructive" />
+            <h3 className="font-medium">Recently Denied ({denied?.length ?? 0})</h3>
+          </div>
+          {!denied || denied.length === 0 ? (
+            <div className="p-8 text-center text-muted-foreground" data-testid="text-no-denied">
+              No denied pre-registrations.
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead className="bg-muted/50 text-muted-foreground text-xs uppercase border-b border-border">
+                  <tr>
+                    <th className="px-4 py-3 text-left font-medium">Guest</th>
+                    <th className="px-4 py-3 text-left font-medium">Company</th>
+                    <th className="px-4 py-3 text-left font-medium">Host</th>
+                    <th className="px-4 py-3 text-left font-medium">Arrival</th>
+                    <th className="px-4 py-3 text-left font-medium">Denied By</th>
+                    <th className="px-4 py-3 text-left font-medium">Denied At</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border">
+                  {denied.map((p) => (
+                    <tr key={p.id} className="hover:bg-muted/30 transition-colors" data-testid={`row-denied-${p.id}`}>
+                      <td className="px-4 py-3 font-medium">
+                        {p.guestName}
+                        <span className="ml-2 inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-destructive/10 text-destructive">
+                          DENIED
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 text-muted-foreground">{p.company || "—"}</td>
+                      <td className="px-4 py-3">{p.hostName}</td>
+                      <td className="px-4 py-3 text-muted-foreground whitespace-nowrap">
+                        {format(new Date(p.expectedArrival), "MMM d, HH:mm")}
+                      </td>
+                      <td className="px-4 py-3 text-muted-foreground">{p.deniedByName ?? "—"}</td>
+                      <td className="px-4 py-3 text-muted-foreground whitespace-nowrap">
+                        {p.deniedAt ? format(new Date(p.deniedAt), "MMM d, HH:mm") : "—"}
                       </td>
                     </tr>
                   ))}

@@ -98,7 +98,16 @@ function appBaseUrl(): string {
 }
 
 function fmtWhen(d: Date): string {
-  return d.toISOString().replace("T", " ").slice(0, 16) + " UTC";
+  // Formats in the server's local timezone — set the TZ env var (e.g.
+  // TZ=America/Los_Angeles) on the api container to control this.
+  return d.toLocaleString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+    timeZoneName: "short",
+  });
 }
 
 async function getUserName(userId: string | null): Promise<string | null> {

@@ -50,6 +50,10 @@ Optional:
 - `APP_BASE_URL` — public base URL of the app (e.g. `http://192.168.1.10`).
   Used for one-click Approve/Deny links in pre-registration approval emails;
   blank = emails direct approvers to the in-app Approvals page.
+- `TZ` — IANA timezone (e.g. `America/Chicago`) used by the API for email
+  timestamps and "today" windows (kiosk search, Productions Today, client
+  portal). Defaults to `UTC`. The web UI always shows times in each viewer's
+  own browser timezone.
 - `HTTP_PORT` — host port to publish (default `80`).
 - `SESSION_COOKIE_SECURE` — see the HTTPS note below.
 
