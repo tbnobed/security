@@ -49,6 +49,38 @@ function titleCase(s: string): string {
     .replace(/(^|[\s\-'])([a-z])/g, (_, p, c: string) => p + c.toUpperCase());
 }
 
+type ReadBarcodesFn = typeof import("zxing-wasm/reader").readBarcodes;
+
+// Load + warm up zxing-wasm exactly once (shared by the live scan loop and
+// the still-photo fallback). Serves the WASM binary from our own origin
+// instead of the default jsDelivr CDN — required for self-hosted/offline
+// deploys and iOS content blockers.
+let zxingPromise: Promise<ReadBarcodesFn | null> | null = null;
+function loadZxing(): Promise<ReadBarcodesFn | null> {
+  zxingPromise ??= (async () => {
+    try {
+      const [mod, wasm] = await Promise.all([
+        import("zxing-wasm/reader"),
+        import("zxing-wasm/reader/zxing_reader.wasm?url"),
+      ]);
+      mod.prepareZXingModule({
+        overrides: {
+          locateFile: (path: string, prefix: string) =>
+            path.endsWith(".wasm") ? wasm.default : prefix + path,
+        },
+      });
+      // Warm-up decode: forces WASM instantiation NOW so a broken module
+      // surfaces as a visible error instead of silently failing every frame.
+      await mod.readBarcodes(new ImageData(2, 2), { formats: ["PDF417"] });
+      return mod.readBarcodes;
+    } catch {
+      zxingPromise = null;
+      return null;
+    }
+  })();
+  return zxingPromise;
+}
+
 export default function ScanPage() {
   const [, params] = useRoute("/scan/:id");
   const sessionId = params?.id ?? "";
@@ -64,11 +96,23 @@ export default function ScanPage() {
   const [camRes, setCamRes] = useState("");
   const [zoomLevel, setZoomLevel] = useState(1);
   const [zoomMax, setZoomMax] = useState(1);
+  // Still-photo fallback: offered after a few seconds of unsuccessful live
+  // scanning (or immediately when the camera/scanner is unavailable). The
+  // native camera app can macro-focus in ways getUserMedia video cannot, so
+  // a deliberate still photo decodes far more reliably than live frames.
+  const [stillOffer, setStillOffer] = useState(false);
+  const [stillBusy, setStillBusy] = useState(false);
+  const [stillFailed, setStillFailed] = useState(false);
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const scanningRef = useRef(false);
+  const stillInputRef = useRef<HTMLInputElement>(null);
+  // Mirrors stillBusy for the live scan loop (refs avoid stale closures):
+  // while a still photo is being decoded the live loop must idle, so the two
+  // decoders never run concurrently on a memory-constrained phone.
+  const stillBusyRef = useRef(false);
 
   const { mutateAsync: submitScan } = useSubmitScanResult();
 
@@ -152,6 +196,121 @@ export default function ScanPage() {
     }
   }, []);
 
+  // Offer the still-photo fallback after 5s of live scanning without a hit.
+  useEffect(() => {
+    if (step !== "scan" || manualEntry) {
+      setStillOffer(false);
+      return;
+    }
+    const t = setTimeout(() => setStillOffer(true), 5000);
+    return () => clearTimeout(t);
+  }, [step, manualEntry]);
+
+  // Decode a still photo taken with the native camera app (file input with
+  // capture). Native camera stills are sharp (real autofocus/macro) and
+  // high-res — the most reliable way to read a dense license PDF417.
+  const decodeStillPhoto = useCallback(
+    async (file: File) => {
+      stillBusyRef.current = true;
+      setStillBusy(true);
+      setStillFailed(false);
+      try {
+        // Prefer createImageBitmap; fall back to an <img> element for older
+        // browsers / unsupported codecs (both are valid CanvasImageSource /
+        // ImageBitmapSource inputs).
+        let source: ImageBitmap | HTMLImageElement;
+        let cleanup: () => void;
+        try {
+          const bmp = await createImageBitmap(file);
+          source = bmp;
+          cleanup = () => bmp.close();
+        } catch {
+          const url = URL.createObjectURL(file);
+          const img = new Image();
+          img.src = url;
+          await img.decode();
+          source = img;
+          cleanup = () => URL.revokeObjectURL(url);
+        }
+        const srcW = source instanceof HTMLImageElement ? source.naturalWidth : source.width;
+        const srcH = source instanceof HTMLImageElement ? source.naturalHeight : source.height;
+        try {
+          let text: string | undefined;
+
+          // Native BarcodeDetector first, if this browser has one with pdf417.
+          try {
+            const BD = (
+              window as unknown as {
+                BarcodeDetector?: {
+                  new (opts: { formats: string[] }): {
+                    detect: (src: ImageBitmapSource) => Promise<{ rawValue: string }[]>;
+                  };
+                  getSupportedFormats?: () => Promise<string[]>;
+                };
+              }
+            ).BarcodeDetector;
+            if (BD?.getSupportedFormats) {
+              const fmts = await BD.getSupportedFormats();
+              if (fmts.includes("pdf417")) {
+                const det = new BD({ formats: ["pdf417"] });
+                text = (await det.detect(source))[0]?.rawValue;
+              }
+            }
+          } catch {
+            /* fall through to zxing */
+          }
+
+          if (text === undefined) {
+            const readBarcodes = await loadZxing();
+            if (readBarcodes) {
+              const work = document.createElement("canvas");
+              const ctx = work.getContext("2d", { willReadFrequently: true })!;
+              // Two passes: near-full resolution first (dense barcodes need
+              // pixels), then a smaller pass (helps slightly blurry shots).
+              for (const cap of [3200, 2000]) {
+                const scale = Math.min(1, cap / Math.max(srcW, srcH));
+                work.width = Math.round(srcW * scale);
+                work.height = Math.round(srcH * scale);
+                ctx.drawImage(source, 0, 0, work.width, work.height);
+                const results = await readBarcodes(
+                  ctx.getImageData(0, 0, work.width, work.height),
+                  {
+                    formats: ["PDF417"],
+                    tryHarder: true,
+                    tryRotate: true,
+                    tryInvert: true,
+                    tryDownscale: true,
+                    maxNumberOfSymbols: 1,
+                  },
+                );
+                text = results[0]?.text;
+                if (text !== undefined) break;
+              }
+            }
+          }
+
+          const parsed = text ? parseAamvaName(text) : null;
+          if (parsed) {
+            stopCamera();
+            setName(titleCase(parsed));
+            setStep("confirm");
+            return;
+          }
+          setStillFailed(true);
+        } finally {
+          cleanup();
+        }
+      } catch {
+        setStillFailed(true);
+      } finally {
+        stillBusyRef.current = false;
+        setStillBusy(false);
+        if (stillInputRef.current) stillInputRef.current.value = "";
+      }
+    },
+    [stopCamera],
+  );
+
   // Barcode scan loop (step === "scan")
   useEffect(() => {
     if (step !== "scan" || manualEntry) return;
@@ -184,28 +343,7 @@ export default function ScanPage() {
         nativeDetector = null;
       }
 
-      let readBarcodes: typeof import("zxing-wasm/reader").readBarcodes | null = null;
-      try {
-        // Serve the WASM binary from our own origin instead of the default
-        // jsDelivr CDN — required for self-hosted/offline deploys and iOS
-        // content blockers, otherwise decoding silently never starts.
-        const [mod, wasm] = await Promise.all([
-          import("zxing-wasm/reader"),
-          import("zxing-wasm/reader/zxing_reader.wasm?url"),
-        ]);
-        mod.prepareZXingModule({
-          overrides: {
-            locateFile: (path: string, prefix: string) =>
-              path.endsWith(".wasm") ? wasm.default : prefix + path,
-          },
-        });
-        // Warm-up decode: forces WASM instantiation NOW so a broken module
-        // surfaces as a visible error instead of silently failing every frame.
-        await mod.readBarcodes(new ImageData(2, 2), { formats: ["PDF417"] });
-        readBarcodes = mod.readBarcodes;
-      } catch {
-        readBarcodes = null;
-      }
+      const readBarcodes = await loadZxing();
       if (!nativeDetector && !readBarcodes) {
         if (!cancelled) {
           setScannerError(true);
@@ -231,6 +369,12 @@ export default function ScanPage() {
 
       const tick = async () => {
         if (cancelled || !scanningRef.current) return;
+        // Idle while a still photo is being decoded (never run both decoders
+        // at once) or while the page is backgrounded (native camera app open).
+        if (stillBusyRef.current || document.hidden) {
+          setTimeout(tick, 250);
+          return;
+        }
         const video = videoRef.current;
         const canvas = canvasRef.current;
         if (video && canvas && video.videoWidth > 0) {
@@ -281,6 +425,7 @@ export default function ScanPage() {
                 tryHarder: true,
                 tryRotate: true,
                 tryInvert: true,
+                tryDownscale: true,
                 maxNumberOfSymbols: 1,
               });
               text = results[0]?.text;
@@ -440,6 +585,45 @@ export default function ScanPage() {
                     {camRes && (
                       <p className="text-[10px] text-muted-foreground/60" data-testid="text-cam-res">
                         Camera {camRes}
+                      </p>
+                    )}
+                  </div>
+                )}
+                {(stillOffer || cameraError || scannerError || insecureContext) && (
+                  <div className="w-full space-y-2">
+                    <input
+                      ref={stillInputRef}
+                      type="file"
+                      accept="image/*"
+                      capture="environment"
+                      className="hidden"
+                      data-testid="input-still-photo"
+                      onChange={(e) => {
+                        const f = e.target.files?.[0];
+                        if (f) void decodeStillPhoto(f);
+                      }}
+                    />
+                    <Button
+                      variant="secondary"
+                      className="w-full"
+                      disabled={stillBusy}
+                      onClick={() => stillInputRef.current?.click()}
+                      data-testid="button-still-photo"
+                    >
+                      {stillBusy ? (
+                        <>
+                          <Loader2 className="w-4 h-4 mr-1 animate-spin" /> Reading photo…
+                        </>
+                      ) : (
+                        <>
+                          <Camera className="w-4 h-4 mr-1" /> Having trouble? Take a photo of the barcode
+                        </>
+                      )}
+                    </Button>
+                    {stillFailed && !stillBusy && (
+                      <p className="text-xs text-destructive text-center" data-testid="text-still-failed">
+                        Couldn't read the barcode from that photo. Fill the frame with the barcode,
+                        make sure it's in focus, avoid glare — and try again.
                       </p>
                     )}
                   </div>
