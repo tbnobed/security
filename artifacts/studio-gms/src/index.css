@@ -69,6 +69,10 @@
 
 /* SINGLE MODE DARK APP */
 :root, .dark {
+  /* Render native form controls (date/time pickers, scrollbars) in their
+     dark variants so e.g. the calendar icon is white, not black. */
+  color-scheme: dark;
+
   --button-outline: rgba(255,255,255, .10);
   --badge-outline: rgba(255,255,255, .05);
 
