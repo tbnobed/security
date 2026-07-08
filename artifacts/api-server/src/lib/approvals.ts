@@ -135,6 +135,8 @@ export async function notifyStageApprover(preg: Prereg, stage: 1 | 2): Promise<v
 
     const base = appBaseUrl();
     const link = base ? `${base}/approval/${token}` : null;
+    const approveLink = link ? `${link}?action=approve` : null;
+    const denyLink = link ? `${link}?action=deny` : null;
     const lateLine = preg.lateRegistration
       ? "\n⚠ LATE REGISTRATION — expected arrival is less than 4 hours away.\n"
       : "";
@@ -148,22 +150,28 @@ export async function notifyStageApprover(preg: Prereg, stage: 1 | 2): Promise<v
       preg.studios.length > 0 ? `Studios: ${preg.studios.join(", ")}` : null,
       `Expected arrival: ${fmtWhen(preg.expectedArrival)}`,
       "",
-      link
-        ? `Approve or deny: ${link}`
-        : "Sign in to FrontDesk and open the Approvals page to decide.",
+      ...(link
+        ? [`Approve: ${approveLink}`, `Deny: ${denyLink}`]
+        : ["Sign in to FrontDesk and open the Approvals page to decide."]),
     ].filter((l): l is string => l !== null);
+
+    const esc = (l: string) => l.replace(/&/g, "&amp;").replace(/</g, "&lt;");
+    const bodyHtml = lines
+      .filter((l) => !l.startsWith("Approve: ") && !l.startsWith("Deny: "))
+      .map((l) => `<p style="margin:2px 0">${esc(l)}</p>`)
+      .join("");
+    const buttonsHtml = link
+      ? `<p style="margin:16px 0">` +
+        `<a href="${approveLink}" style="background:#059669;color:#fff;padding:12px 24px;border-radius:6px;text-decoration:none;font-weight:bold;display:inline-block;margin-right:12px">&#10003; Approve</a>` +
+        `<a href="${denyLink}" style="background:#dc2626;color:#fff;padding:12px 24px;border-radius:6px;text-decoration:none;font-weight:bold;display:inline-block">&#10007; Deny</a>` +
+        `</p><p style="margin:2px 0;font-size:12px;color:#6b7280">You'll be asked to confirm on the next page.</p>`
+      : "";
 
     await sendMail({
       to: [approver.email],
       subject: `[FrontDesk] Approval needed: ${preg.guestName} (${fmtWhen(preg.expectedArrival)})`,
       text: lines.join("\n"),
-      html: `<div style="font-family:sans-serif;font-size:14px;line-height:1.6">${lines
-        .map((l) =>
-          l.startsWith("Approve or deny:") && link
-            ? `<p><a href="${link}" style="background:#0f766e;color:#fff;padding:10px 18px;border-radius:6px;text-decoration:none">Review &amp; decide</a></p>`
-            : `<p style="margin:2px 0">${l.replace(/&/g, "&amp;").replace(/</g, "&lt;")}</p>`,
-        )
-        .join("")}</div>`,
+      html: `<div style="font-family:sans-serif;font-size:14px;line-height:1.6">${bodyHtml}${buttonsHtml}</div>`,
     });
   } catch (err) {
     logger.error({ err, preregId: preg.id, stage }, "notifyStageApprover failed");

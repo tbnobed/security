@@ -17,6 +17,11 @@ let configured = false;
 if (apiKey && fromEmail) {
   sgMail.setApiKey(apiKey);
   configured = true;
+  if (!process.env.APP_BASE_URL && !process.env.REPLIT_DEV_DOMAIN) {
+    logger.warn(
+      "APP_BASE_URL is not set — approval emails will NOT contain Approve/Deny buttons (no public URL to link to). Set APP_BASE_URL (e.g. https://sec.obtv.io) to enable one-click approval links.",
+    );
+  }
 } else {
   logger.warn(
     "SendGrid not configured (SENDGRID_API_KEY / SENDGRID_FROM_EMAIL missing); visitor email alerts are disabled.",

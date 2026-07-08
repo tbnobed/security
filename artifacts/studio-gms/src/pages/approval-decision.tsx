@@ -18,6 +18,10 @@ import { format } from "date-fns";
 export default function ApprovalDecisionPage() {
   const [, params] = useRoute("/approval/:token");
   const token = params?.token ?? "";
+  // The email's Approve / Deny buttons deep-link with ?action= so the page
+  // can highlight the intended choice — a confirming press is still required
+  // (mail-scanner prefetch must never decide).
+  const intent = new URLSearchParams(window.location.search).get("action");
 
   const { data: info, isLoading, error, refetch } = useGetApprovalByToken(token, {
     query: { enabled: token.length > 0, retry: false } as any,
@@ -79,24 +83,36 @@ export default function ApprovalDecisionPage() {
               )}
 
               {state === "pending" ? (
-                <div className="flex gap-3">
-                  <Button
-                    className="flex-1"
-                    onClick={() => handleDecide("approve")}
-                    disabled={deciding}
-                    data-testid="button-token-approve"
-                  >
-                    <CheckCircle2 className="w-4 h-4 mr-2" /> Approve
-                  </Button>
-                  <Button
-                    variant="outline"
-                    className="flex-1 text-destructive hover:text-destructive"
-                    onClick={() => handleDecide("deny")}
-                    disabled={deciding}
-                    data-testid="button-token-deny"
-                  >
-                    <XCircle className="w-4 h-4 mr-2" /> Deny
-                  </Button>
+                <div className="space-y-2">
+                  {(intent === "approve" || intent === "deny") && (
+                    <p className="text-sm text-muted-foreground text-center" data-testid="text-confirm-hint">
+                      Confirm your decision below.
+                    </p>
+                  )}
+                  <div className="flex gap-3">
+                    <Button
+                      variant={intent === "deny" ? "outline" : "default"}
+                      className={`flex-1 ${intent === "approve" ? "ring-2 ring-primary ring-offset-2" : ""}`}
+                      onClick={() => handleDecide("approve")}
+                      disabled={deciding}
+                      data-testid="button-token-approve"
+                    >
+                      <CheckCircle2 className="w-4 h-4 mr-2" /> Approve
+                    </Button>
+                    <Button
+                      variant={intent === "deny" ? "destructive" : "outline"}
+                      className={`flex-1 ${
+                        intent === "deny"
+                          ? "ring-2 ring-destructive ring-offset-2"
+                          : "text-destructive hover:text-destructive"
+                      }`}
+                      onClick={() => handleDecide("deny")}
+                      disabled={deciding}
+                      data-testid="button-token-deny"
+                    >
+                      <XCircle className="w-4 h-4 mr-2" /> Deny
+                    </Button>
+                  </div>
                 </div>
               ) : (
                 <div
