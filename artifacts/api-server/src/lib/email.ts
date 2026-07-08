@@ -19,7 +19,7 @@ if (apiKey && fromEmail) {
   configured = true;
   if (!process.env.APP_BASE_URL && !process.env.REPLIT_DEV_DOMAIN) {
     logger.warn(
-      "APP_BASE_URL is not set — approval emails will NOT contain Approve/Deny buttons (no public URL to link to). Set APP_BASE_URL (e.g. https://sec.obtv.io) to enable one-click approval links.",
+      "APP_BASE_URL is not set — approval emails will fall back to the app URL learned from operator sign-ins for Approve/Deny links (until an operator has signed in at least once, emails omit the buttons). Set APP_BASE_URL (e.g. https://sec.obtv.io) to pin the public URL explicitly.",
     );
   }
 } else {

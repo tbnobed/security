@@ -3,6 +3,7 @@ import { and, eq, sql } from "drizzle-orm";
 import { db, appSettingsTable, preregistrationsTable, usersTable, auditTable } from "@workspace/db";
 import { isEmailConfigured, sendMail } from "./email";
 import { logger } from "./logger";
+import { getPublicOrigin } from "./public-origin";
 
 /**
  * Pre-registration approval workflow.
@@ -94,6 +95,10 @@ function appBaseUrl(): string {
   if (explicit) return explicit.replace(/\/$/, "");
   const dev = process.env.REPLIT_DEV_DOMAIN;
   if (dev) return `https://${dev}`;
+  // Fallback: origin learned from authenticated operator requests (never from
+  // unauthenticated ones — Host-header injection would poison email links).
+  const learned = getPublicOrigin();
+  if (learned) return learned.replace(/\/$/, "");
   return "";
 }
 

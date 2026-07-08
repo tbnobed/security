@@ -47,9 +47,13 @@ Optional:
 
 - `SENDGRID_API_KEY` + `SENDGRID_FROM_EMAIL` — enable email alerts (the from
   address must be a Verified Sender/domain in SendGrid).
-- `APP_BASE_URL` — public base URL of the app (e.g. `http://192.168.1.10`).
-  Used for one-click Approve/Deny links in pre-registration approval emails;
-  blank = emails direct approvers to the in-app Approvals page.
+- `APP_BASE_URL` — public base URL of the app (e.g. `http://192.168.1.10` or
+  `https://frontdesk.example.com`). Used for one-click Approve/Deny links in
+  pre-registration approval emails. Recommended in production. If blank, the
+  server falls back to the URL it learns from security/admin staff sign-ins
+  (persisted across restarts); until a staff member has signed in at least
+  once after install, approval emails omit the buttons and direct approvers
+  to the in-app Approvals page.
 - `TZ` — IANA timezone (e.g. `America/Chicago`) used by the API for email
   timestamps and "today" windows (kiosk search, Productions Today, client
   portal). Defaults to `UTC`. The web UI always shows times in each viewer's

@@ -1,6 +1,7 @@
 import app from "./app";
 import { logger } from "./lib/logger";
 import { startOverdueScheduler } from "./lib/overdue-scheduler";
+import { loadPublicOrigin } from "./lib/public-origin";
 
 const rawPort = process.env["PORT"];
 
@@ -24,4 +25,5 @@ app.listen(port, (err) => {
 
   logger.info({ port }, "Server listening");
   startOverdueScheduler();
+  void loadPublicOrigin();
 });

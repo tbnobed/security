@@ -3,6 +3,18 @@ import { eq } from "drizzle-orm";
 import bcrypt from "bcryptjs";
 import { randomUUID } from "node:crypto";
 import type { Request, Response, NextFunction } from "express";
+import { notePublicOrigin } from "./public-origin";
+
+/**
+ * Record the request's origin as the app's learned public origin. Called ONLY
+ * after a security/admin role check has passed — kiosk and client accounts are
+ * externally-held and must not be able to teach the origin used in approval
+ * email links (host-header poisoning / decision-token exfiltration).
+ */
+function learnOriginFromTrustedRequest(req: Request): void {
+  const host = req.get("host");
+  if (host) notePublicOrigin(`${req.protocol}://${host}`);
+}
 
 const BCRYPT_ROUNDS = 12;
 
@@ -57,6 +69,7 @@ export async function requireOperator(
     res.status(403).json({ error: "Operator access required" });
     return;
   }
+  learnOriginFromTrustedRequest(req);
   next();
 }
 
@@ -117,6 +130,7 @@ export async function requireAdmin(req: Request, res: Response, next: NextFuncti
     res.status(403).json({ error: "Admin access required" });
     return;
   }
+  learnOriginFromTrustedRequest(req);
   next();
 }
 
