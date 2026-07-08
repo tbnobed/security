@@ -121,7 +121,7 @@ export default function BrandingPage() {
                   <img
                     src={effectiveUrl}
                     alt="Badge logo"
-                    className="h-9 w-auto max-w-32 object-contain"
+                    className="h-14 w-auto max-w-48 object-contain"
                   />
                 ) : (
                   <span className="flex items-center gap-1.5 text-xs text-gray-400">
