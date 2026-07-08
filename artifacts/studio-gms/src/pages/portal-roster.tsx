@@ -79,33 +79,55 @@ function parseCsv(text: string): string[][] {
   return rows;
 }
 
-function csvToRows(text: string): { rows: CsvRow[]; error: string | null } {
+type PreviewRow = CsvRow & { line: number };
+type RowIssue = { line: number; message: string };
+
+function csvToRows(text: string): {
+  rows: PreviewRow[];
+  invalid: RowIssue[];
+  error: string | null;
+} {
   const parsed = parseCsv(text);
-  if (parsed.length === 0) return { rows: [], error: "The file is empty." };
+  if (parsed.length === 0) return { rows: [], invalid: [], error: "The file is empty." };
 
   const header = parsed[0].map((h) => h.trim().toLowerCase());
   const nameIdx = header.findIndex((h) => h === "name" || h === "full name" || h === "employee");
   if (nameIdx === -1) {
-    return { rows: [], error: 'The CSV needs a "name" column (optionally: title, phone, email).' };
+    return {
+      rows: [],
+      invalid: [],
+      error: 'The CSV needs a "name" column (optionally: title, phone, email).',
+    };
   }
   const titleIdx = header.findIndex((h) => h === "title" || h === "job title" || h === "role");
   const phoneIdx = header.findIndex((h) => h === "phone" || h === "phone number");
   const emailIdx = header.findIndex((h) => h === "email" || h === "email address");
 
-  const rows: CsvRow[] = [];
-  for (const raw of parsed.slice(1)) {
+  const rows: PreviewRow[] = [];
+  const invalid: RowIssue[] = [];
+  for (let i = 1; i < parsed.length; i++) {
+    const raw = parsed[i];
+    const line = i + 1; // 1-based CSV line number (line 1 = header)
     const name = (raw[nameIdx] ?? "").trim();
-    if (!name) continue;
+    if (!name) {
+      invalid.push({ line, message: "Missing name — this row will not be imported" });
+      continue;
+    }
     rows.push({
+      line,
       name,
       title: titleIdx >= 0 ? (raw[titleIdx] ?? "").trim() || undefined : undefined,
       phone: phoneIdx >= 0 ? (raw[phoneIdx] ?? "").trim() || undefined : undefined,
       email: emailIdx >= 0 ? (raw[emailIdx] ?? "").trim() || undefined : undefined,
     });
   }
-  if (rows.length === 0) return { rows: [], error: "No rows with a name were found." };
-  if (rows.length > 500) return { rows: [], error: "Imports are limited to 500 rows at a time." };
-  return { rows, error: null };
+  if (rows.length === 0 && invalid.length === 0) {
+    return { rows: [], invalid: [], error: "No data rows were found." };
+  }
+  if (rows.length > 500) {
+    return { rows: [], invalid: [], error: "Imports are limited to 500 rows at a time." };
+  }
+  return { rows, invalid, error: null };
 }
 
 export default function PortalRosterPage() {
@@ -131,9 +153,11 @@ export default function PortalRosterPage() {
 
   // CSV import
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [csvRows, setCsvRows] = useState<CsvRow[] | null>(null);
+  const [csvRows, setCsvRows] = useState<PreviewRow[] | null>(null);
+  const [csvInvalid, setCsvInvalid] = useState<RowIssue[]>([]);
   const [csvError, setCsvError] = useState<string | null>(null);
   const [csvFileName, setCsvFileName] = useState("");
+  const [importErrors, setImportErrors] = useState<RowIssue[] | null>(null);
 
   // Visit history dialog
   const [historyTarget, setHistoryTarget] = useState<{ id: number; name: string } | null>(null);
@@ -217,12 +241,22 @@ export default function PortalRosterPage() {
     }
   };
 
+  const closeCsvDialog = () => {
+    setCsvRows(null);
+    setCsvInvalid([]);
+    setCsvError(null);
+    setCsvFileName("");
+    setImportErrors(null);
+  };
+
   const handleFile = (file: File) => {
     setCsvFileName(file.name);
+    setImportErrors(null);
     const reader = new FileReader();
     reader.onload = () => {
-      const { rows, error } = csvToRows(String(reader.result ?? ""));
+      const { rows, invalid, error } = csvToRows(String(reader.result ?? ""));
       setCsvRows(error ? null : rows);
+      setCsvInvalid(error ? [] : invalid);
       setCsvError(error);
     };
     reader.readAsText(file);
@@ -231,15 +265,31 @@ export default function PortalRosterPage() {
   const handleImport = async () => {
     if (!csvRows || csvRows.length === 0) return;
     try {
-      const result = await importEmployees({ data: { rows: csvRows } });
-      refresh();
-      toast({
-        title: "Import complete",
-        description: `${result.imported} added, ${result.merged} merged with existing${result.errors.length > 0 ? `, ${result.errors.length} failed` : ""}.`,
+      const result = await importEmployees({
+        data: { rows: csvRows.map(({ line: _line, ...row }) => row) },
       });
-      setCsvRows(null);
-      setCsvError(null);
-      setCsvFileName("");
+      refresh();
+      if (result.errors.length > 0) {
+        // Map server row indexes (1-based into the submitted array) back to
+        // the original CSV line numbers so the user can find the bad lines.
+        setImportErrors(
+          result.errors.map((e) => ({
+            line: csvRows[e.row - 1]?.line ?? e.row,
+            message: e.message,
+          })),
+        );
+        toast({
+          title: "Import finished with problems",
+          description: `${result.imported} added, ${result.merged} merged, ${result.errors.length} failed — see details below.`,
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Import complete",
+          description: `${result.imported} added, ${result.merged} merged with existing.`,
+        });
+        closeCsvDialog();
+      }
     } catch {
       toast({ title: "Import failed", variant: "destructive" });
     }
@@ -447,11 +497,7 @@ export default function PortalRosterPage() {
       <Dialog
         open={!!csvRows || !!csvError}
         onOpenChange={(o) => {
-          if (!o) {
-            setCsvRows(null);
-            setCsvError(null);
-            setCsvFileName("");
-          }
+          if (!o) closeCsvDialog();
         }}
       >
         <DialogContent className="max-w-2xl">
@@ -466,42 +512,80 @@ export default function PortalRosterPage() {
           {csvError ? (
             <p className="text-sm text-destructive py-2">{csvError}</p>
           ) : (
-            <div className="max-h-72 overflow-y-auto overflow-x-auto border border-border rounded-md">
-              <table className="w-full text-sm">
-                <thead className="bg-muted/50 text-muted-foreground text-xs uppercase border-b border-border sticky top-0">
-                  <tr>
-                    <th className="px-3 py-2 text-left font-medium">Name</th>
-                    <th className="px-3 py-2 text-left font-medium">Title</th>
-                    <th className="px-3 py-2 text-left font-medium">Phone</th>
-                    <th className="px-3 py-2 text-left font-medium">Email</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-border">
-                  {csvRows?.map((r, i) => (
-                    <tr key={i}>
-                      <td className="px-3 py-2">{r.name}</td>
-                      <td className="px-3 py-2 text-muted-foreground">{r.title ?? "—"}</td>
-                      <td className="px-3 py-2 text-muted-foreground">{r.phone ?? "—"}</td>
-                      <td className="px-3 py-2 text-muted-foreground">{r.email ?? "—"}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            <>
+              {csvRows && csvRows.length > 0 && (
+                <div className="max-h-60 overflow-y-auto overflow-x-auto border border-border rounded-md">
+                  <table className="w-full text-sm">
+                    <thead className="bg-muted/50 text-muted-foreground text-xs uppercase border-b border-border sticky top-0">
+                      <tr>
+                        <th className="px-3 py-2 text-left font-medium">Line</th>
+                        <th className="px-3 py-2 text-left font-medium">Name</th>
+                        <th className="px-3 py-2 text-left font-medium">Title</th>
+                        <th className="px-3 py-2 text-left font-medium">Phone</th>
+                        <th className="px-3 py-2 text-left font-medium">Email</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-border">
+                      {csvRows.map((r) => (
+                        <tr key={r.line}>
+                          <td className="px-3 py-2 text-muted-foreground tabular-nums">{r.line}</td>
+                          <td className="px-3 py-2">{r.name}</td>
+                          <td className="px-3 py-2 text-muted-foreground">{r.title ?? "—"}</td>
+                          <td className="px-3 py-2 text-muted-foreground">{r.phone ?? "—"}</td>
+                          <td className="px-3 py-2 text-muted-foreground">{r.email ?? "—"}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+              {csvInvalid.length > 0 && !importErrors && (
+                <div
+                  className="border border-amber-500/50 bg-amber-500/10 rounded-md p-3 text-sm space-y-1"
+                  data-testid="csv-invalid-rows"
+                >
+                  <p className="font-medium text-amber-700 dark:text-amber-400">
+                    {csvInvalid.length} row{csvInvalid.length === 1 ? "" : "s"} with problems (will
+                    not be imported):
+                  </p>
+                  <ul className="max-h-32 overflow-y-auto space-y-0.5 text-muted-foreground">
+                    {csvInvalid.map((e) => (
+                      <li key={e.line}>
+                        Line {e.line}: {e.message}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+              {importErrors && importErrors.length > 0 && (
+                <div
+                  className="border border-destructive/50 bg-destructive/10 rounded-md p-3 text-sm space-y-1"
+                  data-testid="csv-import-errors"
+                >
+                  <p className="font-medium text-destructive">
+                    {importErrors.length} row{importErrors.length === 1 ? "" : "s"} failed to
+                    import:
+                  </p>
+                  <ul className="max-h-32 overflow-y-auto space-y-0.5 text-muted-foreground">
+                    {importErrors.map((e, i) => (
+                      <li key={i}>
+                        Line {e.line}: {e.message}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </>
           )}
           <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => {
-                setCsvRows(null);
-                setCsvError(null);
-                setCsvFileName("");
-              }}
-            >
-              Cancel
+            <Button variant="outline" onClick={closeCsvDialog}>
+              {importErrors ? "Close" : "Cancel"}
             </Button>
-            {!csvError && (
-              <Button onClick={handleImport} disabled={importing}>
+            {!csvError && !importErrors && (
+              <Button
+                onClick={handleImport}
+                disabled={importing || !csvRows || csvRows.length === 0}
+              >
                 {importing && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
                 Import {csvRows?.length ?? 0} Employees
               </Button>
