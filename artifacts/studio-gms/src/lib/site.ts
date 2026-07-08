@@ -22,3 +22,12 @@ export const CLIENT_LOGO_URL = rawClientLogo
     ? rawClientLogo
     : `${basePath}/${rawClientLogo.replace(/^\//, "")}`
   : "";
+
+// Privacy notice configuration (shown on the public /privacy page):
+//   VITE_PRIVACY_CONTACT   — who to contact for privacy/data requests (email or
+//                            instructions). Blank = "the security desk".
+//   VITE_PRIVACY_RETENTION — human-readable retention statement, e.g.
+//                            "Visitor records are retained for 24 months."
+//                            Blank = generic "as long as needed" wording.
+export const PRIVACY_CONTACT = import.meta.env.VITE_PRIVACY_CONTACT?.trim() || "";
+export const PRIVACY_RETENTION = import.meta.env.VITE_PRIVACY_RETENTION?.trim() || "";

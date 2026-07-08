@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { Link } from "wouter";
 import {
   useKioskListPreregistrations,
   useKioskCheckin,
@@ -132,6 +133,12 @@ export default function KioskPage() {
             >
               Tap to Check In
             </Button>
+            <p className="text-xs text-muted-foreground">
+              By checking in you provide your name and photo for facility security.{" "}
+              <Link href="/privacy" className="underline underline-offset-2" data-testid="link-privacy-kiosk">
+                Privacy Notice
+              </Link>
+            </p>
           </div>
         )}
 

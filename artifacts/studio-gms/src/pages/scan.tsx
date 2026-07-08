@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useRoute } from "wouter";
+import { Link, useRoute } from "wouter";
 import { useSubmitScanResult } from "@workspace/api-client-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -224,6 +224,12 @@ export default function ScanPage() {
                     <Loader2 className="w-3 h-3 animate-spin" /> Scanning… only the name is read from the ID.
                   </p>
                 )}
+                <p className="text-xs text-muted-foreground text-center">
+                  The barcode is read on this device only — license data never leaves the phone.{" "}
+                  <Link href="/privacy" className="underline underline-offset-2" data-testid="link-privacy-scan">
+                    Privacy Notice
+                  </Link>
+                </p>
                 <Button variant="ghost" size="sm" onClick={() => { stopCamera(); setManualEntry(true); }}>
                   Enter name manually instead
                 </Button>

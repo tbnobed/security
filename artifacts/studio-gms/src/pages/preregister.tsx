@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Link } from "wouter";
 import { useCreatePublicPreregistration, useListStudios } from "@workspace/api-client-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -98,6 +99,13 @@ export default function Preregister() {
           <p className="text-sm text-muted-foreground flex items-start gap-2">
             <ClipboardCheck className="w-4 h-4 mt-0.5 shrink-0 text-primary" />
             Fill this out ahead of your visit to speed up check-in at the security desk.
+          </p>
+          <p className="text-xs text-muted-foreground">
+            Your information is collected for facility security and visit management. See our{" "}
+            <Link href="/privacy" className="underline underline-offset-2" data-testid="link-privacy-preregister">
+              Privacy Notice
+            </Link>
+            .
           </p>
 
           {error && (

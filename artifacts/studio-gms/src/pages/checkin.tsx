@@ -13,6 +13,7 @@ import { useListStudios } from "@workspace/api-client-react";
 import { SITE_NAME } from "@/lib/site";
 import { PhotoCapture } from "@/components/photo-capture";
 import { ScanIdDialog } from "@/components/scan-id-dialog";
+import { Link } from "wouter";
 import { VisitorBadge, type VisitorBadgeData } from "@/components/visitor-badge";
 import { printBadge } from "@/lib/print-badge";
 import { AlertTriangle, Printer, UserPlus, Star, ScanLine } from "lucide-react";
@@ -326,6 +327,14 @@ export default function CheckIn() {
                   </div>
                 )}
               </div>
+
+              <p className="text-xs text-muted-foreground">
+                Visitor information is collected for facility security —{" "}
+                <Link href="/privacy" className="underline underline-offset-2" data-testid="link-privacy-checkin">
+                  Privacy Notice
+                </Link>{" "}
+                (share with the guest on request).
+              </p>
 
               <div className="flex gap-3 pt-2">
                 <Button type="submit" disabled={isPending || uploadingPhoto} className="flex-1">
