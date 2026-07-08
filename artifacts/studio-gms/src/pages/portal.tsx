@@ -116,7 +116,7 @@ export default function PortalPage() {
                         )}
                         {v.lateRegistration && v.status === "expected" && (
                           <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-amber-500/10 text-amber-500" title="Registered less than 4 hours before arrival">
-                            LATE
+                            LATE REG
                           </span>
                         )}
                       </div>

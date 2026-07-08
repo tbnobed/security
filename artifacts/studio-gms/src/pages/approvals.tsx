@@ -200,7 +200,7 @@ export default function ApprovalsPage() {
                         {p.guestName}
                         {p.lateRegistration && (
                           <span className="ml-2 inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-semibold bg-amber-500/15 text-amber-600" data-testid={`pill-late-${p.id}`}>
-                            <AlertTriangle className="w-3 h-3" /> LATE
+                            <AlertTriangle className="w-3 h-3" /> LATE REG
                           </span>
                         )}
                       </td>

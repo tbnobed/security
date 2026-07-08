@@ -315,7 +315,7 @@ export default function Preregistrations() {
                         )}
                         {p.lateRegistration && p.approvalStatus !== "denied" && (
                           <span className="ml-1.5 inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[10px] font-semibold bg-amber-500/10 text-amber-600" title="Registered less than 4 hours before arrival">
-                            <AlertTriangle className="w-2.5 h-2.5" /> LATE
+                            <AlertTriangle className="w-2.5 h-2.5" /> LATE REG
                           </span>
                         )}
                       </td>
