@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Layout } from "@/components/layout";
 import {
   useListPreregistrations,
@@ -6,6 +6,7 @@ import {
   useDeletePreregistration,
   useConvertPreregistration,
   useUploadPhoto,
+  useListKnownGuests,
   type Preregistration,
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
@@ -39,8 +40,27 @@ export default function Preregistrations() {
   // Convert-to-check-in dialog (photo capture + badge)
   const [convertTarget, setConvertTarget] = useState<Preg | null>(null);
   const [convertPhoto, setConvertPhoto] = useState<string | null>(null);
+  // Known-guest photo prefilled for returning visitors (cleared on retake/clear).
+  const [convertPhotoUrl, setConvertPhotoUrl] = useState<string | null>(null);
+  const [convertPhotoDismissed, setConvertPhotoDismissed] = useState(false);
   const [convertBadge, setConvertBadge] = useState<VisitorBadgeData | null>(null);
   const [convertPending, setConvertPending] = useState(false);
+
+  // Look up the guest in the known-guests directory while the convert dialog
+  // is open, so a returning visitor's photo carries over to this check-in.
+  const { data: knownMatches } = useListKnownGuests(
+    { q: convertTarget?.guestName ?? "" },
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    { query: { enabled: convertTarget !== null && (convertTarget?.guestName.trim().length ?? 0) >= 2 } as any }
+  );
+
+  useEffect(() => {
+    if (!convertTarget || convertPhoto || convertPhotoDismissed || convertPhotoUrl) return;
+    const match = knownMatches?.items?.find(
+      (kg) => kg.name.trim().toLowerCase() === convertTarget.guestName.trim().toLowerCase()
+    );
+    if (match?.photoUrl) setConvertPhotoUrl(match.photoUrl);
+  }, [knownMatches, convertTarget, convertPhoto, convertPhotoDismissed, convertPhotoUrl]);
 
   const [form, setForm] = useState({
     guestName: "", company: "", phone: "", email: "",
@@ -95,12 +115,16 @@ export default function Preregistrations() {
   const openConvert = (p: Preg) => {
     setConvertTarget(p);
     setConvertPhoto(null);
+    setConvertPhotoUrl(null);
+    setConvertPhotoDismissed(false);
     setConvertBadge(null);
   };
 
   const closeConvert = () => {
     setConvertTarget(null);
     setConvertPhoto(null);
+    setConvertPhotoUrl(null);
+    setConvertPhotoDismissed(false);
     setConvertBadge(null);
     setConvertPending(false);
   };
@@ -109,7 +133,7 @@ export default function Preregistrations() {
     if (!convertTarget) return;
     setConvertPending(true);
     try {
-      let photoUrl: string | undefined;
+      let photoUrl: string | undefined = convertPhotoUrl ?? undefined;
       if (convertPhoto) {
         try {
           const base64 = convertPhoto.split(",")[1];
@@ -379,7 +403,17 @@ export default function Preregistrations() {
               </div>
               <div>
                 <Label className="mb-2 block">Photo (optional)</Label>
-                <PhotoCapture photo={convertPhoto} onChange={setConvertPhoto} />
+                <PhotoCapture
+                  photo={convertPhoto}
+                  photoUrl={convertPhotoUrl}
+                  onChange={(p) => {
+                    setConvertPhoto(p);
+                    if (convertPhotoUrl) {
+                      setConvertPhotoUrl(null);
+                      setConvertPhotoDismissed(true);
+                    }
+                  }}
+                />
               </div>
               <div className="flex gap-3 justify-end">
                 <Button variant="outline" onClick={closeConvert} disabled={convertPending}>Cancel</Button>
