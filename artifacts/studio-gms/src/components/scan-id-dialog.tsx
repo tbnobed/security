@@ -167,8 +167,36 @@ export function ScanIdDialog({ open, onOpenChange, onScanned }: ScanIdDialogProp
                 <QRCode value={scanUrl} size={192} />
               </div>
               <p className="text-xs text-muted-foreground flex items-center gap-2">
-                <Loader2 className="w-3 h-3 animate-spin" /> Waiting for the phone…
+                <Loader2 className="w-3 h-3 animate-spin" />{" "}
+                {session?.diagnostics ? "Phone connected…" : "Waiting for the phone…"}
               </p>
+              {session?.diagnostics && (
+                <div
+                  className="w-full rounded-md bg-muted/60 border border-border p-2 font-mono text-[10px] leading-relaxed text-muted-foreground"
+                  data-testid="scan-phone-diagnostics"
+                >
+                  <div>
+                    phone: {session.diagnostics.stage ?? "?"} · decoder:{" "}
+                    {session.diagnostics.decoder || "none"} · cam:{" "}
+                    {session.diagnostics.camRes || "no camera"}
+                    {(session.diagnostics.zoom ?? 1) > 1 ? ` @${session.diagnostics.zoom}x` : ""}
+                  </div>
+                  <div>
+                    frames: {session.diagnostics.frames ?? 0} · zxing tries:{" "}
+                    {session.diagnostics.zxingAttempts ?? 0} · errors:{" "}
+                    {session.diagnostics.decodeErrors ?? 0} · still photos:{" "}
+                    {session.diagnostics.stillAttempts ?? 0}
+                  </div>
+                  {session.diagnostics.secureContext === false && (
+                    <div className="text-destructive">
+                      ⚠ phone is on HTTP (insecure) — camera blocked, needs HTTPS
+                    </div>
+                  )}
+                  {session.diagnostics.lastEvent && (
+                    <div className="break-words">last: {session.diagnostics.lastEvent}</div>
+                  )}
+                </div>
+              )}
             </>
           ) : (
             <div className="flex flex-col items-center gap-3 py-6">

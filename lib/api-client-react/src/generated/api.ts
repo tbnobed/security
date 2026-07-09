@@ -75,6 +75,7 @@ import type {
   PublicPreregistrationInput,
   ResetPasswordInput,
   RoleUpdate,
+  ScanDiagnostics,
   ScanSession,
   ScanSessionState,
   ScanSubmission,
@@ -5190,6 +5191,77 @@ export function useGetScanSessionStatus<TData = Awaited<ReturnType<typeof getSca
 
 
 
+
+export const getReportScanDiagnosticsUrl = (id: string,) => {
+
+
+
+
+  return `/api/scan-sessions/${id}/diagnostics`
+}
+
+/**
+ * @summary Report live scanner telemetry from the paired phone (token-authenticated by session id; shown to the desk for debugging)
+ */
+export const reportScanDiagnostics = async (id: string,
+    scanDiagnostics: ScanDiagnostics, options?: RequestInit): Promise<void> => {
+
+  return customFetch<void>(getReportScanDiagnosticsUrl(id),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(scanDiagnostics)
+  }
+);}
+
+
+
+
+export const getReportScanDiagnosticsMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof reportScanDiagnostics>>, TError,{id: string;data: BodyType<ScanDiagnostics>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof reportScanDiagnostics>>, TError,{id: string;data: BodyType<ScanDiagnostics>}, TContext> => {
+
+const mutationKey = ['reportScanDiagnostics'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof reportScanDiagnostics>>, {id: string;data: BodyType<ScanDiagnostics>}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  reportScanDiagnostics(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ReportScanDiagnosticsMutationResult = NonNullable<Awaited<ReturnType<typeof reportScanDiagnostics>>>
+    export type ReportScanDiagnosticsMutationBody = BodyType<ScanDiagnostics>
+    export type ReportScanDiagnosticsMutationError = ErrorType<void>
+
+    /**
+ * @summary Report live scanner telemetry from the paired phone (token-authenticated by session id; shown to the desk for debugging)
+ */
+export const useReportScanDiagnostics = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof reportScanDiagnostics>>, TError,{id: string;data: BodyType<ScanDiagnostics>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof reportScanDiagnostics>>,
+        TError,
+        {id: string;data: BodyType<ScanDiagnostics>},
+        TContext
+      > => {
+      return useMutation(getReportScanDiagnosticsMutationOptions(options));
+    }
 
 export const getSubmitScanResultUrl = (id: string,) => {
 

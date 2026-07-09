@@ -1,6 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Link, useRoute } from "wouter";
-import { getGetScanSessionStatusUrl, useSubmitScanResult } from "@workspace/api-client-react";
+import {
+  getGetScanSessionStatusUrl,
+  getReportScanDiagnosticsUrl,
+  useSubmitScanResult,
+} from "@workspace/api-client-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -119,6 +123,88 @@ export default function ScanPage() {
   // decoders never run concurrently on a memory-constrained phone.
   const stillBusyRef = useRef(false);
 
+  // ── Scanner diagnostics ────────────────────────────────────────────────
+  // Live telemetry: counters the scan loop updates on every frame, reported
+  // to the server every 3s so the DESK dialog can show why a scan is failing
+  // on the guest's phone. Also rendered locally in a debug overlay (open it
+  // with ?debug=1 or by tapping the "ID Scan" header title 5 times).
+  const diagRef = useRef({
+    stage: "scan",
+    decoder: "",
+    frames: 0,
+    nativeMisses: 0,
+    zxingAttempts: 0,
+    decodeErrors: 0,
+    stillAttempts: 0,
+    lastEvent: "",
+  });
+  const [debugOpen, setDebugOpen] = useState(
+    () => new URLSearchParams(window.location.search).has("debug"),
+  );
+  // Bumped on a timer while the overlay is open so it re-renders live counters.
+  const [, setDebugTick] = useState(0);
+  const headerTapsRef = useRef({ count: 0, last: 0 });
+
+  const logEvent = useCallback((msg: string) => {
+    diagRef.current.lastEvent = `${new Date().toLocaleTimeString()} — ${msg}`;
+  }, []);
+
+  const onHeaderTap = () => {
+    const now = Date.now();
+    const t = headerTapsRef.current;
+    t.count = now - t.last < 1500 ? t.count + 1 : 1;
+    t.last = now;
+    if (t.count >= 5) {
+      t.count = 0;
+      setDebugOpen((v) => !v);
+    }
+  };
+
+  // Keep the reported stage in sync with the UI state.
+  useEffect(() => {
+    diagRef.current.stage = manualEntry && step === "scan" ? "manual" : step;
+  }, [step, manualEntry]);
+
+  // Report diagnostics to the session every 3s while it is live (the "diag"
+  // rate-limit bucket allows 30/min — this is 20/min). Fire-and-forget; the
+  // report is token-authenticated by the unguessable session id.
+  useEffect(() => {
+    if (!sessionId || sessionValid !== true || step === "done") return;
+    const send = () => {
+      if (document.hidden) return;
+      const d = diagRef.current;
+      void fetch(getReportScanDiagnosticsUrl(sessionId), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        keepalive: true,
+        body: JSON.stringify({
+          stage: d.stage,
+          decoder: d.decoder,
+          camRes,
+          zoom: zoomLevel,
+          frames: d.frames,
+          nativeMisses: d.nativeMisses,
+          zxingAttempts: d.zxingAttempts,
+          decodeErrors: d.decodeErrors,
+          stillAttempts: d.stillAttempts,
+          secureContext: window.isSecureContext,
+          userAgent: navigator.userAgent.slice(0, 300),
+          lastEvent: d.lastEvent.slice(0, 500),
+        }),
+      }).catch(() => undefined);
+    };
+    send();
+    const t = setInterval(send, 3000);
+    return () => clearInterval(t);
+  }, [sessionId, sessionValid, step, camRes, zoomLevel]);
+
+  // Re-render the local debug overlay twice a second while it's open.
+  useEffect(() => {
+    if (!debugOpen) return;
+    const t = setInterval(() => setDebugTick((n) => n + 1), 500);
+    return () => clearInterval(t);
+  }, [debugOpen]);
+
   const { mutateAsync: submitScan } = useSubmitScanResult();
 
   const applyZoom = useCallback(async (level: number) => {
@@ -127,10 +213,11 @@ export default function ScanPage() {
     try {
       await track.applyConstraints({ advanced: [{ zoom: level } as MediaTrackConstraintSet] });
       setZoomLevel(level);
+      logEvent(`zoom set to ${level}x`);
     } catch {
-      /* zoom rejected — leave as-is */
+      logEvent(`zoom ${level}x rejected by camera`);
     }
-  }, []);
+  }, [logEvent]);
 
   const stopCamera = useCallback(() => {
     scanningRef.current = false;
@@ -148,6 +235,11 @@ export default function ScanPage() {
     if (!navigator.mediaDevices?.getUserMedia) {
       setInsecureContext(!window.isSecureContext);
       setCameraError(true);
+      logEvent(
+        window.isSecureContext
+          ? "camera API unavailable in this browser"
+          : "insecure context (HTTP) — camera requires HTTPS",
+      );
       return false;
     }
     try {
@@ -194,12 +286,19 @@ export default function ScanPage() {
         videoRef.current.srcObject = stream;
         await videoRef.current.play().catch(() => undefined);
       }
+      if (track) {
+        const s = track.getSettings();
+        logEvent(`camera started at ${s.width ?? "?"}x${s.height ?? "?"}`);
+      }
       return true;
-    } catch {
+    } catch (err) {
       setCameraError(true);
+      logEvent(
+        `camera failed: ${err instanceof Error ? `${err.name} ${err.message}` : "unknown error"}`,
+      );
       return false;
     }
-  }, []);
+  }, [logEvent]);
 
   // Verify the token with the server on load AND every time the page becomes
   // visible again (reload, back-navigation, returning from the camera app).
@@ -261,6 +360,8 @@ export default function ScanPage() {
       setStillBusy(true);
       setStillFailed(false);
       setStillFailedMsg("");
+      diagRef.current.stillAttempts += 1;
+      logEvent(`still photo received (${Math.round(file.size / 1024)}kB) — decoding`);
       try {
         // Prefer createImageBitmap; fall back to an <img> element for older
         // browsers / unsupported codecs (both are valid CanvasImageSource /
@@ -367,11 +468,17 @@ export default function ScanPage() {
 
           const parsed = text ? parseAamvaName(text) : null;
           if (parsed) {
+            logEvent("still photo decoded successfully");
             stopCamera();
             setName(titleCase(parsed));
             setStep("confirm");
             return;
           }
+          logEvent(
+            text !== undefined
+              ? "still decode: barcode read but no AAMVA name (not a US license?)"
+              : `still decode failed: no barcode found (${srcW}x${srcH} photo)`,
+          );
           setStillFailedMsg(
             text !== undefined
               ? "We read the barcode, but couldn't find a name on it — this may not be a US driver's license. Use manual entry below."
@@ -381,7 +488,10 @@ export default function ScanPage() {
         } finally {
           cleanup();
         }
-      } catch {
+      } catch (err) {
+        logEvent(
+          `still decode crashed: ${err instanceof Error ? `${err.name} ${err.message}` : "unknown"}`,
+        );
         setStillFailed(true);
       } finally {
         stillBusyRef.current = false;
@@ -426,8 +536,17 @@ export default function ScanPage() {
       }
 
       const readBarcodes = await loadZxing();
+      diagRef.current.decoder = nativeDetector
+        ? readBarcodes
+          ? "native+zxing"
+          : "native"
+        : readBarcodes
+          ? "zxing"
+          : "none";
+      if (!readBarcodes) logEvent("zxing-wasm failed to load");
       if (!nativeDetector && !readBarcodes) {
         if (!cancelled) {
+          logEvent("no barcode decoder available (native + zxing both unavailable)");
           setScannerError(true);
           stopCamera();
         }
@@ -460,6 +579,7 @@ export default function ScanPage() {
         const video = videoRef.current;
         const canvas = canvasRef.current;
         if (video && canvas && video.videoWidth > 0) {
+          diagRef.current.frames += 1;
           try {
             let text: string | undefined;
             if (nativeDetector) {
@@ -471,9 +591,12 @@ export default function ScanPage() {
                 const detections = await nativeDetector.detect(video);
                 text = detections[0]?.rawValue;
                 nativeMisses = text === undefined ? nativeMisses + 1 : 0;
+                diagRef.current.nativeMisses = nativeMisses;
               } catch {
                 // Native detector broken on this device — fall back to WASM.
                 nativeDetector = null;
+                diagRef.current.decoder = readBarcodes ? "zxing" : "none";
+                logEvent("native detector threw — switched to zxing");
                 if (!readBarcodes) throw new Error("no decoder");
               }
             }
@@ -483,6 +606,7 @@ export default function ScanPage() {
             const wasmTurn =
               !nativeDetector || (nativeMisses >= 8 && nativeMisses % 2 === 0);
             if (text === undefined && readBarcodes && wasmTurn) {
+              diagRef.current.zxingAttempts += 1;
               const vw = video.videoWidth;
               const vh = video.videoHeight;
               const useCrop = frameNo % 2 === 0;
@@ -516,18 +640,25 @@ export default function ScanPage() {
             if (text && !cancelled) {
               const parsed = parseAamvaName(text);
               if (parsed) {
+                logEvent("live scan decoded successfully");
                 stopCamera();
                 setName(titleCase(parsed));
                 setStep("confirm");
                 return;
               }
+              logEvent("barcode read but no AAMVA name found (not a US license?)");
             }
-          } catch {
+          } catch (err) {
             // A single bad frame is fine, but persistent decode exceptions
             // mean the decoder is broken on this device — surface it instead
             // of silently scanning forever.
             consecutiveDecodeErrors += 1;
+            diagRef.current.decodeErrors += 1;
+            logEvent(
+              `decode error: ${err instanceof Error ? `${err.name} ${err.message}` : "unknown"}`,
+            );
             if (consecutiveDecodeErrors >= 10 && !cancelled) {
+              logEvent("10 consecutive decode errors — scanner marked broken");
               setScannerError(true);
               stopCamera();
               return;
@@ -599,10 +730,33 @@ export default function ScanPage() {
 
   return (
     <div className="min-h-screen bg-background text-foreground dark flex flex-col">
-      <header className="p-4 border-b border-border flex items-center gap-2">
+      <header
+        className="p-4 border-b border-border flex items-center gap-2 select-none"
+        onClick={onHeaderTap}
+      >
         <ScanLine className="w-5 h-5 text-primary" />
         <h1 className="font-semibold">ID Scan</h1>
       </header>
+
+      {debugOpen && (
+        <div
+          className="fixed bottom-0 left-0 right-0 z-50 bg-black/85 text-green-400 font-mono text-[10px] leading-relaxed p-2 max-h-48 overflow-y-auto"
+          data-testid="scan-debug-panel"
+        >
+          <div>stage: {diagRef.current.stage} | decoder: {diagRef.current.decoder || "—"}</div>
+          <div>
+            cam: {camRes || "—"} @{zoomLevel}x (max {zoomMax}x) | secure:{" "}
+            {String(window.isSecureContext)}
+          </div>
+          <div>
+            frames: {diagRef.current.frames} | nativeMisses: {diagRef.current.nativeMisses} |
+            zxing: {diagRef.current.zxingAttempts} | errors: {diagRef.current.decodeErrors} |
+            stills: {diagRef.current.stillAttempts}
+          </div>
+          <div>last: {diagRef.current.lastEvent || "—"}</div>
+          <div className="text-green-600 break-all">{navigator.userAgent}</div>
+        </div>
+      )}
 
       <main className="flex-1 p-4 flex flex-col items-center justify-center gap-4 max-w-md w-full mx-auto">
         {sessionValid === false && step !== "done" ? (

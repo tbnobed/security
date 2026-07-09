@@ -1528,12 +1528,41 @@ export const GetScanSessionParams = zod.object({
   "id": zod.coerce.string()
 })
 
+export const getScanSessionResponseDiagnosticsOneStageMax = 40;
+
+export const getScanSessionResponseDiagnosticsOneDecoderMax = 60;
+
+export const getScanSessionResponseDiagnosticsOneCamResMax = 20;
+
+export const getScanSessionResponseDiagnosticsOneUserAgentMax = 300;
+
+export const getScanSessionResponseDiagnosticsOneLastEventMax = 500;
+
+export const getScanSessionResponseDiagnosticsOneReceivedAtMax = 40;
+
+
+
 export const GetScanSessionResponse = zod.object({
   "status": zod.enum(['pending', 'completed']),
   "result": zod.object({
   "name": zod.string(),
   "photoUrl": zod.string().nullish()
-}).nullish()
+}).nullish(),
+  "diagnostics": zod.object({
+  "stage": zod.string().max(getScanSessionResponseDiagnosticsOneStageMax).optional().describe('Current phone UI stage (scan, manual, still, confirm, photo, done)'),
+  "decoder": zod.string().max(getScanSessionResponseDiagnosticsOneDecoderMax).optional().describe('Active barcode decoder(s), e.g. \"native\", \"zxing\", \"native+zxing\", \"none\"'),
+  "camRes": zod.string().max(getScanSessionResponseDiagnosticsOneCamResMax).optional().describe('Active camera resolution, e.g. \"3840x2160\"'),
+  "zoom": zod.number().optional().describe('Current zoom level'),
+  "frames": zod.number().optional().describe('Live frames processed so far'),
+  "nativeMisses": zod.number().optional().describe('Consecutive native-detector frames with no detection'),
+  "zxingAttempts": zod.number().optional().describe('zxing-wasm decode attempts so far'),
+  "decodeErrors": zod.number().optional().describe('Decode exceptions so far'),
+  "stillAttempts": zod.number().optional().describe('Still-photo decode attempts so far'),
+  "secureContext": zod.boolean().optional().describe('Whether the page is running in a secure context (camera requires HTTPS)'),
+  "userAgent": zod.string().max(getScanSessionResponseDiagnosticsOneUserAgentMax).optional(),
+  "lastEvent": zod.string().max(getScanSessionResponseDiagnosticsOneLastEventMax).optional().describe('Most recent notable event, e.g. \"camera denied\", \"still decode failed (no barcode found)\"'),
+  "receivedAt": zod.string().max(getScanSessionResponseDiagnosticsOneReceivedAtMax).optional().describe('Server-stamped ISO time the report was received (set by the server, ignored on input)')
+}).describe('Live scanner telemetry reported by the paired phone so the desk can see why a scan is failing without touching the guest\'s phone.').optional()
 })
 
 
@@ -1555,6 +1584,46 @@ export const GetScanSessionStatusParams = zod.object({
 })
 
 export const GetScanSessionStatusResponse = zod.void()
+
+
+/**
+ * @summary Report live scanner telemetry from the paired phone (token-authenticated by session id; shown to the desk for debugging)
+ */
+export const ReportScanDiagnosticsParams = zod.object({
+  "id": zod.coerce.string()
+})
+
+export const reportScanDiagnosticsBodyStageMax = 40;
+
+export const reportScanDiagnosticsBodyDecoderMax = 60;
+
+export const reportScanDiagnosticsBodyCamResMax = 20;
+
+export const reportScanDiagnosticsBodyUserAgentMax = 300;
+
+export const reportScanDiagnosticsBodyLastEventMax = 500;
+
+export const reportScanDiagnosticsBodyReceivedAtMax = 40;
+
+
+
+export const ReportScanDiagnosticsBody = zod.object({
+  "stage": zod.string().max(reportScanDiagnosticsBodyStageMax).optional().describe('Current phone UI stage (scan, manual, still, confirm, photo, done)'),
+  "decoder": zod.string().max(reportScanDiagnosticsBodyDecoderMax).optional().describe('Active barcode decoder(s), e.g. \"native\", \"zxing\", \"native+zxing\", \"none\"'),
+  "camRes": zod.string().max(reportScanDiagnosticsBodyCamResMax).optional().describe('Active camera resolution, e.g. \"3840x2160\"'),
+  "zoom": zod.number().optional().describe('Current zoom level'),
+  "frames": zod.number().optional().describe('Live frames processed so far'),
+  "nativeMisses": zod.number().optional().describe('Consecutive native-detector frames with no detection'),
+  "zxingAttempts": zod.number().optional().describe('zxing-wasm decode attempts so far'),
+  "decodeErrors": zod.number().optional().describe('Decode exceptions so far'),
+  "stillAttempts": zod.number().optional().describe('Still-photo decode attempts so far'),
+  "secureContext": zod.boolean().optional().describe('Whether the page is running in a secure context (camera requires HTTPS)'),
+  "userAgent": zod.string().max(reportScanDiagnosticsBodyUserAgentMax).optional(),
+  "lastEvent": zod.string().max(reportScanDiagnosticsBodyLastEventMax).optional().describe('Most recent notable event, e.g. \"camera denied\", \"still decode failed (no barcode found)\"'),
+  "receivedAt": zod.string().max(reportScanDiagnosticsBodyReceivedAtMax).optional().describe('Server-stamped ISO time the report was received (set by the server, ignored on input)')
+}).describe('Live scanner telemetry reported by the paired phone so the desk can see why a scan is failing without touching the guest\'s phone.')
+
+export const ReportScanDiagnosticsResponse = zod.void()
 
 
 /**

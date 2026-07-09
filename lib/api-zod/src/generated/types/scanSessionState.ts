@@ -5,10 +5,12 @@
  * Studio Guest Management System API
  * OpenAPI spec version: 0.1.0
  */
+import type { ScanDiagnostics } from './scanDiagnostics';
 import type { ScanSessionStateResult } from './scanSessionStateResult';
 import type { ScanSessionStateStatus } from './scanSessionStateStatus';
 
 export interface ScanSessionState {
   status: ScanSessionStateStatus;
   result?: ScanSessionStateResult;
+  diagnostics?: ScanDiagnostics;
 }

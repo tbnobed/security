@@ -1,2 +1,2 @@
 - [Audit eventType enum is strict](audit-eventtype-enum.md) — new audit event types must be added to openapi AuditEntry enum or GET /api/audit 500s (dashboard recent-activity is lenient and won't catch it).
-- [Orval date query params](orval-date-params.md) — never use `format: date` on query params; Orval emits zod.date() which rejects strings. Use pattern + handler-side semantic validation.
+- [Orval date formats](orval-date-params.md) — never use `format: date`/`date-time` on query params OR body fields; Orval emits zod.date() which rejects ISO strings. Use plain string + pattern/maxLength.

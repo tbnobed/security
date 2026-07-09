@@ -1384,6 +1384,29 @@ paths:
         "404":
           description: Unknown, expired, cancelled, or already-completed session
 
+  /scan-sessions/{id}/diagnostics:
+    post:
+      operationId: reportScanDiagnostics
+      tags: [scan]
+      summary: Report live scanner telemetry from the paired phone (token-authenticated by session id; shown to the desk for debugging)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ScanDiagnostics"
+      responses:
+        "204":
+          description: Diagnostics recorded
+        "404":
+          description: Unknown or expired session
+
   /scan-sessions/{id}/submit:
     post:
       operationId: submitScanResult
@@ -2535,6 +2558,58 @@ components:
             photoUrl:
               type: string
               nullable: true
+        diagnostics:
+          allOf:
+            - $ref: "#/components/schemas/ScanDiagnostics"
+
+    ScanDiagnostics:
+      type: object
+      description: Live scanner telemetry reported by the paired phone so the desk can see why a scan is failing without touching the guest's phone.
+      properties:
+        stage:
+          type: string
+          maxLength: 40
+          description: Current phone UI stage (scan, manual, still, confirm, photo, done)
+        decoder:
+          type: string
+          maxLength: 60
+          description: Active barcode decoder(s), e.g. "native", "zxing", "native+zxing", "none"
+        camRes:
+          type: string
+          maxLength: 20
+          description: Active camera resolution, e.g. "3840x2160"
+        zoom:
+          type: number
+          description: Current zoom level
+        frames:
+          type: integer
+          description: Live frames processed so far
+        nativeMisses:
+          type: integer
+          description: Consecutive native-detector frames with no detection
+        zxingAttempts:
+          type: integer
+          description: zxing-wasm decode attempts so far
+        decodeErrors:
+          type: integer
+          description: Decode exceptions so far
+        stillAttempts:
+          type: integer
+          description: Still-photo decode attempts so far
+        secureContext:
+          type: boolean
+          description: Whether the page is running in a secure context (camera requires HTTPS)
+        userAgent:
+          type: string
+          maxLength: 300
+        lastEvent:
+          type: string
+          maxLength: 500
+          description: Most recent notable event, e.g. "camera denied", "still decode failed (no barcode found)"
+        receivedAt:
+          type: string
+          maxLength: 40
+          description: Server-stamped ISO time the report was received (set by the server, ignored on input)
 
     ScanSubmission:
       type: object

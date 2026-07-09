@@ -746,9 +746,57 @@ export type ScanSessionStateResult = {
   photoUrl?: string | null;
 } | null;
 
+/**
+ * Live scanner telemetry reported by the paired phone so the desk can see why a scan is failing without touching the guest's phone.
+ */
+export interface ScanDiagnostics {
+  /**
+     * Current phone UI stage (scan, manual, still, confirm, photo, done)
+     * @maxLength 40
+     */
+  stage?: string;
+  /**
+     * Active barcode decoder(s), e.g. "native", "zxing", "native+zxing", "none"
+     * @maxLength 60
+     */
+  decoder?: string;
+  /**
+     * Active camera resolution, e.g. "3840x2160"
+     * @maxLength 20
+     */
+  camRes?: string;
+  /** Current zoom level */
+  zoom?: number;
+  /** Live frames processed so far */
+  frames?: number;
+  /** Consecutive native-detector frames with no detection */
+  nativeMisses?: number;
+  /** zxing-wasm decode attempts so far */
+  zxingAttempts?: number;
+  /** Decode exceptions so far */
+  decodeErrors?: number;
+  /** Still-photo decode attempts so far */
+  stillAttempts?: number;
+  /** Whether the page is running in a secure context (camera requires HTTPS) */
+  secureContext?: boolean;
+  /** @maxLength 300 */
+  userAgent?: string;
+  /**
+     * Most recent notable event, e.g. "camera denied", "still decode failed (no barcode found)"
+     * @maxLength 500
+     */
+  lastEvent?: string;
+  /**
+     * Server-stamped ISO time the report was received (set by the server, ignored on input)
+     * @maxLength 40
+     */
+  receivedAt?: string;
+}
+
 export interface ScanSessionState {
   status: ScanSessionStateStatus;
   result?: ScanSessionStateResult;
+  diagnostics?: ScanDiagnostics;
 }
 
 export interface ScanSubmission {

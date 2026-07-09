@@ -79,6 +79,7 @@ export * from './publicPreregistrationInput';
 export * from './resetPasswordInput';
 export * from './roleUpdate';
 export * from './roleUpdateRole';
+export * from './scanDiagnostics';
 export * from './scanSession';
 export * from './scanSessionState';
 export * from './scanSessionStateResult';
