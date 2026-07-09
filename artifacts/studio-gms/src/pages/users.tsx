@@ -43,6 +43,7 @@ export default function UsersPage() {
   const [newName, setNewName] = useState("");
   const [newRole, setNewRole] = useState<Role>("security");
   const [newPassword, setNewPassword] = useState("");
+  const [newCompanyChoice, setNewCompanyChoice] = useState<string>("__new__");
   const [newCompany, setNewCompany] = useState("");
   const [newNotifyEmail, setNewNotifyEmail] = useState("");
   const [addError, setAddError] = useState<string | null>(null);
@@ -85,6 +86,7 @@ export default function UsersPage() {
     setNewName("");
     setNewRole("security");
     setNewPassword("");
+    setNewCompanyChoice("__new__");
     setNewCompany("");
     setNewNotifyEmail("");
     setAddError(null);
@@ -99,7 +101,10 @@ export default function UsersPage() {
       return;
     }
 
-    if (newRole === "client" && !newCompany.trim()) {
+    const resolvedCompany =
+      newCompanyChoice === "__new__" ? newCompany.trim() : newCompanyChoice;
+
+    if (newRole === "client" && !resolvedCompany) {
       setAddError("Company name is required for client accounts.");
       return;
     }
@@ -111,7 +116,7 @@ export default function UsersPage() {
           password: newPassword,
           displayName: newName.trim() || undefined,
           role: newRole,
-          companyName: newRole === "client" ? newCompany.trim() : undefined,
+          companyName: newRole === "client" ? resolvedCompany : undefined,
           notifyEmail: newRole === "client" ? newNotifyEmail.trim() || undefined : undefined,
         },
       });
@@ -314,24 +319,43 @@ export default function UsersPage() {
               {newRole === "client" && (
                 <>
                   <div className="space-y-1.5">
-                    <Label htmlFor="new-company">Company name</Label>
-                    <Input
-                      id="new-company"
-                      required
-                      value={newCompany}
-                      onChange={(e) => setNewCompany(e.target.value)}
-                      placeholder="Acme Productions"
-                      list="client-company-suggestions"
-                    />
-                    <datalist id="client-company-suggestions">
-                      {companySuggestions.map((name) => (
-                        <option key={name} value={name} />
-                      ))}
-                    </datalist>
-                    <p className="text-xs text-muted-foreground">
-                      Pick an existing company to give this login shared access to that
-                      company's roster and visits, or type a new name to create one.
-                    </p>
+                    <Label htmlFor="new-company-choice">Company</Label>
+                    <Select
+                      value={newCompanyChoice}
+                      onValueChange={(v) => setNewCompanyChoice(v)}
+                    >
+                      <SelectTrigger id="new-company-choice" data-testid="select-client-company">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {companySuggestions.map((name) => (
+                          <SelectItem key={name} value={name}>
+                            {name}
+                          </SelectItem>
+                        ))}
+                        <SelectItem value="__new__">＋ New company…</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    {newCompanyChoice === "__new__" ? (
+                      <>
+                        <Input
+                          id="new-company"
+                          required
+                          value={newCompany}
+                          onChange={(e) => setNewCompany(e.target.value)}
+                          placeholder="New company name"
+                          data-testid="input-new-company-name"
+                        />
+                        <p className="text-xs text-muted-foreground">
+                          Creates a new company. To give this login shared access to an
+                          existing company's roster and visits, pick it from the list above.
+                        </p>
+                      </>
+                    ) : (
+                      <p className="text-xs text-muted-foreground">
+                        This login will share {newCompanyChoice}'s roster and visits.
+                      </p>
+                    )}
                   </div>
                   <div className="space-y-1.5">
                     <Label htmlFor="new-notify-email">Notification email (optional)</Label>
