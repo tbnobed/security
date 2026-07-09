@@ -24,6 +24,7 @@ import {
   generateUserId,
   hashPassword,
 } from "../lib/auth";
+import { getOrCreateCompanyByName } from "../lib/client-companies";
 
 const router = Router();
 
@@ -70,6 +71,14 @@ router.post("/users", requireAdmin, async (req, res): Promise<void> => {
 
   const passwordHash = await hashPassword(parsed.data.password);
 
+  // Client accounts are scoped to a company — resolve (or create) the company
+  // record so multiple client logins with the same company name share one
+  // roster and pre-registration view.
+  const company =
+    parsed.data.role === "client"
+      ? await getOrCreateCompanyByName(parsed.data.companyName!.trim())
+      : null;
+
   let user: typeof usersTable.$inferSelect;
   try {
     [user] = await db
@@ -80,8 +89,8 @@ router.post("/users", requireAdmin, async (req, res): Promise<void> => {
         email,
         passwordHash,
         role: parsed.data.role,
-        companyName:
-          parsed.data.role === "client" ? (parsed.data.companyName?.trim() ?? null) : null,
+        clientCompanyId: company?.id ?? null,
+        companyName: company?.name ?? null,
         notifyEmail:
           parsed.data.role === "client" ? (parsed.data.notifyEmail?.trim() || null) : null,
       })
@@ -153,6 +162,22 @@ router.patch("/users/:clerkId/role", requireAdmin, async (req, res): Promise<voi
   if (!parsed.success) {
     res.status(400).json({ error: parsed.error.message });
     return;
+  }
+
+  // Client accounts must be company-linked; switching a company-less user to
+  // "client" would create a login that requireClient immediately rejects.
+  if (parsed.data.role === "client") {
+    const [target] = await db
+      .select()
+      .from(usersTable)
+      .where(eq(usersTable.clerkId, params.data.clerkId));
+    if (target && !target.companyName?.trim()) {
+      res.status(400).json({
+        error:
+          "This user has no company. Create client accounts from Add Operator with a company name instead.",
+      });
+      return;
+    }
   }
 
   const [user] = await db

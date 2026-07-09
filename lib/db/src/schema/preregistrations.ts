@@ -16,8 +16,11 @@ export const preregistrationsTable = pgTable("preregistrations", {
   expectedDeparture: timestamp("expected_departure", { withTimezone: true }),
   status: text("status").notNull().default("pending"),
   createdByClerkId: text("created_by_clerk_id"),
-  // Set when a client-portal account created this pre-registration (visit
-  // scoping + check-in notification back to the client).
+  // Set when a client-portal account created this pre-registration.
+  // clientCompanyId is the visit-scoping key (shared across all logins of the
+  // company); clientUserId records which login created it (attribution +
+  // check-in notification back to that client).
+  clientCompanyId: integer("client_company_id"),
   clientUserId: text("client_user_id"),
   clientEmployeeId: integer("client_employee_id"),
   convertedGuestId: integer("converted_guest_id"),

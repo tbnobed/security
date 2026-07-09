@@ -4,6 +4,7 @@ import bcrypt from "bcryptjs";
 import { randomUUID } from "node:crypto";
 import type { Request, Response, NextFunction } from "express";
 import { notePublicOrigin } from "./public-origin";
+import { ensureClientCompany } from "./client-companies";
 
 /**
  * Record the request's origin as the app's learned public origin. Called ONLY
@@ -141,7 +142,16 @@ export async function requireClient(
     res.status(403).json({ error: "Client access required" });
     return;
   }
-  res.locals.clientUser = user;
+  // Resolve the company scope (lazy-migrates legacy accounts that predate
+  // company scoping by creating the company from companyName and backfilling
+  // their roster/pre-registration rows).
+  const company = await ensureClientCompany(user);
+  if (!company) {
+    res.status(403).json({ error: "Client account is not linked to a company" });
+    return;
+  }
+  res.locals.clientUser = { ...user, clientCompanyId: company.id, companyName: company.name };
+  res.locals.clientCompany = company;
   next();
 }
 

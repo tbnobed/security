@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Layout } from "@/components/layout";
 import {
   useListUsers,
@@ -53,6 +53,19 @@ export default function UsersPage() {
   const [resetError, setResetError] = useState<string | null>(null);
 
   const refreshUsers = () => queryClient.invalidateQueries({ queryKey: ["/api/users"] });
+
+  // Existing client company names (deduped case-insensitively) for the
+  // company-name suggestions when adding a new client login.
+  const companySuggestions = useMemo(() => {
+    const seen = new Map<string, string>();
+    for (const u of users ?? []) {
+      if (u.role === "client" && u.companyName) {
+        const key = u.companyName.toLowerCase();
+        if (!seen.has(key)) seen.set(key, u.companyName);
+      }
+    }
+    return [...seen.values()].sort((a, b) => a.localeCompare(b));
+  }, [users]);
 
   const handleRoleChange = async (clerkId: string, role: Role) => {
     setUpdating(clerkId);
@@ -308,7 +321,17 @@ export default function UsersPage() {
                       value={newCompany}
                       onChange={(e) => setNewCompany(e.target.value)}
                       placeholder="Acme Productions"
+                      list="client-company-suggestions"
                     />
+                    <datalist id="client-company-suggestions">
+                      {companySuggestions.map((name) => (
+                        <option key={name} value={name} />
+                      ))}
+                    </datalist>
+                    <p className="text-xs text-muted-foreground">
+                      Pick an existing company to give this login shared access to that
+                      company's roster and visits, or type a new name to create one.
+                    </p>
                   </div>
                   <div className="space-y-1.5">
                     <Label htmlFor="new-notify-email">Notification email (optional)</Label>

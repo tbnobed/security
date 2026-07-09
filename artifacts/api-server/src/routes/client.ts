@@ -27,7 +27,7 @@ import {
 import { requireClient } from "../lib/auth";
 import { sendVisitorAlert } from "../lib/alerts";
 import { getWorkflowConfig, buildApprovalFields, notifyStageApprover } from "../lib/approvals";
-import type { AppUser } from "@workspace/db";
+import type { AppUser, ClientCompany } from "@workspace/db";
 
 const router = Router();
 
@@ -35,6 +35,12 @@ router.use("/client", requireClient);
 
 function getClientUser(res: { locals: Record<string, unknown> }): AppUser {
   return res.locals.clientUser as AppUser;
+}
+
+// The company scope set by requireClient — all roster/visit data is shared
+// across every client login belonging to this company.
+function getClientCompany(res: { locals: Record<string, unknown> }): ClientCompany {
+  return res.locals.clientCompany as ClientCompany;
 }
 
 function clientOperatorName(client: AppUser): string {
@@ -64,9 +70,9 @@ router.get("/client/employees", async (req, res): Promise<void> => {
     res.status(400).json({ error: parsed.error.message });
     return;
   }
-  const client = getClientUser(res);
+  const company = getClientCompany(res);
 
-  const conditions = [eq(clientEmployeesTable.clientUserId, client.clerkId)];
+  const conditions = [eq(clientEmployeesTable.clientCompanyId, company.id)];
   if (parsed.data.q && parsed.data.q.trim().length > 0) {
     conditions.push(ilike(clientEmployeesTable.name, `%${parsed.data.q.trim()}%`));
   }
@@ -87,12 +93,14 @@ router.post("/client/employees", async (req, res): Promise<void> => {
     return;
   }
   const client = getClientUser(res);
+  const company = getClientCompany(res);
 
   let employee: typeof clientEmployeesTable.$inferSelect;
   try {
     [employee] = await db
       .insert(clientEmployeesTable)
       .values({
+        clientCompanyId: company.id,
         clientUserId: client.clerkId,
         name: parsed.data.name.trim(),
         title: parsed.data.title?.trim() || null,
@@ -127,6 +135,7 @@ router.post("/client/employees/import", async (req, res): Promise<void> => {
     return;
   }
   const client = getClientUser(res);
+  const company = getClientCompany(res);
 
   let imported = 0;
   let merged = 0;
@@ -145,13 +154,13 @@ router.post("/client/employees/import", async (req, res): Promise<void> => {
     try {
       const inserted = await db
         .insert(clientEmployeesTable)
-        .values({ clientUserId: client.clerkId, name, title, phone, email })
+        .values({ clientCompanyId: company.id, clientUserId: client.clerkId, name, title, phone, email })
         .onConflictDoNothing()
         .returning({ id: clientEmployeesTable.id });
       if (inserted.length > 0) {
         imported++;
       } else {
-        // Row matches an existing employee (unique on clientUserId +
+        // Row matches an existing employee (unique on clientCompanyId +
         // lower(name)): MERGE — new non-empty fields win, existing values
         // are kept where the CSV cell is blank.
         const updates: Partial<typeof clientEmployeesTable.$inferInsert> = {};
@@ -164,7 +173,7 @@ router.post("/client/employees/import", async (req, res): Promise<void> => {
             .set(updates)
             .where(
               and(
-                eq(clientEmployeesTable.clientUserId, client.clerkId),
+                eq(clientEmployeesTable.clientCompanyId, company.id),
                 sql`lower(${clientEmployeesTable.name}) = lower(${name})`,
               ),
             );
@@ -202,6 +211,7 @@ router.patch("/client/employees/:id", async (req, res): Promise<void> => {
     return;
   }
   const client = getClientUser(res);
+  const company = getClientCompany(res);
 
   const updates: Partial<typeof clientEmployeesTable.$inferInsert> = {};
   if (parsed.data.name !== undefined) updates.name = parsed.data.name.trim();
@@ -216,7 +226,7 @@ router.patch("/client/employees/:id", async (req, res): Promise<void> => {
       .where(
         and(
           eq(clientEmployeesTable.id, params.data.id),
-          eq(clientEmployeesTable.clientUserId, client.clerkId),
+          eq(clientEmployeesTable.clientCompanyId, company.id),
         ),
       );
     if (!existing) {
@@ -235,7 +245,7 @@ router.patch("/client/employees/:id", async (req, res): Promise<void> => {
       .where(
         and(
           eq(clientEmployeesTable.id, params.data.id),
-          eq(clientEmployeesTable.clientUserId, client.clerkId),
+          eq(clientEmployeesTable.clientCompanyId, company.id),
         ),
       )
       .returning();
@@ -271,13 +281,14 @@ router.delete("/client/employees/:id", async (req, res): Promise<void> => {
     return;
   }
   const client = getClientUser(res);
+  const company = getClientCompany(res);
 
   const deleted = await db
     .delete(clientEmployeesTable)
     .where(
       and(
         eq(clientEmployeesTable.id, params.data.id),
-        eq(clientEmployeesTable.clientUserId, client.clerkId),
+        eq(clientEmployeesTable.clientCompanyId, company.id),
       ),
     )
     .returning({ id: clientEmployeesTable.id, name: clientEmployeesTable.name });
@@ -328,7 +339,7 @@ router.get("/client/employees/:id/visits", async (req, res): Promise<void> => {
     res.status(400).json({ error: params.error.message });
     return;
   }
-  const client = getClientUser(res);
+  const company = getClientCompany(res);
 
   const [employee] = await db
     .select()
@@ -336,7 +347,7 @@ router.get("/client/employees/:id/visits", async (req, res): Promise<void> => {
     .where(
       and(
         eq(clientEmployeesTable.id, params.data.id),
-        eq(clientEmployeesTable.clientUserId, client.clerkId),
+        eq(clientEmployeesTable.clientCompanyId, company.id),
       ),
     );
   if (!employee) {
@@ -350,7 +361,7 @@ router.get("/client/employees/:id/visits", async (req, res): Promise<void> => {
     .leftJoin(guestsTable, eq(guestsTable.id, preregistrationsTable.convertedGuestId))
     .where(
       and(
-        eq(preregistrationsTable.clientUserId, client.clerkId),
+        eq(preregistrationsTable.clientCompanyId, company.id),
         eq(preregistrationsTable.clientEmployeeId, params.data.id),
       ),
     )
@@ -360,7 +371,7 @@ router.get("/client/employees/:id/visits", async (req, res): Promise<void> => {
 });
 
 router.get("/client/visits/today", async (req, res): Promise<void> => {
-  const client = getClientUser(res);
+  const company = getClientCompany(res);
 
   // "Today" in the server's local timezone (set TZ on the api container).
   const now = new Date();
@@ -373,7 +384,7 @@ router.get("/client/visits/today", async (req, res): Promise<void> => {
     .leftJoin(guestsTable, eq(guestsTable.id, preregistrationsTable.convertedGuestId))
     .where(
       and(
-        eq(preregistrationsTable.clientUserId, client.clerkId),
+        eq(preregistrationsTable.clientCompanyId, company.id),
         gte(preregistrationsTable.expectedArrival, dayStart),
         lt(preregistrationsTable.expectedArrival, dayEnd),
       ),
@@ -390,12 +401,13 @@ router.post("/client/preregistrations/bulk", async (req, res): Promise<void> => 
     return;
   }
   const client = getClientUser(res);
+  const company = getClientCompany(res);
 
   const uniqueIds = [...new Set(parsed.data.employeeIds)];
   const employees = await db
     .select()
     .from(clientEmployeesTable)
-    .where(eq(clientEmployeesTable.clientUserId, client.clerkId));
+    .where(eq(clientEmployeesTable.clientCompanyId, company.id));
   const byId = new Map(employees.map((e) => [e.id, e]));
 
   const missing = uniqueIds.filter((id) => !byId.has(id));
@@ -421,7 +433,7 @@ router.post("/client/preregistrations/bulk", async (req, res): Promise<void> => 
           // Per-row: approval tokens must be unique per pre-registration.
           ...buildApprovalFields(expectedArrival, workflow),
           guestName: emp.name,
-          company: client.companyName ?? "",
+          company: company.name,
           phone: emp.phone ?? null,
           email: emp.email ?? null,
           hostName: parsed.data.hostName,
@@ -431,6 +443,7 @@ router.post("/client/preregistrations/bulk", async (req, res): Promise<void> => 
           expectedDeparture,
           studios: parsed.data.studios ?? [],
           createdByClerkId: client.clerkId,
+          clientCompanyId: company.id,
           clientUserId: client.clerkId,
           clientEmployeeId: emp.id,
           status: "pending" as const,

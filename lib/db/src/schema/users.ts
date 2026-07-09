@@ -1,4 +1,4 @@
-import { pgTable, text, timestamp, uniqueIndex } from "drizzle-orm/pg-core";
+import { pgTable, text, integer, timestamp, uniqueIndex } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
@@ -15,6 +15,12 @@ export const usersTable = pgTable(
     passwordHash: text("password_hash"),
     role: text("role").notNull().default("security"),
     // Client-portal accounts (role === "client") only:
+    // Company scope (client_companies.id). Multiple client logins may share one
+    // company; roster + pre-registration data is scoped by this, not by user.
+    // Nullable for lazy migration — requireClient self-heals legacy accounts
+    // (creates the company from companyName and backfills owned rows).
+    clientCompanyId: integer("client_company_id"),
+    // Display name of the company (kept in sync with client_companies.name).
     companyName: text("company_name"),
     notifyEmail: text("notify_email"),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
