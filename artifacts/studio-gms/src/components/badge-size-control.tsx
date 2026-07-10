@@ -13,6 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
   BADGE_SIZE_PRESETS,
+  badgeLengthToMm,
   isValidBadgeLength,
   normalizeBadgeLength,
   setBadgeSize,
@@ -53,6 +54,20 @@ export function BadgeSizeControl({ className }: { className?: string }) {
     if (!p) return;
     setWidth(p.width);
     setHeight(p.height);
+  };
+
+  const wMm = badgeLengthToMm(normWidth);
+  const hMm = badgeLengthToMm(normHeight);
+  const orientation = wMm && hMm ? (hMm > wMm ? "portrait" : "landscape") : null;
+
+  // Flip orientation by swapping width/height (keeps whatever units are typed).
+  const setOrientation = (want: "portrait" | "landscape") => {
+    if (!wMm || !hMm) return;
+    const isPortraitNow = hMm > wMm;
+    if (isPortraitNow !== (want === "portrait")) {
+      setWidth(normHeight);
+      setHeight(normWidth);
+    }
   };
 
   const save = () => {
@@ -100,6 +115,28 @@ export function BadgeSizeControl({ className }: { className?: string }) {
                     {p.label}
                   </button>
                 ))}
+              </div>
+            </div>
+
+            <div className="space-y-1.5">
+              <Label>Orientation</Label>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  onClick={() => setOrientation("landscape")}
+                  className={`rounded-md border px-3 py-2 text-sm transition-colors ${orientation === "landscape" ? "border-primary bg-primary/10 text-foreground" : "border-border text-muted-foreground hover:bg-muted"}`}
+                  data-testid="button-orientation-landscape"
+                >
+                  Landscape (wide)
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setOrientation("portrait")}
+                  className={`rounded-md border px-3 py-2 text-sm transition-colors ${orientation === "portrait" ? "border-primary bg-primary/10 text-foreground" : "border-border text-muted-foreground hover:bg-muted"}`}
+                  data-testid="button-orientation-portrait"
+                >
+                  Portrait (tall)
+                </button>
               </div>
             </div>
 
