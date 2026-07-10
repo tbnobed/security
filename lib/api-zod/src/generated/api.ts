@@ -1470,20 +1470,27 @@ export const GetRecentActivityResponse = zod.array(GetRecentActivityResponseItem
 
 
 /**
- * @summary List studio productions/bookings scheduled for today (proxied from the external bookings API)
+ * @summary List studio productions/bookings for a time range (proxied from the external bookings API)
  */
-export const GetProductionsTodayResponseItem = zod.object({
+export const getProductionsQueryRangeDefault = `today`;
+
+export const GetProductionsQueryParams = zod.object({
+  "range": zod.enum(['today', 'week', 'month']).default(getProductionsQueryRangeDefault).describe('Time window to fetch (from the start of today). Defaults to today.')
+})
+
+export const GetProductionsResponseItem = zod.object({
   "id": zod.number(),
   "title": zod.string(),
   "description": zod.string().nullish(),
   "start": zod.coerce.date(),
   "end": zod.coerce.date(),
   "studioId": zod.number().nullish(),
+  "studioName": zod.string().nullish(),
   "type": zod.string(),
   "status": zod.string(),
   "color": zod.string().nullish()
 })
-export const GetProductionsTodayResponse = zod.array(GetProductionsTodayResponseItem)
+export const GetProductionsResponse = zod.array(GetProductionsResponseItem)
 
 
 /**

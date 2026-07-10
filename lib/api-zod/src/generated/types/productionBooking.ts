@@ -13,6 +13,7 @@ export interface ProductionBooking {
   start: Date;
   end: Date;
   studioId?: number | null;
+  studioName?: string | null;
   type: string;
   status: string;
   color?: string | null;

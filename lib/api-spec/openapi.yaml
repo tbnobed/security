@@ -1266,14 +1266,23 @@ paths:
                 items:
                   $ref: "#/components/schemas/ActivityEvent"
 
-  /productions/today:
+  /productions:
     get:
-      operationId: getProductionsToday
+      operationId: getProductions
       tags: [dashboard]
-      summary: List studio productions/bookings scheduled for today (proxied from the external bookings API)
+      summary: List studio productions/bookings for a time range (proxied from the external bookings API)
+      parameters:
+        - name: range
+          in: query
+          required: false
+          description: Time window to fetch (from the start of today). Defaults to today.
+          schema:
+            type: string
+            enum: [today, week, month]
+            default: today
       responses:
         "200":
-          description: Today's productions
+          description: Productions in the requested range
           content:
             application/json:
               schema:
@@ -2357,6 +2366,9 @@ components:
           format: date-time
         studioId:
           type: integer
+          nullable: true
+        studioName:
+          type: string
           nullable: true
         type:
           type: string

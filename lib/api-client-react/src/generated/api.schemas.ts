@@ -639,6 +639,7 @@ export interface ProductionBooking {
   start: string;
   end: string;
   studioId?: number | null;
+  studioName?: string | null;
   type: string;
   status: string;
   color?: string | null;
@@ -969,4 +970,20 @@ endDate: string;
 export type GetRecentActivityParams = {
 limit?: number;
 };
+
+export type GetProductionsParams = {
+/**
+ * Time window to fetch (from the start of today). Defaults to today.
+ */
+range?: GetProductionsRange;
+};
+
+export type GetProductionsRange = typeof GetProductionsRange[keyof typeof GetProductionsRange];
+
+
+export const GetProductionsRange = {
+  today: 'today',
+  week: 'week',
+  month: 'month',
+} as const;
 

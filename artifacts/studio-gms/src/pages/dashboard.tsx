@@ -4,9 +4,10 @@ import { GuestAvatar } from "@/components/guest-avatar";
 import {
   useListGuests,
   useGetDashboardSummary,
-  useGetProductionsToday,
+  useGetProductions,
   useMarkBadgePrinted,
 } from "@workspace/api-client-react";
+import type { GetProductionsRange } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -28,11 +29,12 @@ export default function Dashboard() {
   const queryClient = useQueryClient();
   const { data: guests, isLoading: loadingGuests } = useListGuests({ status: "active" });
   const { data: summary } = useGetDashboardSummary();
+  const [productionsRange, setProductionsRange] = useState<GetProductionsRange>("today");
   const {
     data: productions,
     isLoading: loadingProductions,
     isError: productionsError,
-  } = useGetProductionsToday();
+  } = useGetProductions({ range: productionsRange });
 
   const [printData, setPrintData] = useState<VisitorBadgeData | null>(null);
 
@@ -76,7 +78,7 @@ export default function Dashboard() {
     const interval = setInterval(() => {
       queryClient.invalidateQueries({ queryKey: ["/api/guests"] });
       queryClient.invalidateQueries({ queryKey: ["/api/dashboard/summary"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/productions/today"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/productions"] });
     }, 30000);
     return () => clearInterval(interval);
   }, [queryClient]);
@@ -151,14 +153,39 @@ export default function Dashboard() {
         </div>
 
         <div className="bg-card border border-border rounded-md shadow-sm">
-          <div className="p-4 border-b border-border flex items-center justify-between">
+          <div className="p-4 border-b border-border flex items-center justify-between gap-3 flex-wrap">
             <div className="flex items-center gap-2">
               <Clapperboard className="w-4 h-4 text-primary" />
-              <h3 className="font-medium">Productions Today</h3>
+              <h3 className="font-medium">
+                {productionsRange === "week"
+                  ? "Productions This Week"
+                  : productionsRange === "month"
+                    ? "Productions This Month"
+                    : "Productions Today"}
+              </h3>
             </div>
-            <span className="text-xs text-muted-foreground">
-              {productions?.length ? `${productions.length} scheduled` : ""}
-            </span>
+            <div className="flex items-center gap-3">
+              <div className="inline-flex rounded-md border border-border overflow-hidden">
+                {(["today", "week", "month"] as const).map((r) => (
+                  <button
+                    key={r}
+                    type="button"
+                    onClick={() => setProductionsRange(r)}
+                    data-testid={`button-productions-range-${r}`}
+                    className={`px-3 py-1 text-xs font-medium capitalize transition-colors ${
+                      productionsRange === r
+                        ? "bg-primary text-primary-foreground"
+                        : "bg-transparent text-muted-foreground hover:bg-muted/50"
+                    }`}
+                  >
+                    {r}
+                  </button>
+                ))}
+              </div>
+              <span className="text-xs text-muted-foreground">
+                {productions?.length ? `${productions.length} scheduled` : ""}
+              </span>
+            </div>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-sm text-left">
@@ -183,7 +210,13 @@ export default function Dashboard() {
                   </tr>
                 ) : productions?.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="px-4 py-8 text-center text-muted-foreground">No productions scheduled today.</td>
+                    <td colSpan={6} className="px-4 py-8 text-center text-muted-foreground">
+                      {productionsRange === "week"
+                        ? "No productions scheduled this week."
+                        : productionsRange === "month"
+                          ? "No productions scheduled this month."
+                          : "No productions scheduled today."}
+                    </td>
                   </tr>
                 ) : (
                   productions?.map((p) => (
@@ -199,9 +232,15 @@ export default function Dashboard() {
                           {p.title}
                         </div>
                       </td>
-                      <td className="px-4 py-3 text-muted-foreground">{p.studioId ?? "—"}</td>
-                      <td className="px-4 py-3 text-muted-foreground">{format(new Date(p.start), "HH:mm")}</td>
-                      <td className="px-4 py-3 text-muted-foreground">{format(new Date(p.end), "HH:mm")}</td>
+                      <td className="px-4 py-3 text-muted-foreground">
+                        {p.studioName ?? (p.studioId != null ? `Studio ${p.studioId}` : "—")}
+                      </td>
+                      <td className="px-4 py-3 text-muted-foreground">
+                        {format(new Date(p.start), productionsRange === "today" ? "HH:mm" : "MMM d, HH:mm")}
+                      </td>
+                      <td className="px-4 py-3 text-muted-foreground">
+                        {format(new Date(p.end), productionsRange === "today" ? "HH:mm" : "MMM d, HH:mm")}
+                      </td>
                       <td className="px-4 py-3 text-muted-foreground capitalize">{p.type}</td>
                       <td className="px-4 py-3 text-right">
                         <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-muted text-muted-foreground border border-border capitalize">

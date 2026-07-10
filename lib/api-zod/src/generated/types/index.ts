@@ -42,6 +42,8 @@ export * from './convertPreregistrationInput';
 export * from './dashboardSummary';
 export * from './deniedApproval';
 export * from './exportAuditLogParams';
+export * from './getProductionsParams';
+export * from './getProductionsRange';
 export * from './getRecentActivityParams';
 export * from './guest';
 export * from './guestCheckinSource';
