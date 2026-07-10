@@ -41,6 +41,24 @@ export function normalizeBadgeLength(value: string): string {
   return t;
 }
 
+// Convert a validated badge length ("2.4in" / "62mm" / "6cm") to millimeters so
+// the two dimensions can be compared regardless of unit. Returns 0 if unparsable.
+export function badgeLengthToMm(value: string): number {
+  const m = value.trim().toLowerCase().match(/^(\d*\.?\d+)(in|mm|cm)$/);
+  if (!m) return 0;
+  const n = parseFloat(m[1]);
+  return m[2] === "in" ? n * 25.4 : m[2] === "cm" ? n * 10 : n;
+}
+
+// A label is "portrait" when it's clearly taller than it is wide; the badge then
+// switches to a vertical layout that fills the whole label instead of leaving a
+// gap under the landscape design.
+export function isPortraitBadge(width: string, height: string): boolean {
+  const w = badgeLengthToMm(width);
+  const h = badgeLengthToMm(height);
+  return w > 0 && h > w * 1.1;
+}
+
 export const DEFAULT_BADGE_SIZE: BadgeSize = { width: BADGE_WIDTH, height: BADGE_HEIGHT };
 
 function read(): BadgeSize {

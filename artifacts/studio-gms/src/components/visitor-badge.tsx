@@ -1,7 +1,7 @@
 import { forwardRef } from "react";
 import { useGetBrandingSettings } from "@workspace/api-client-react";
 import { CLIENT_LOGO_URL, SITE_NAME } from "@/lib/site";
-import { useBadgeSize } from "@/lib/badge-size";
+import { isPortraitBadge, useBadgeSize } from "@/lib/badge-size";
 
 export interface VisitorBadgeData {
   badgeId: string;
@@ -43,6 +43,29 @@ export const VisitorBadge = forwardRef<HTMLDivElement, { data: VisitorBadgeData 
     const { data: branding } = useGetBrandingSettings();
     const logoUrl = branding?.badgeLogoUrl || CLIENT_LOGO_URL;
     const { width: badgeWidth, height: badgeHeight } = useBadgeSize();
+    const portrait = isPortraitBadge(badgeWidth, badgeHeight);
+
+    const detailRows = (
+      <>
+        <div className="truncate">
+          <span className="font-bold uppercase tracking-wide text-gray-900">Host </span>
+          {data.host}
+        </div>
+        {data.purpose && (
+          <div className="truncate">
+            <span className="font-bold uppercase tracking-wide text-gray-900">Purpose </span>
+            {data.purpose}
+          </div>
+        )}
+        {data.studios.length > 0 && (
+          <div className="truncate">
+            <span className="font-bold uppercase tracking-wide text-gray-900">Studios </span>
+            {data.studios.join(", ")}
+          </div>
+        )}
+      </>
+    );
+
     return (
       <div
         id="print-badge"
@@ -66,50 +89,59 @@ export const VisitorBadge = forwardRef<HTMLDivElement, { data: VisitorBadgeData 
           </span>
         </div>
 
-        {/* Body */}
-        <div className="flex flex-1 gap-2 px-2.5 py-1.5">
-          {/* Photo */}
-          <div className="flex h-[0.95in] w-[0.8in] shrink-0 items-center justify-center overflow-hidden rounded-sm border border-gray-300 bg-gray-100">
-            {data.photo ? (
-              <img src={data.photo} alt={data.name} className="h-full w-full object-cover" />
-            ) : (
-              <span className="text-[18px] font-bold text-gray-400">{initials(data.name) || "?"}</span>
+        {portrait ? (
+          /* Portrait body — a vertical badge that fills a tall label */
+          <div className="flex flex-1 flex-col items-center gap-2 px-3 py-3 text-center">
+            {logoUrl && (
+              <img src={logoUrl} alt="" className="max-h-[0.4in] w-auto max-w-[70%] object-contain" />
+            )}
+            {/* Photo — square, scales to fill the vertical space */}
+            <div className="flex min-h-0 w-full flex-1 items-center justify-center overflow-hidden rounded-md border border-gray-300 bg-gray-100">
+              {data.photo ? (
+                <img src={data.photo} alt={data.name} className="h-full w-full object-cover" />
+              ) : (
+                <span className="text-[48px] font-bold text-gray-400">{initials(data.name) || "?"}</span>
+              )}
+            </div>
+            <div className="w-full min-w-0">
+              <div className="truncate text-[20px] font-bold leading-tight text-gray-900">{data.name}</div>
+              {data.company && (
+                <div className="truncate text-[12px] font-medium text-gray-800">{data.company}</div>
+              )}
+            </div>
+            <div className="w-full min-w-0 space-y-0.5 text-left text-[11px] font-medium leading-tight text-black">
+              {detailRows}
+            </div>
+          </div>
+        ) : (
+          /* Landscape body */
+          <div className="flex flex-1 gap-2 px-2.5 py-1.5">
+            {/* Photo */}
+            <div className="flex h-[0.95in] w-[0.8in] shrink-0 items-center justify-center overflow-hidden rounded-sm border border-gray-300 bg-gray-100">
+              {data.photo ? (
+                <img src={data.photo} alt={data.name} className="h-full w-full object-cover" />
+              ) : (
+                <span className="text-[18px] font-bold text-gray-400">{initials(data.name) || "?"}</span>
+              )}
+            </div>
+
+            {/* Details */}
+            <div className="flex min-w-0 flex-1 flex-col justify-center leading-tight">
+              <div className="min-w-0">
+                <div className="truncate text-[13px] font-bold text-gray-900">{data.name}</div>
+                <div className="truncate text-[9px] font-medium text-gray-800">{data.company}</div>
+              </div>
+              <div className="mt-1 space-y-0.5 text-[8px] font-medium text-black">{detailRows}</div>
+            </div>
+
+            {/* Logo — its own fixed column so it can never crowd the name */}
+            {logoUrl && (
+              <div className="flex w-[0.6in] shrink-0 items-start justify-end pt-0.5">
+                <img src={logoUrl} alt="" className="max-h-[0.35in] w-full object-contain object-right-top" />
+              </div>
             )}
           </div>
-
-          {/* Details */}
-          <div className="flex min-w-0 flex-1 flex-col justify-center leading-tight">
-            <div className="min-w-0">
-              <div className="truncate text-[13px] font-bold text-gray-900">{data.name}</div>
-              <div className="truncate text-[9px] font-medium text-gray-800">{data.company}</div>
-            </div>
-            <div className="mt-1 space-y-0.5 text-[8px] font-medium text-black">
-              <div className="truncate">
-                <span className="font-bold uppercase tracking-wide text-gray-900">Host </span>
-                {data.host}
-              </div>
-              {data.purpose && (
-                <div className="truncate">
-                  <span className="font-bold uppercase tracking-wide text-gray-900">Purpose </span>
-                  {data.purpose}
-                </div>
-              )}
-              {data.studios.length > 0 && (
-                <div className="truncate">
-                  <span className="font-bold uppercase tracking-wide text-gray-900">Studios </span>
-                  {data.studios.join(", ")}
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Logo — its own fixed column so it can never crowd the name */}
-          {logoUrl && (
-            <div className="flex w-[0.6in] shrink-0 items-start justify-end pt-0.5">
-              <img src={logoUrl} alt="" className="max-h-[0.35in] w-full object-contain object-right-top" />
-            </div>
-          )}
-        </div>
+        )}
 
         {/* Footer / badge id band */}
         <div
