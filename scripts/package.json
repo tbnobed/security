@@ -12,6 +12,7 @@
     "tsx": "catalog:"
   },
   "dependencies": {
-    "bcryptjs": "^3.0.3"
+    "bcryptjs": "^3.0.3",
+    "bwip-js": "^4.11.2"
   }
 }

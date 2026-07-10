@@ -1,0 +1,8 @@
+uploads = []
+generated = []
+
+[[outputs]]
+id = "7f98ubAa44GFvJ60B98-k"
+uri = "file://attached_assets/pdf417-aamva-test.png"
+type = "image"
+title = "AAMVA PDF417 test barcode (John Quincy Doe)"

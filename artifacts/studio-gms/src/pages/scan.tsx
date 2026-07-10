@@ -47,6 +47,26 @@ export function parseAamvaName(raw: string): string | null {
   return null;
 }
 
+// zxing-wasm represents non-printable bytes in `.text` as escaped placeholders
+// (e.g. "<LF>", "<CR>", "<RS>"), which breaks AAMVA parsing — the field tags
+// (DCS/DAC/DAD...) are delimited by REAL LF/CR. Decode the raw `.bytes` as
+// Latin-1 instead so the control characters survive. (The native
+// BarcodeDetector path returns rawValue with real control chars, so it doesn't
+// need this.) Falls back to `.text` when bytes are unavailable.
+function readBarcodeText(
+  result: { text?: string; bytes?: Uint8Array } | undefined,
+): string | undefined {
+  if (!result) return undefined;
+  if (result.bytes && result.bytes.length > 0) {
+    try {
+      return new TextDecoder("latin1").decode(result.bytes);
+    } catch {
+      /* fall through to text */
+    }
+  }
+  return result.text;
+}
+
 function titleCase(s: string): string {
   return s
     .toLowerCase()
@@ -425,7 +445,7 @@ export default function ScanPage() {
               // its pixel density; canvas passes below inevitably downscale).
               try {
                 const results = await readBarcodes(file, opts);
-                text = results[0]?.text;
+                text = readBarcodeText(results[0]);
               } catch {
                 /* fall through to canvas passes */
               }
@@ -448,7 +468,7 @@ export default function ScanPage() {
                     ctx.getImageData(0, 0, work.width, work.height),
                     opts,
                   );
-                  return results[0]?.text;
+                  return readBarcodeText(results[0]);
                 };
                 // Pass 2: full frame at 3200px cap.
                 text = await runPass(0, 0, srcW, srcH, 3200);
@@ -634,7 +654,7 @@ export default function ScanPage() {
                 tryDownscale: true,
                 maxNumberOfSymbols: 1,
               });
-              text = results[0]?.text;
+              text = readBarcodeText(results[0]);
             }
             consecutiveDecodeErrors = 0;
             if (text && !cancelled) {
