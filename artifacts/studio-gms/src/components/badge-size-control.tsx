@@ -14,6 +14,7 @@ import { Label } from "@/components/ui/label";
 import {
   BADGE_SIZE_PRESETS,
   isValidBadgeLength,
+  normalizeBadgeLength,
   setBadgeSize,
   useBadgeSize,
   type BadgeSize,
@@ -40,9 +41,11 @@ export function BadgeSizeControl({ className }: { className?: string }) {
     setOpen(true);
   };
 
-  const selectedPreset = matchPreset({ width, height });
-  const widthValid = isValidBadgeLength(width);
-  const heightValid = isValidBadgeLength(height);
+  const normWidth = normalizeBadgeLength(width);
+  const normHeight = normalizeBadgeLength(height);
+  const selectedPreset = matchPreset({ width: normWidth, height: normHeight });
+  const widthValid = isValidBadgeLength(normWidth);
+  const heightValid = isValidBadgeLength(normHeight);
   const canSave = widthValid && heightValid;
 
   const applyPreset = (index: number) => {
@@ -54,7 +57,7 @@ export function BadgeSizeControl({ className }: { className?: string }) {
 
   const save = () => {
     if (!canSave) return;
-    setBadgeSize({ width: width.trim(), height: height.trim() });
+    setBadgeSize({ width: normWidth, height: normHeight });
     setOpen(false);
   };
 
@@ -123,11 +126,11 @@ export function BadgeSizeControl({ className }: { className?: string }) {
               </div>
             </div>
             <p className="text-xs text-muted-foreground">
-              Use a length in inches or millimeters, e.g. <code>2.4in</code> or{" "}
-              <code>62mm</code>.
+              Enter a number in inches (e.g. <code>2.4</code>), or add a unit like{" "}
+              <code>2.4in</code>, <code>62mm</code>, or <code>6cm</code>.
               {!canSave && (
                 <span className="block text-destructive mt-1">
-                  Enter valid sizes (like 2.4in or 62mm) to save.
+                  Enter valid sizes (like 2.4 or 62mm) to save.
                 </span>
               )}
             </p>

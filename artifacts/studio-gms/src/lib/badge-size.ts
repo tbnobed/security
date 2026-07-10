@@ -31,6 +31,16 @@ export function isValidBadgeLength(value: string): boolean {
   return /^\d*\.?\d+(in|mm|cm)$/.test(value.trim());
 }
 
+// Forgiving normalization for operator-typed input: lowercase, strip spaces,
+// and treat a bare number as inches (so "2.4" -> "2.4in", "2.4 IN" -> "2.4in").
+// The result is re-validated by isValidBadgeLength before it's ever stored or
+// interpolated, so this never weakens the interpolation-safety guarantee.
+export function normalizeBadgeLength(value: string): string {
+  const t = value.trim().toLowerCase().replace(/\s+/g, "");
+  if (/^\d*\.?\d+$/.test(t)) return `${t}in`;
+  return t;
+}
+
 export const DEFAULT_BADGE_SIZE: BadgeSize = { width: BADGE_WIDTH, height: BADGE_HEIGHT };
 
 function read(): BadgeSize {
