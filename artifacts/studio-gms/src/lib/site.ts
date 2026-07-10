@@ -31,3 +31,20 @@ export const CLIENT_LOGO_URL = rawClientLogo
 //                            Blank = generic "as long as needed" wording.
 export const PRIVACY_CONTACT = import.meta.env.VITE_PRIVACY_CONTACT?.trim() || "";
 export const PRIVACY_RETENTION = import.meta.env.VITE_PRIVACY_RETENTION?.trim() || "";
+
+// DEFAULT printed-badge dimensions for a fresh browser. Badge/label size is a
+// PER-WORKSTATION setting chosen in-app and stored per-browser (see
+// lib/badge-size.ts) because different security desks at the same site can have
+// different label printers. These env vars only seed that default:
+//   VITE_BADGE_WIDTH  — badge width  (default "3in")
+//   VITE_BADGE_HEIGHT — badge height (default "2in")
+// Accepts a CSS length in in/mm/cm (e.g. "2.4in", "62mm"); the same units the
+// runtime validator (isValidBadgeLength) accepts. Values are validated to a
+// strict length pattern because they can be interpolated into an injected @page
+// CSS rule (see print-badge.ts).
+function badgeDimension(value: string | undefined, fallback: string): string {
+  const t = (value ?? "").trim();
+  return /^\d*\.?\d+(in|mm|cm)$/.test(t) ? t : fallback;
+}
+export const BADGE_WIDTH = badgeDimension(import.meta.env.VITE_BADGE_WIDTH, "3in");
+export const BADGE_HEIGHT = badgeDimension(import.meta.env.VITE_BADGE_HEIGHT, "2in");

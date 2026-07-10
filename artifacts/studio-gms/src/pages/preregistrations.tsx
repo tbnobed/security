@@ -23,6 +23,7 @@ import { SITE_NAME } from "@/lib/site";
 import { PhotoCapture } from "@/components/photo-capture";
 import { VisitorBadge, type VisitorBadgeData } from "@/components/visitor-badge";
 import { printBadge } from "@/lib/print-badge";
+import { BadgeSizeControl } from "@/components/badge-size-control";
 import { AlertTriangle, CalendarClock, LogIn, Plus, Printer, Trash2, UserPlus } from "lucide-react";
 import { format } from "date-fns";
 
@@ -384,11 +385,14 @@ export default function Preregistrations() {
           {convertBadge ? (
             <div className="space-y-6">
               <VisitorBadge data={convertBadge} />
-              <div className="flex gap-3 justify-center print:hidden">
-                <Button onClick={handlePrint} variant="outline">
-                  <Printer className="w-4 h-4 mr-2" /> Print Badge
-                </Button>
-                <Button onClick={closeConvert}>Done</Button>
+              <div className="flex flex-col items-center gap-3 print:hidden">
+                <div className="flex gap-3 justify-center">
+                  <Button onClick={handlePrint} variant="outline">
+                    <Printer className="w-4 h-4 mr-2" /> Print Badge
+                  </Button>
+                  <Button onClick={closeConvert}>Done</Button>
+                </div>
+                <BadgeSizeControl />
               </div>
             </div>
           ) : convertTarget ? (

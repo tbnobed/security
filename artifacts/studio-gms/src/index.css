@@ -157,6 +157,8 @@
 
 /* ── Printable visitor badge (3in x 2in landscape) ──────────────── */
 .visitor-badge {
+  /* Default size; overridden per-site by inline styles from BADGE_WIDTH/HEIGHT
+     (see components/visitor-badge.tsx and lib/site.ts). */
   width: 3in;
   height: 2in;
   background: #ffffff;
@@ -170,8 +172,10 @@
 }
 
 @media print {
+  /* The @page size is injected at print time from the badge's per-site
+     dimensions (see printBadge() in src/lib/print-badge.ts); we only set a
+     zero margin here as a default. */
   @page {
-    size: 3in 2in;
     margin: 0;
   }
   html,

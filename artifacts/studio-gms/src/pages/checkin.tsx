@@ -16,6 +16,7 @@ import { ScanIdDialog } from "@/components/scan-id-dialog";
 import { Link } from "wouter";
 import { VisitorBadge, type VisitorBadgeData } from "@/components/visitor-badge";
 import { printBadge } from "@/lib/print-badge";
+import { BadgeSizeControl } from "@/components/badge-size-control";
 import { AlertTriangle, Printer, UserPlus, Star, ScanLine } from "lucide-react";
 import { PURPOSES } from "@/lib/purposes";
 
@@ -196,13 +197,16 @@ export default function CheckIn() {
         {badge ? (
           <div className="space-y-6">
             <VisitorBadge data={badge} />
-            <div className="flex gap-3 justify-center print:hidden">
-              <Button onClick={handlePrint} variant="outline">
-                <Printer className="w-4 h-4 mr-2" /> Print Badge
-              </Button>
-              <Button onClick={() => setBadge(null)}>
-                <UserPlus className="w-4 h-4 mr-2" /> Check In Another
-              </Button>
+            <div className="flex flex-col items-center gap-3 print:hidden">
+              <div className="flex gap-3 justify-center">
+                <Button onClick={handlePrint} variant="outline">
+                  <Printer className="w-4 h-4 mr-2" /> Print Badge
+                </Button>
+                <Button onClick={() => setBadge(null)}>
+                  <UserPlus className="w-4 h-4 mr-2" /> Check In Another
+                </Button>
+              </div>
+              <BadgeSizeControl />
             </div>
           </div>
         ) : (

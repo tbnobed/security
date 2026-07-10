@@ -42,6 +42,15 @@ At minimum set:
   `SEED_ADMIN_PASSWORD` is required: `docker compose` refuses to start without it,
   so an install can never ship with a known default password.
 - `VITE_SITE_NAME` (and optional `VITE_CLIENT_NAME` / `VITE_CLIENT_LOGO`) — branding.
+- `VITE_BADGE_WIDTH` / `VITE_BADGE_HEIGHT` (optional) — the **default** printed
+  visitor-badge size. Badge size is really a per-workstation setting: each security
+  desk picks its own label size in-app (the **Label size** control next to the Print
+  Badge button and on the dashboard) and it is remembered in that browser, because
+  different desks at the same site can have different printers (e.g. a Brother
+  QL-820NWB on a 2.4" roll). These env vars only seed the default for a fresh
+  browser. Accepts a CSS length in `in`/`mm`/`cm` (e.g. `2.4in`, `62mm`). Defaults
+  to `3in` × `2in`. Because they are build-time, rebuild the web image after changing
+  the default; the in-app per-desk override needs no rebuild.
 
 Optional:
 

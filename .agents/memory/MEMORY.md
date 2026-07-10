@@ -1,2 +1,3 @@
 - [Audit eventType enum is strict](audit-eventtype-enum.md) — new audit event types must be added to openapi AuditEntry enum or GET /api/audit 500s (dashboard recent-activity is lenient and won't catch it).
 - [Orval date formats](orval-date-params.md) — never use `format: date`/`date-time` on query params OR body fields; Orval emits zod.date() which rejects ISO strings. Use plain string + pattern/maxLength.
+- [Print @page size](print-page-size.md) — @page size can't use CSS vars; inject a literal <style> at print time from validated data-* dims. Badge size is per-workstation (localStorage), not per-deploy env.

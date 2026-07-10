@@ -1,6 +1,7 @@
 import { forwardRef } from "react";
 import { useGetBrandingSettings } from "@workspace/api-client-react";
 import { CLIENT_LOGO_URL, SITE_NAME } from "@/lib/site";
+import { useBadgeSize } from "@/lib/badge-size";
 
 export interface VisitorBadgeData {
   badgeId: string;
@@ -41,10 +42,17 @@ export const VisitorBadge = forwardRef<HTMLDivElement, { data: VisitorBadgeData 
     const site = data.site || SITE_NAME;
     const { data: branding } = useGetBrandingSettings();
     const logoUrl = branding?.badgeLogoUrl || CLIENT_LOGO_URL;
+    const { width: badgeWidth, height: badgeHeight } = useBadgeSize();
     return (
       <div
         id="print-badge"
         ref={ref}
+        // Per-workstation label size (see lib/badge-size.ts). Inline styles
+        // override the CSS defaults; data-* attrs let printBadge() read them to
+        // set a matching @page size so the badge fills the whole label.
+        style={{ width: badgeWidth, height: badgeHeight }}
+        data-badge-width={badgeWidth}
+        data-badge-height={badgeHeight}
         className="visitor-badge mx-auto flex flex-col overflow-hidden rounded-md border border-gray-300 shadow-sm"
       >
         {/* Header */}

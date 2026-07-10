@@ -12,6 +12,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { VisitorBadge, type VisitorBadgeData } from "@/components/visitor-badge";
 import { printBadge } from "@/lib/print-badge";
+import { BadgeSizeControl } from "@/components/badge-size-control";
 import {
   Users,
   LogIn,
@@ -93,9 +94,12 @@ export default function Dashboard() {
   return (
     <Layout>
       <div className="p-4 md:p-6 space-y-6">
-        <div>
-          <h2 className="text-2xl font-bold tracking-tight">Active Visitor Dashboard</h2>
-          <p className="text-muted-foreground">Live overview of studio operations.</p>
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+          <div>
+            <h2 className="text-2xl font-bold tracking-tight">Active Visitor Dashboard</h2>
+            <p className="text-muted-foreground">Live overview of studio operations.</p>
+          </div>
+          <BadgeSizeControl />
         </div>
 
         <div className="grid grid-cols-2 md:grid-cols-5 gap-3 md:gap-4">

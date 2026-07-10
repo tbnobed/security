@@ -14,6 +14,19 @@ export function printBadge(): void {
     return;
   }
 
+  // The label media differs per workstation, so the badge carries its physical
+  // size in data-* attrs (set by VisitorBadge from the per-desk size in
+  // lib/badge-size.ts). Inject a matching @page size rule so the printed page is
+  // exactly the label size and the badge fills it — otherwise the browser falls
+  // back to a default paper and shrinks the badge into a corner. The value is a
+  // strictly validated CSS length (isValidBadgeLength), safe to interpolate here.
+  const w = source.dataset.badgeWidth || "3in";
+  const h = source.dataset.badgeHeight || "2in";
+  const pageStyle = document.createElement("style");
+  pageStyle.id = "print-page-size";
+  pageStyle.textContent = `@page { size: ${w} ${h}; margin: 0; }`;
+  document.head.appendChild(pageStyle);
+
   const root = document.createElement("div");
   root.id = "print-root";
   const clone = source.cloneNode(true) as HTMLElement;
@@ -25,6 +38,7 @@ export function printBadge(): void {
   const cleanup = () => {
     document.body.classList.remove("printing-badge");
     root.remove();
+    pageStyle.remove();
     window.removeEventListener("afterprint", cleanup);
   };
   window.addEventListener("afterprint", cleanup);
