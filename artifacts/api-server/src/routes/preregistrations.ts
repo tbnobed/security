@@ -51,7 +51,8 @@ router.get("/preregistrations", requireOperator, async (req, res): Promise<void>
   let pregs;
   if (parsed.data.date) {
     const dayStart = new Date(parsed.data.date + "T00:00:00Z");
-    const dayEnd = new Date(parsed.data.date + "T23:59:59Z");
+    const windowDays = parsed.data.range === "week" ? 7 : 1;
+    const dayEnd = new Date(dayStart.getTime() + windowDays * 24 * 60 * 60 * 1000);
     pregs = await db
       .select()
       .from(preregistrationsTable)

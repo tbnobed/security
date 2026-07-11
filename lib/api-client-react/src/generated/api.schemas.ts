@@ -909,7 +909,19 @@ export type ListPreregistrationsParams = {
  * @pattern ^\d{4}-\d{2}-\d{2}$
  */
 date?: string;
+/**
+ * Window starting at the given date. Day (default) shows that day only; week shows 7 days from the date.
+ */
+range?: ListPreregistrationsRange;
 };
+
+export type ListPreregistrationsRange = typeof ListPreregistrationsRange[keyof typeof ListPreregistrationsRange];
+
+
+export const ListPreregistrationsRange = {
+  day: 'day',
+  week: 'week',
+} as const;
 
 export type CheckWatchlistParams = {
 name: string;

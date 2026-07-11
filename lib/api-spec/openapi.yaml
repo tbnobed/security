@@ -323,6 +323,14 @@ paths:
             type: string
             pattern: '^\d{4}-\d{2}-\d{2}$'
           description: Filter by date (YYYY-MM-DD), defaults to today
+        - name: range
+          in: query
+          required: false
+          description: Window starting at the given date. Day (default) shows that day only; week shows 7 days from the date.
+          schema:
+            type: string
+            enum: [day, week]
+            default: day
       responses:
         "200":
           description: Pre-registrations

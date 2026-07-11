@@ -392,10 +392,11 @@ export const ListOverdueGuestsResponse = zod.array(ListOverdueGuestsResponseItem
  * @summary List pre-registered guests
  */
 export const listPreregistrationsQueryDateRegExp = new RegExp('^\\d{4}-\\d{2}-\\d{2}$');
-
+export const listPreregistrationsQueryRangeDefault = `day`;
 
 export const ListPreregistrationsQueryParams = zod.object({
-  "date": zod.coerce.string().regex(listPreregistrationsQueryDateRegExp).optional().describe('Filter by date (YYYY-MM-DD), defaults to today')
+  "date": zod.coerce.string().regex(listPreregistrationsQueryDateRegExp).optional().describe('Filter by date (YYYY-MM-DD), defaults to today'),
+  "range": zod.enum(['day', 'week']).default(listPreregistrationsQueryRangeDefault).describe('Window starting at the given date. Day (default) shows that day only; week shows 7 days from the date.')
 })
 
 export const ListPreregistrationsResponseItem = zod.object({

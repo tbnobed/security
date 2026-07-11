@@ -5,6 +5,7 @@
  * Studio Guest Management System API
  * OpenAPI spec version: 0.1.0
  */
+import type { ListPreregistrationsRange } from './listPreregistrationsRange';
 
 export type ListPreregistrationsParams = {
 /**
@@ -12,4 +13,8 @@ export type ListPreregistrationsParams = {
  * @pattern ^\d{4}-\d{2}-\d{2}$
  */
 date?: string;
+/**
+ * Window starting at the given date. Day (default) shows that day only; week shows 7 days from the date.
+ */
+range?: ListPreregistrationsRange;
 };

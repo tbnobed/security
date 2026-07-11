@@ -67,6 +67,7 @@ export * from './listGuestsParams';
 export * from './listGuestsStatus';
 export * from './listKnownGuestsParams';
 export * from './listPreregistrationsParams';
+export * from './listPreregistrationsRange';
 export * from './listRosterEmployeesParams';
 export * from './loginInput';
 export * from './pendingApproval';

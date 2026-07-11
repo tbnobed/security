@@ -8,6 +8,7 @@ import {
   useUploadPhoto,
   useListKnownGuests,
   type Preregistration,
+  type ListPreregistrationsRange,
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -35,6 +36,7 @@ export default function Preregistrations() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [date, setDate] = useState(todayStr());
+  const [range, setRange] = useState<ListPreregistrationsRange>("day");
   const [open, setOpen] = useState(false);
   const [deleting, setDeleting] = useState<number | null>(null);
 
@@ -75,7 +77,7 @@ export default function Preregistrations() {
     setStudios((prev) => (checked ? [...prev, name] : prev.filter((s) => s !== name)));
   };
 
-  const { data: pregs, isLoading } = useListPreregistrations({ date });
+  const { data: pregs, isLoading } = useListPreregistrations({ date, range });
   const { mutateAsync: createPreg, isPending: creating } = useCreatePreregistration();
   const { mutateAsync: deletePreg } = useDeletePreregistration();
   const { mutateAsync: convertPreg } = useConvertPreregistration();
@@ -192,7 +194,7 @@ export default function Preregistrations() {
         <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
           <div>
             <h2 className="text-2xl font-bold tracking-tight">Pre-Registrations</h2>
-            <p className="text-muted-foreground">Expected guests for a given day.</p>
+            <p className="text-muted-foreground">Expected guests for a given day or week.</p>
           </div>
           <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
@@ -272,9 +274,26 @@ export default function Preregistrations() {
           </Dialog>
         </div>
 
-        <div className="mb-4 flex items-center gap-3">
-          <Label className="shrink-0">Date</Label>
+        <div className="mb-4 flex flex-wrap items-center gap-3">
+          <Label className="shrink-0">{range === "week" ? "Week starting" : "Date"}</Label>
           <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} className="w-44" />
+          <div className="inline-flex rounded-md border border-border overflow-hidden">
+            {(["day", "week"] as const).map((r) => (
+              <button
+                key={r}
+                type="button"
+                onClick={() => setRange(r)}
+                data-testid={`button-prereg-range-${r}`}
+                className={`px-3 py-1.5 text-xs font-medium capitalize transition-colors ${
+                  range === r
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-transparent text-muted-foreground hover:bg-muted/50"
+                }`}
+              >
+                {r}
+              </button>
+            ))}
+          </div>
         </div>
 
         <div className="space-y-6">
@@ -286,7 +305,11 @@ export default function Preregistrations() {
             {isLoading ? (
               <div className="p-8 text-center text-muted-foreground">Loading...</div>
             ) : pending.length === 0 ? (
-              <div className="p-8 text-center text-muted-foreground">No pending pre-registrations for this date.</div>
+              <div className="p-8 text-center text-muted-foreground">
+                {range === "week"
+                  ? "No pending pre-registrations for this week."
+                  : "No pending pre-registrations for this date."}
+              </div>
             ) : (
               <div className="overflow-x-auto"><table className="w-full text-sm">
                 <thead className="bg-muted/50 text-muted-foreground text-xs uppercase border-b border-border">
@@ -323,7 +346,9 @@ export default function Preregistrations() {
                       <td className="px-4 py-3 text-muted-foreground">{p.company}</td>
                       <td className="px-4 py-3">{p.hostName}</td>
                       <td className="px-4 py-3 text-muted-foreground">{p.studios?.length ? p.studios.join(", ") : "—"}</td>
-                      <td className="px-4 py-3 text-muted-foreground">{format(new Date(p.expectedArrival), "HH:mm")}</td>
+                      <td className="px-4 py-3 text-muted-foreground">
+                        {format(new Date(p.expectedArrival), range === "week" ? "EEE MMM d, HH:mm" : "HH:mm")}
+                      </td>
                       <td className="px-4 py-3 text-right flex items-center justify-end gap-2">
                         <Button
                           size="sm"
