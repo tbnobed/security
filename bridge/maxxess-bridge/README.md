@@ -30,6 +30,25 @@ the **Emergency Evacuation** roster.
    test cardholders appear on FrontDesk's Building page), then switch to
    `SOURCE=efusion`.
 
+## What we know about eFusion's integration surface (researched July 2026)
+
+- **eFusion Web API** — a separately licensed optional module (not part of the
+  base install; shows up under Service Manager → Setup → Integrators once
+  installed). This is what commercial integrations (e.g. Telaeris XPressEntry
+  mustering) use to pull cardholder data and door activities. The API docs are
+  distributed by Maxxess/dealers, not published publicly.
+- **SMSWeb / MX+** ("SMSWeb: Yes" in the license) is the *browser client* (web
+  UI with dashboards, cardholders, reports) served by the SMS Web Server — it
+  is not the same thing as the Web API license.
+- **Occupancy source**: eFusion tracks "who is in" via anti-passback areas and
+  its Muster Report (list of all cardholders currently inside defined areas).
+  That muster/in-plant data is what this bridge's `occupants` snapshot maps to.
+- **Database fallback**: eFusion stores everything in Microsoft SQL Server
+  (instance typically `COMPUTERNAME\MAXXESS`). All access events land in the
+  transaction log tables (event time, facility-card number, event type), and
+  SQL scripts against the DB are supported. A read-only SQL login is a viable
+  no-extra-license path; the adapter would use a SQL client instead of fetch.
+
 ## Connecting to Maxxess eFusion
 
 `SOURCE=efusion` is a template: eFusion's integration surface varies by
