@@ -1731,3 +1731,92 @@ export const UploadPhotoResponse = zod.object({
 })
 
 
+/**
+ * @summary Bridge push of building occupancy snapshot + door events (bearer token auth)
+ */
+export const ingestOccupancyBodyOccupantsItemCardholderNameMax = 200;
+
+export const ingestOccupancyBodyOccupantsItemCardNumberMax = 100;
+
+export const ingestOccupancyBodyOccupantsItemDepartmentMax = 200;
+
+export const ingestOccupancyBodyOccupantsItemLocationMax = 200;
+
+export const ingestOccupancyBodyOccupantsMax = 5000;
+
+export const ingestOccupancyBodyEventsItemExternalIdMax = 200;
+
+export const ingestOccupancyBodyEventsItemCardholderNameMax = 200;
+
+export const ingestOccupancyBodyEventsItemCardNumberMax = 100;
+
+export const ingestOccupancyBodyEventsItemDoorMax = 200;
+
+export const ingestOccupancyBodyEventsMax = 1000;
+
+
+
+export const IngestOccupancyBody = zod.object({
+  "occupants": zod.array(zod.object({
+  "cardholderName": zod.string().min(1).max(ingestOccupancyBodyOccupantsItemCardholderNameMax),
+  "cardNumber": zod.string().max(ingestOccupancyBodyOccupantsItemCardNumberMax).nullish(),
+  "department": zod.string().max(ingestOccupancyBodyOccupantsItemDepartmentMax).nullish(),
+  "location": zod.string().max(ingestOccupancyBodyOccupantsItemLocationMax).nullish().describe('Last door\/reader the cardholder was seen at'),
+  "sinceAt": zod.coerce.date().nullish().describe('When they entered \/ were last seen, per the access system')
+})).max(ingestOccupancyBodyOccupantsMax).describe('Full snapshot of everyone currently in the building (replaces the previous snapshot)'),
+  "events": zod.array(zod.object({
+  "externalId": zod.string().min(1).max(ingestOccupancyBodyEventsItemExternalIdMax).describe('Unique event id from the source system (dedupe key)'),
+  "cardholderName": zod.string().min(1).max(ingestOccupancyBodyEventsItemCardholderNameMax),
+  "cardNumber": zod.string().max(ingestOccupancyBodyEventsItemCardNumberMax).nullish(),
+  "door": zod.string().min(1).max(ingestOccupancyBodyEventsItemDoorMax),
+  "direction": zod.enum(['in', 'out', 'unknown']).optional(),
+  "occurredAt": zod.coerce.date()
+})).max(ingestOccupancyBodyEventsMax).optional().describe('Door events since the last push (deduped by externalId)')
+})
+
+export const IngestOccupancyResponse = zod.object({
+  "occupants": zod.number(),
+  "eventsAdded": zod.number()
+})
+
+
+/**
+ * @summary Current building occupancy from the access-control bridge
+ */
+export const GetOccupancyResponse = zod.object({
+  "occupants": zod.array(zod.object({
+  "id": zod.number(),
+  "cardholderName": zod.string(),
+  "cardNumber": zod.string().nullish(),
+  "department": zod.string().nullish(),
+  "location": zod.string().nullish(),
+  "sinceAt": zod.coerce.date().nullish()
+})),
+  "lastSyncAt": zod.coerce.date().nullable().describe('When the bridge last pushed a snapshot (null = never)')
+})
+
+
+/**
+ * @summary Recent door entry/exit events from the access-control bridge
+ */
+export const listAccessEventsQueryLimitMax = 200;
+
+
+
+export const ListAccessEventsQueryParams = zod.object({
+  "limit": zod.coerce.number().min(1).max(listAccessEventsQueryLimitMax).optional()
+})
+
+export const ListAccessEventsResponse = zod.object({
+  "items": zod.array(zod.object({
+  "id": zod.number(),
+  "externalId": zod.string(),
+  "cardholderName": zod.string(),
+  "cardNumber": zod.string().nullish(),
+  "door": zod.string(),
+  "direction": zod.enum(['in', 'out', 'unknown']),
+  "occurredAt": zod.coerce.date()
+}))
+})
+
+

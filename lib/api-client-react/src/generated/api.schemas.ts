@@ -825,6 +825,134 @@ export interface ScanSubmission {
   photoData?: string;
 }
 
+export interface OccupantInput {
+  /**
+     * @minLength 1
+     * @maxLength 200
+     */
+  cardholderName: string;
+  /**
+     * @maxLength 100
+     * @nullable
+     */
+  cardNumber?: string | null;
+  /**
+     * @maxLength 200
+     * @nullable
+     */
+  department?: string | null;
+  /**
+     * Last door/reader the cardholder was seen at
+     * @maxLength 200
+     * @nullable
+     */
+  location?: string | null;
+  /**
+     * When they entered / were last seen, per the access system
+     * @nullable
+     */
+  sinceAt?: string | null;
+}
+
+export type AccessEventInputDirection = typeof AccessEventInputDirection[keyof typeof AccessEventInputDirection];
+
+
+export const AccessEventInputDirection = {
+  in: 'in',
+  out: 'out',
+  unknown: 'unknown',
+} as const;
+
+export interface AccessEventInput {
+  /**
+     * Unique event id from the source system (dedupe key)
+     * @minLength 1
+     * @maxLength 200
+     */
+  externalId: string;
+  /**
+     * @minLength 1
+     * @maxLength 200
+     */
+  cardholderName: string;
+  /**
+     * @maxLength 100
+     * @nullable
+     */
+  cardNumber?: string | null;
+  /**
+     * @minLength 1
+     * @maxLength 200
+     */
+  door: string;
+  direction?: AccessEventInputDirection;
+  occurredAt: string;
+}
+
+export interface OccupancyIngest {
+  /**
+     * Full snapshot of everyone currently in the building (replaces the previous snapshot)
+     * @maxItems 5000
+     */
+  occupants: OccupantInput[];
+  /**
+     * Door events since the last push (deduped by externalId)
+     * @maxItems 1000
+     */
+  events?: AccessEventInput[];
+}
+
+export interface OccupancyIngestResult {
+  occupants: number;
+  eventsAdded: number;
+}
+
+export interface Occupant {
+  id: number;
+  cardholderName: string;
+  /** @nullable */
+  cardNumber?: string | null;
+  /** @nullable */
+  department?: string | null;
+  /** @nullable */
+  location?: string | null;
+  /** @nullable */
+  sinceAt?: string | null;
+}
+
+export interface OccupancyResponse {
+  occupants: Occupant[];
+  /**
+     * When the bridge last pushed a snapshot (null = never)
+     * @nullable
+     */
+  lastSyncAt: string | null;
+}
+
+export type AccessEventRecordDirection = typeof AccessEventRecordDirection[keyof typeof AccessEventRecordDirection];
+
+
+export const AccessEventRecordDirection = {
+  in: 'in',
+  out: 'out',
+  unknown: 'unknown',
+} as const;
+
+export interface AccessEventRecord {
+  id: number;
+  externalId: string;
+  cardholderName: string;
+  /** @nullable */
+  cardNumber?: string | null;
+  door: string;
+  direction: AccessEventRecordDirection;
+  occurredAt: string;
+}
+
+export interface AccessEventsResponse {
+  items: AccessEventRecord[];
+}
+
 export type ListGuestsParams = {
 /**
  * Filter by status
@@ -1013,4 +1141,12 @@ export const GetProductionsRange = {
   week: 'week',
   month: 'month',
 } as const;
+
+export type ListAccessEventsParams = {
+/**
+ * @minimum 1
+ * @maximum 200
+ */
+limit?: number;
+};
 

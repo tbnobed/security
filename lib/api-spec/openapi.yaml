@@ -27,6 +27,8 @@ tags:
     description: Studio location management
   - name: alerts
     description: Email alert recipient configuration
+  - name: occupancy
+    description: Building occupancy from the external access-control bridge
 
 paths:
   /healthz:
@@ -1492,6 +1494,65 @@ paths:
               schema:
                 $ref: "#/components/schemas/PhotoResult"
 
+  # NOTE: authenticated by the MAXXESS_BRIDGE_TOKEN bearer token, not a session.
+  /integrations/occupancy:
+    post:
+      operationId: ingestOccupancy
+      tags: [occupancy]
+      summary: Bridge push of building occupancy snapshot + door events (bearer token auth)
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/OccupancyIngest"
+      responses:
+        "200":
+          description: Snapshot stored
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OccupancyIngestResult"
+        "401":
+          description: Missing or invalid bridge token
+        "503":
+          description: Bridge ingest not configured (MAXXESS_BRIDGE_TOKEN unset)
+
+  /occupancy:
+    get:
+      operationId: getOccupancy
+      tags: [occupancy]
+      summary: Current building occupancy from the access-control bridge
+      responses:
+        "200":
+          description: Occupancy snapshot
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OccupancyResponse"
+
+  /occupancy/events:
+    get:
+      operationId: listAccessEvents
+      tags: [occupancy]
+      summary: Recent door entry/exit events from the access-control bridge
+      parameters:
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 200
+      responses:
+        "200":
+          description: Recent events, newest first
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AccessEventsResponse"
+
 components:
   schemas:
     HealthStatus:
@@ -2684,3 +2745,159 @@ components:
         photoData:
           type: string
           description: Base64-encoded JPEG (no data-URL prefix) of the live guest photo
+
+    OccupantInput:
+      type: object
+      required:
+        - cardholderName
+      properties:
+        cardholderName:
+          type: string
+          minLength: 1
+          maxLength: 200
+        cardNumber:
+          type: ["string", "null"]
+          maxLength: 100
+        department:
+          type: ["string", "null"]
+          maxLength: 200
+        location:
+          type: ["string", "null"]
+          maxLength: 200
+          description: Last door/reader the cardholder was seen at
+        sinceAt:
+          type: ["string", "null"]
+          format: date-time
+          description: When they entered / were last seen, per the access system
+
+    AccessEventInput:
+      type: object
+      required:
+        - externalId
+        - cardholderName
+        - door
+        - occurredAt
+      properties:
+        externalId:
+          type: string
+          minLength: 1
+          maxLength: 200
+          description: Unique event id from the source system (dedupe key)
+        cardholderName:
+          type: string
+          minLength: 1
+          maxLength: 200
+        cardNumber:
+          type: ["string", "null"]
+          maxLength: 100
+        door:
+          type: string
+          minLength: 1
+          maxLength: 200
+        direction:
+          type: string
+          enum: [in, out, unknown]
+        occurredAt:
+          type: string
+          format: date-time
+
+    OccupancyIngest:
+      type: object
+      required:
+        - occupants
+      properties:
+        occupants:
+          type: array
+          maxItems: 5000
+          items:
+            $ref: "#/components/schemas/OccupantInput"
+          description: Full snapshot of everyone currently in the building (replaces the previous snapshot)
+        events:
+          type: array
+          maxItems: 1000
+          items:
+            $ref: "#/components/schemas/AccessEventInput"
+          description: Door events since the last push (deduped by externalId)
+
+    OccupancyIngestResult:
+      type: object
+      required:
+        - occupants
+        - eventsAdded
+      properties:
+        occupants:
+          type: integer
+        eventsAdded:
+          type: integer
+
+    Occupant:
+      type: object
+      required:
+        - id
+        - cardholderName
+      properties:
+        id:
+          type: integer
+        cardholderName:
+          type: string
+        cardNumber:
+          type: ["string", "null"]
+        department:
+          type: ["string", "null"]
+        location:
+          type: ["string", "null"]
+        sinceAt:
+          type: ["string", "null"]
+          format: date-time
+
+    OccupancyResponse:
+      type: object
+      required:
+        - occupants
+        - lastSyncAt
+      properties:
+        occupants:
+          type: array
+          items:
+            $ref: "#/components/schemas/Occupant"
+        lastSyncAt:
+          type: ["string", "null"]
+          format: date-time
+          description: When the bridge last pushed a snapshot (null = never)
+
+    AccessEventRecord:
+      type: object
+      required:
+        - id
+        - externalId
+        - cardholderName
+        - door
+        - direction
+        - occurredAt
+      properties:
+        id:
+          type: integer
+        externalId:
+          type: string
+        cardholderName:
+          type: string
+        cardNumber:
+          type: ["string", "null"]
+        door:
+          type: string
+        direction:
+          type: string
+          enum: [in, out, unknown]
+        occurredAt:
+          type: string
+          format: date-time
+
+    AccessEventsResponse:
+      type: object
+      required:
+        - items
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/AccessEventRecord"

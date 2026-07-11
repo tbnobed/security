@@ -10,3 +10,4 @@ export * from "./known-guests";
 export * from "./client-companies";
 export * from "./client-employees";
 export * from "./settings";
+export * from "./occupancy";

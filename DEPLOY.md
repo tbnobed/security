@@ -67,6 +67,11 @@ Optional:
   timestamps and "today" windows (kiosk search, Productions Today, client
   portal). Defaults to `UTC`. The web UI always shows times in each viewer's
   own browser timezone.
+- `MAXXESS_BRIDGE_TOKEN` — shared secret that lets the Maxxess access-control
+  bridge (`bridge/maxxess-bridge/`, runs on the LAN next to the eFusion
+  server) push building occupancy + door events into FrontDesk. Generate with
+  `openssl rand -hex 32` and use the same value in the bridge's `.env`. Leave
+  blank to disable the Building page's data feed.
 - `HTTP_PORT` — host port to publish (default `80`).
 - `SESSION_COOKIE_SECURE` — see the HTTPS note below.
 

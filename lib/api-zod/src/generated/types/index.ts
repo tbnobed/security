@@ -6,6 +6,11 @@
  * OpenAPI spec version: 0.1.0
  */
 
+export * from './accessEventInput';
+export * from './accessEventInputDirection';
+export * from './accessEventRecord';
+export * from './accessEventRecordDirection';
+export * from './accessEventsResponse';
 export * from './activityEvent';
 export * from './alertEventType';
 export * from './alertRecipient';
@@ -58,6 +63,7 @@ export * from './kioskPreregistration';
 export * from './knownGuest';
 export * from './knownGuestList';
 export * from './knownGuestUpdate';
+export * from './listAccessEventsParams';
 export * from './listAuditLogParams';
 export * from './listGuestHistoryParams';
 export * from './listGuestHistorySortBy';
@@ -70,6 +76,11 @@ export * from './listPreregistrationsParams';
 export * from './listPreregistrationsRange';
 export * from './listRosterEmployeesParams';
 export * from './loginInput';
+export * from './occupancyIngest';
+export * from './occupancyIngestResult';
+export * from './occupancyResponse';
+export * from './occupant';
+export * from './occupantInput';
 export * from './pendingApproval';
 export * from './photoResult';
 export * from './photoUpload';

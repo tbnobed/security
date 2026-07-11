@@ -21,3 +21,8 @@ timeoutMs = 20000
 
 [nix]
 channel = "stable-25_05"
+
+[userenv]
+
+[userenv.development]
+MAXXESS_BRIDGE_TOKEN = "dev-bridge-token-8f3a1c"

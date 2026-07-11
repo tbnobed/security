@@ -19,6 +19,7 @@ import BrandingPage from "@/pages/branding";
 import KnownGuestsPage from "@/pages/known-guests";
 import VisitLogPage from "@/pages/visit-log";
 import EvacuationPage from "@/pages/evacuation";
+import BuildingPage from "@/pages/building";
 import Preregister from "@/pages/preregister";
 import ApprovalsPage from "@/pages/approvals";
 import ApprovalDecisionPage from "@/pages/approval-decision";
@@ -100,6 +101,9 @@ function AppRoutes() {
         </Route>
         <Route path="/evacuation">
           <ProtectedRoute component={EvacuationPage} />
+        </Route>
+        <Route path="/building">
+          <ProtectedRoute component={BuildingPage} />
         </Route>
         <Route path="/checkout">
           <ProtectedRoute component={CheckOut} />

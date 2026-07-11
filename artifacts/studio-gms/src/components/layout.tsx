@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useLocation } from "wouter";
-import { LayoutDashboard, UserPlus, LogOut, FileText, ClipboardList, CheckSquare, ShieldAlert, Users, Building2, Bell, BookUser, History, ImageIcon, Menu, LogOut as LogOutIcon, Siren } from "lucide-react";
+import { LayoutDashboard, UserPlus, LogOut, FileText, ClipboardList, CheckSquare, ShieldAlert, Users, Building2, Bell, BookUser, History, ImageIcon, Menu, LogOut as LogOutIcon, Siren, DoorOpen } from "lucide-react";
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { useAuth } from "@/lib/auth";
 
@@ -31,6 +31,7 @@ export function Layout({ children }: LayoutProps) {
     { href: "/approvals", label: "Approvals", icon: CheckSquare },
     { href: "/known-guests", label: "Known Guests", icon: BookUser },
     { href: "/visits", label: "Visit Log", icon: History },
+    { href: "/building", label: "Building", icon: DoorOpen },
     { href: "/evacuation", label: "Evacuation", icon: Siren },
   ];
 

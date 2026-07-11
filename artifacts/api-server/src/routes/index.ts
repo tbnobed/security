@@ -17,6 +17,7 @@ import clientRouter from "./client";
 import settingsRouter from "./settings";
 import scanSessionsRouter from "./scan-sessions";
 import approvalsRouter from "./approvals";
+import occupancyRouter from "./occupancy";
 
 const router: IRouter = Router();
 
@@ -38,5 +39,6 @@ router.use(clientRouter);
 router.use(settingsRouter);
 router.use(scanSessionsRouter);
 router.use(approvalsRouter);
+router.use(occupancyRouter);
 
 export default router;

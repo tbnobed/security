@@ -20,6 +20,7 @@ import type {
 } from '@tanstack/react-query';
 
 import type {
+  AccessEventsResponse,
   ActivityEvent,
   AlertRecipient,
   AlertRecipientInput,
@@ -60,6 +61,7 @@ import type {
   KnownGuest,
   KnownGuestList,
   KnownGuestUpdate,
+  ListAccessEventsParams,
   ListAuditLogParams,
   ListGuestHistoryParams,
   ListGuestsParams,
@@ -67,6 +69,9 @@ import type {
   ListPreregistrationsParams,
   ListRosterEmployeesParams,
   LoginInput,
+  OccupancyIngest,
+  OccupancyIngestResult,
+  OccupancyResponse,
   PendingApproval,
   PhotoResult,
   PhotoUpload,
@@ -5488,4 +5493,235 @@ export const useUploadPhoto = <TError = ErrorType<unknown>,
       > => {
       return useMutation(getUploadPhotoMutationOptions(options));
     }
+
+export const getIngestOccupancyUrl = () => {
+
+
+
+
+  return `/api/integrations/occupancy`
+}
+
+/**
+ * @summary Bridge push of building occupancy snapshot + door events (bearer token auth)
+ */
+export const ingestOccupancy = async (occupancyIngest: OccupancyIngest, options?: RequestInit): Promise<OccupancyIngestResult> => {
+
+  return customFetch<OccupancyIngestResult>(getIngestOccupancyUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(occupancyIngest)
+  }
+);}
+
+
+
+
+export const getIngestOccupancyMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof ingestOccupancy>>, TError,{data: BodyType<OccupancyIngest>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof ingestOccupancy>>, TError,{data: BodyType<OccupancyIngest>}, TContext> => {
+
+const mutationKey = ['ingestOccupancy'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof ingestOccupancy>>, {data: BodyType<OccupancyIngest>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  ingestOccupancy(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type IngestOccupancyMutationResult = NonNullable<Awaited<ReturnType<typeof ingestOccupancy>>>
+    export type IngestOccupancyMutationBody = BodyType<OccupancyIngest>
+    export type IngestOccupancyMutationError = ErrorType<void>
+
+    /**
+ * @summary Bridge push of building occupancy snapshot + door events (bearer token auth)
+ */
+export const useIngestOccupancy = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof ingestOccupancy>>, TError,{data: BodyType<OccupancyIngest>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof ingestOccupancy>>,
+        TError,
+        {data: BodyType<OccupancyIngest>},
+        TContext
+      > => {
+      return useMutation(getIngestOccupancyMutationOptions(options));
+    }
+
+export const getGetOccupancyUrl = () => {
+
+
+
+
+  return `/api/occupancy`
+}
+
+/**
+ * @summary Current building occupancy from the access-control bridge
+ */
+export const getOccupancy = async ( options?: RequestInit): Promise<OccupancyResponse> => {
+
+  return customFetch<OccupancyResponse>(getGetOccupancyUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetOccupancyQueryKey = () => {
+    return [
+    `/api/occupancy`
+    ] as const;
+    }
+
+
+export const getGetOccupancyQueryOptions = <TData = Awaited<ReturnType<typeof getOccupancy>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getOccupancy>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetOccupancyQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getOccupancy>>> = ({ signal }) => getOccupancy({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getOccupancy>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetOccupancyQueryResult = NonNullable<Awaited<ReturnType<typeof getOccupancy>>>
+export type GetOccupancyQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Current building occupancy from the access-control bridge
+ */
+
+export function useGetOccupancy<TData = Awaited<ReturnType<typeof getOccupancy>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getOccupancy>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetOccupancyQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getListAccessEventsUrl = (params?: ListAccessEventsParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/occupancy/events?${stringifiedParams}` : `/api/occupancy/events`
+}
+
+/**
+ * @summary Recent door entry/exit events from the access-control bridge
+ */
+export const listAccessEvents = async (params?: ListAccessEventsParams, options?: RequestInit): Promise<AccessEventsResponse> => {
+
+  return customFetch<AccessEventsResponse>(getListAccessEventsUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListAccessEventsQueryKey = (params?: ListAccessEventsParams,) => {
+    return [
+    `/api/occupancy/events`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getListAccessEventsQueryOptions = <TData = Awaited<ReturnType<typeof listAccessEvents>>, TError = ErrorType<unknown>>(params?: ListAccessEventsParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listAccessEvents>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListAccessEventsQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listAccessEvents>>> = ({ signal }) => listAccessEvents(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listAccessEvents>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListAccessEventsQueryResult = NonNullable<Awaited<ReturnType<typeof listAccessEvents>>>
+export type ListAccessEventsQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Recent door entry/exit events from the access-control bridge
+ */
+
+export function useListAccessEvents<TData = Awaited<ReturnType<typeof listAccessEvents>>, TError = ErrorType<unknown>>(
+ params?: ListAccessEventsParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listAccessEvents>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListAccessEventsQueryOptions(params,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
 

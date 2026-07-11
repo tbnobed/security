@@ -57,6 +57,9 @@ services:
       APP_BASE_URL: ${APP_BASE_URL:-}
       # Optional external bookings API for the "Productions Today" panel.
       BOOKINGS_API_URL: ${BOOKINGS_API_URL:-https://plex.bookstud.io/api/public/bookings}
+      # Optional shared secret for the Maxxess access-control bridge
+      # (bridge/maxxess-bridge/). Leave blank to disable occupancy ingest.
+      MAXXESS_BRIDGE_TOKEN: ${MAXXESS_BRIDGE_TOKEN:-}
     volumes:
       - uploads:/app/artifacts/api-server/uploads
     depends_on:
