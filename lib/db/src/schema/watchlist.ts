@@ -9,6 +9,7 @@ export const watchlistTable = pgTable("watchlist", {
   reason: text("reason").notNull(),
   action: text("action").notNull().default("flag"),
   addedByClerkId: text("added_by_clerk_id"),
+  photoUrl: text("photo_url"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 

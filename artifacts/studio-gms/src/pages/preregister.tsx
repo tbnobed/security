@@ -19,7 +19,7 @@ export default function Preregister() {
   const [error, setError] = useState<string | null>(null);
   const [form, setForm] = useState({
     guestName: "", company: "", phone: "", email: "",
-    hostName: "", purposeOfVisit: "",
+    hostName: "", hostEmail: "", purposeOfVisit: "",
     expectedArrival: "", expectedDeparture: "",
   });
   const [studios, setStudios] = useState<string[]>([]);
@@ -46,6 +46,7 @@ export default function Preregister() {
           phone: form.phone || undefined,
           email: form.email || undefined,
           hostName: form.hostName,
+          hostEmail: form.hostEmail.trim() || undefined,
           purposeOfVisit: form.purposeOfVisit || undefined,
           site: SITE_NAME,
           expectedArrival: new Date(form.expectedArrival).toISOString(),
@@ -75,7 +76,7 @@ export default function Preregister() {
           <Button
             onClick={() => {
               setSubmitted(false);
-              setForm({ guestName: "", company: "", phone: "", email: "", hostName: "", purposeOfVisit: "", expectedArrival: "", expectedDeparture: "" });
+              setForm({ guestName: "", company: "", phone: "", email: "", hostName: "", hostEmail: "", purposeOfVisit: "", expectedArrival: "", expectedDeparture: "" });
               setStudios([]);
             }}
           >
@@ -128,6 +129,10 @@ export default function Preregister() {
             <div>
               <Label htmlFor="hostName">Who are you visiting? *</Label>
               <Input id="hostName" className="mt-1" value={form.hostName} onChange={(e) => setForm((f) => ({ ...f, hostName: e.target.value }))} placeholder="Host / employee name" required />
+            </div>
+            <div>
+              <Label htmlFor="hostEmail">Host email (if known)</Label>
+              <Input id="hostEmail" type="email" className="mt-1" value={form.hostEmail} onChange={(e) => setForm((f) => ({ ...f, hostEmail: e.target.value }))} placeholder="They'll be emailed when you arrive" data-testid="input-host-email" />
             </div>
             <div>
               <Label htmlFor="phone">Phone</Label>

@@ -1,4 +1,4 @@
-import { pgTable, text, serial, timestamp, integer, boolean } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, timestamp, integer, boolean, uniqueIndex } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
@@ -10,6 +10,7 @@ export const preregistrationsTable = pgTable("preregistrations", {
   phone: text("phone"),
   email: text("email"),
   hostName: text("host_name").notNull(),
+  hostEmail: text("host_email"),
   purposeOfVisit: text("purpose_of_visit"),
   site: text("site").notNull(),
   expectedArrival: timestamp("expected_arrival", { withTimezone: true }).notNull(),
@@ -24,6 +25,8 @@ export const preregistrationsTable = pgTable("preregistrations", {
   clientUserId: text("client_user_id"),
   clientEmployeeId: integer("client_employee_id"),
   convertedGuestId: integer("converted_guest_id"),
+  // Unique fast-track code for QR check-in at the desk (e.g. "FT-A1B2C3").
+  fastTrackCode: text("fast_track_code"),
   studios: text("studios").array().notNull().default(sql`'{}'::text[]`),
   // Approval workflow. "approved" (default — bypass when no workflow configured),
   // "pending" (awaiting the stage-N approver), or "denied". Approvers are
@@ -41,7 +44,12 @@ export const preregistrationsTable = pgTable("preregistrations", {
   // Registered less than the pre-approval threshold (4h) before expected arrival.
   lateRegistration: boolean("late_registration").notNull().default(false),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
-});
+}, (table) => [
+  // A colliding fast-track code could resolve a scan to the wrong guest —
+  // enforce uniqueness at the DB level (NULLs are distinct, so rows without
+  // a code are unaffected). Inserts retry with a fresh code on violation.
+  uniqueIndex("preregistrations_fast_track_code_unique").on(table.fastTrackCode),
+]);
 
 export const insertPreregistrationSchema = createInsertSchema(preregistrationsTable).omit({
   id: true,

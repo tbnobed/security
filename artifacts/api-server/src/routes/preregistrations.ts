@@ -9,15 +9,17 @@ import {
   ConvertPreregistrationBody,
   CreatePublicPreregistrationBody,
   ListPreregistrationsResponse,
+  LookupFastTrackResponse,
   CreatePreregistrationResponse,
   ConvertPreregistrationResponse,
   CreatePublicPreregistrationResponse,
 } from "@workspace/api-zod";
 import { requireOperator } from "../lib/auth";
 import { generateBadgeId } from "../lib/badge";
+import { sendFastTrackEmail, insertPreregWithFastTrackCode } from "../lib/fast-track";
 import { getSessionUserId } from "../lib/auth";
 import { usersTable } from "@workspace/db";
-import { sendVisitorAlert, sendClientCheckinNotification } from "../lib/alerts";
+import { sendVisitorAlert, sendClientCheckinNotification, sendHostArrivalNotification } from "../lib/alerts";
 import { upsertKnownGuest } from "../lib/known-guests";
 import { getWorkflowConfig, buildApprovalFields, notifyStageApprover } from "../lib/approvals";
 
@@ -85,29 +87,29 @@ router.post("/preregistrations", requireOperator, async (req, res): Promise<void
   const expectedArrival = new Date(parsed.data.expectedArrival);
   const workflow = await getWorkflowConfig();
 
-  const [preg] = await db
-    .insert(preregistrationsTable)
-    .values({
-      guestName: parsed.data.guestName,
-      company: parsed.data.company ?? "",
-      phone: parsed.data.phone ?? null,
-      email: parsed.data.email ?? null,
-      hostName: parsed.data.hostName,
-      purposeOfVisit: parsed.data.purposeOfVisit ?? null,
-      site: parsed.data.site,
-      expectedArrival,
-      expectedDeparture: parsed.data.expectedDeparture
-        ? new Date(parsed.data.expectedDeparture)
-        : null,
-      studios: parsed.data.studios ?? [],
-      createdByClerkId: clerkId,
-      status: "pending",
-      ...buildApprovalFields(expectedArrival, workflow),
-    })
-    .returning();
+  const preg = await insertPreregWithFastTrackCode({
+    guestName: parsed.data.guestName,
+    company: parsed.data.company ?? "",
+    phone: parsed.data.phone ?? null,
+    email: parsed.data.email ?? null,
+    hostName: parsed.data.hostName,
+    hostEmail: parsed.data.hostEmail?.trim() || null,
+    purposeOfVisit: parsed.data.purposeOfVisit ?? null,
+    site: parsed.data.site,
+    expectedArrival,
+    expectedDeparture: parsed.data.expectedDeparture
+      ? new Date(parsed.data.expectedDeparture)
+      : null,
+    studios: parsed.data.studios ?? [],
+    createdByClerkId: clerkId,
+    status: "pending",
+    ...buildApprovalFields(expectedArrival, workflow),
+  });
 
   if (preg.approvalStatus === "pending") {
     void notifyStageApprover(preg, 1);
+  } else {
+    void sendFastTrackEmail(preg);
   }
 
   const operatorName = await getOperatorName(clerkId);
@@ -133,6 +135,39 @@ router.post("/preregistrations", requireOperator, async (req, res): Promise<void
   });
 
   res.status(201).json(CreatePreregistrationResponse.parse(toPreregResponse(preg)));
+});
+
+// Fast-track lookup: resolve a scanned/typed QR code to its pre-registration.
+// Registered before /preregistrations/:id (two path segments, no conflict, but
+// keep the more specific route first for clarity).
+router.get("/preregistrations/fasttrack/:code", requireOperator, async (req, res): Promise<void> => {
+  const code = String(req.params.code ?? "").trim().toUpperCase();
+  if (!code) {
+    res.status(404).json({ error: "Unknown fast-track code" });
+    return;
+  }
+
+  const [preg] = await db
+    .select()
+    .from(preregistrationsTable)
+    .where(eq(preregistrationsTable.fastTrackCode, code));
+
+  if (!preg || preg.status !== "pending") {
+    // Unknown code, or already converted/expired — nothing to check in.
+    res.status(404).json({ error: "Unknown fast-track code" });
+    return;
+  }
+  if (preg.approvalStatus !== "approved") {
+    res.status(409).json({
+      error:
+        preg.approvalStatus === "denied"
+          ? "This pre-registration was denied"
+          : "This pre-registration is still pending approval",
+    });
+    return;
+  }
+
+  res.json(LookupFastTrackResponse.parse(toPreregResponse(preg)));
 });
 
 router.delete("/preregistrations/:id", requireOperator, async (req, res): Promise<void> => {
@@ -190,6 +225,7 @@ router.post("/preregistrations/:id/convert", requireOperator, async (req, res): 
       phone: preg.phone ?? null,
       email: preg.email ?? null,
       hostName: preg.hostName,
+      hostEmail: preg.hostEmail ?? null,
       purposeOfVisit: preg.purposeOfVisit ?? "Pre-registered visit",
       site: preg.site,
       studios: preg.studios,
@@ -235,6 +271,17 @@ router.post("/preregistrations/:id/convert", requireOperator, async (req, res): 
     phone: guest.phone,
     email: guest.email,
     photoUrl: guest.photoUrl,
+  });
+
+  void sendHostArrivalNotification(guest.hostEmail, {
+    guestName: guest.name,
+    company: guest.company,
+    hostName: guest.hostName,
+    purposeOfVisit: guest.purposeOfVisit,
+    site: guest.site,
+    studios: guest.studios,
+    badgeId: guest.badgeId,
+    checkinAt: guest.checkinAt.toISOString(),
   });
 
   if (preg.clientUserId) {
@@ -285,29 +332,29 @@ router.post("/public/preregistrations", async (req, res): Promise<void> => {
   const expectedArrival = new Date(parsed.data.expectedArrival);
   const workflow = await getWorkflowConfig();
 
-  const [preg] = await db
-    .insert(preregistrationsTable)
-    .values({
-      guestName: parsed.data.guestName,
-      company: parsed.data.company ?? "",
-      phone: parsed.data.phone ?? null,
-      email: parsed.data.email ?? null,
-      hostName: parsed.data.hostName,
-      purposeOfVisit: parsed.data.purposeOfVisit ?? null,
-      site: parsed.data.site,
-      expectedArrival,
-      expectedDeparture: parsed.data.expectedDeparture
-        ? new Date(parsed.data.expectedDeparture)
-        : null,
-      studios: parsed.data.studios ?? [],
-      createdByClerkId: null,
-      status: "pending",
-      ...buildApprovalFields(expectedArrival, workflow),
-    })
-    .returning();
+  const preg = await insertPreregWithFastTrackCode({
+    guestName: parsed.data.guestName,
+    company: parsed.data.company ?? "",
+    phone: parsed.data.phone ?? null,
+    email: parsed.data.email ?? null,
+    hostName: parsed.data.hostName,
+    hostEmail: parsed.data.hostEmail?.trim() || null,
+    purposeOfVisit: parsed.data.purposeOfVisit ?? null,
+    site: parsed.data.site,
+    expectedArrival,
+    expectedDeparture: parsed.data.expectedDeparture
+      ? new Date(parsed.data.expectedDeparture)
+      : null,
+    studios: parsed.data.studios ?? [],
+    createdByClerkId: null,
+    status: "pending",
+    ...buildApprovalFields(expectedArrival, workflow),
+  });
 
   if (preg.approvalStatus === "pending") {
     void notifyStageApprover(preg, 1);
+  } else {
+    void sendFastTrackEmail(preg);
   }
 
   await db.insert(auditTable).values({

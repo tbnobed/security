@@ -38,6 +38,8 @@ export interface Guest {
   /** @nullable */
   email?: string | null;
   hostName: string;
+  /** @nullable */
+  hostEmail?: string | null;
   purposeOfVisit: string;
   /** Dallas/The Plex, Tustin, Nashville */
   site: string;
@@ -77,6 +79,7 @@ export interface GuestInput {
   email?: string;
   /** @minLength 1 */
   hostName: string;
+  hostEmail?: string;
   /** @minLength 1 */
   purposeOfVisit: string;
   /** @minLength 1 */
@@ -139,6 +142,8 @@ export interface Preregistration {
   email?: string | null;
   hostName: string;
   /** @nullable */
+  hostEmail?: string | null;
+  /** @nullable */
   purposeOfVisit?: string | null;
   site: string;
   expectedArrival: string;
@@ -158,6 +163,11 @@ export interface Preregistration {
   approvalStage?: number | null;
   /** Registered less than 4 hours before expected arrival */
   lateRegistration?: boolean;
+  /**
+     * Unique code embedded in the guest's fast-track QR email
+     * @nullable
+     */
+  fastTrackCode?: string | null;
 }
 
 export type PendingApproval = Preregistration & ({
@@ -249,6 +259,7 @@ export interface PreregistrationInput {
   email?: string;
   /** @minLength 1 */
   hostName: string;
+  hostEmail?: string;
   purposeOfVisit?: string;
   /** @minLength 1 */
   site: string;
@@ -323,6 +334,8 @@ export interface WatchlistEntry {
   createdAt: string;
   /** @nullable */
   addedByClerkId?: string | null;
+  /** @nullable */
+  photoUrl?: string | null;
 }
 
 export type WatchlistEntryInputAction = typeof WatchlistEntryInputAction[keyof typeof WatchlistEntryInputAction];
@@ -340,6 +353,7 @@ export interface WatchlistEntryInput {
   /** @minLength 1 */
   reason: string;
   action?: WatchlistEntryInputAction;
+  photoUrl?: string;
 }
 
 export interface WatchlistCheckResult {
@@ -721,6 +735,7 @@ export interface PublicPreregistrationInput {
   email?: string;
   /** @minLength 1 */
   hostName: string;
+  hostEmail?: string;
   purposeOfVisit?: string;
   /** @minLength 1 */
   site: string;

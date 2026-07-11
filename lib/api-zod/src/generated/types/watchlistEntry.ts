@@ -17,4 +17,6 @@ export interface WatchlistEntry {
   createdAt: Date;
   /** @nullable */
   addedByClerkId?: string | null;
+  /** @nullable */
+  photoUrl?: string | null;
 }

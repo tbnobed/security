@@ -14,4 +14,5 @@ export interface WatchlistEntryInput {
   /** @minLength 1 */
   reason: string;
   action?: WatchlistEntryInputAction;
+  photoUrl?: string;
 }

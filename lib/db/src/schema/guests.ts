@@ -11,6 +11,7 @@ export const guestsTable = pgTable("guests", {
   phone: text("phone"),
   email: text("email"),
   hostName: text("host_name").notNull(),
+  hostEmail: text("host_email"),
   purposeOfVisit: text("purpose_of_visit").notNull(),
   site: text("site").notNull(),
   status: text("status").notNull().default("active"),

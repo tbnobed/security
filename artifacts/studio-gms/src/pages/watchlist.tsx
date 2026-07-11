@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Layout } from "@/components/layout";
-import { useListWatchlist, useCreateWatchlistEntry, useDeleteWatchlistEntry } from "@workspace/api-client-react";
+import { PhotoCapture } from "@/components/photo-capture";
+import { useListWatchlist, useCreateWatchlistEntry, useDeleteWatchlistEntry, useUploadPhoto } from "@workspace/api-client-react";
 import type { WatchlistEntry } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -18,10 +19,12 @@ export default function Watchlist() {
   const [open, setOpen] = useState(false);
   const [deleting, setDeleting] = useState<number | null>(null);
   const [form, setForm] = useState({ name: "", company: "", reason: "", action: "flag" as "flag" | "block" });
+  const [photo, setPhoto] = useState<string | null>(null);
 
   const { data: entries, isLoading } = useListWatchlist();
   const { mutateAsync: createEntry, isPending: creating } = useCreateWatchlistEntry();
   const { mutateAsync: deleteEntry } = useDeleteWatchlistEntry();
+  const { mutateAsync: uploadPhoto, isPending: uploadingPhoto } = useUploadPhoto();
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -30,18 +33,30 @@ export default function Watchlist() {
       return;
     }
     try {
+      let photoUrl: string | undefined;
+      if (photo) {
+        try {
+          const base64 = photo.split(",")[1];
+          const result = await uploadPhoto({ data: { imageData: base64 } });
+          photoUrl = result.photoUrl;
+        } catch {
+          toast({ title: "Photo upload failed", description: "Continuing without photo.", variant: "destructive" });
+        }
+      }
       await createEntry({
         data: {
           name: form.name,
           company: form.company || undefined,
           reason: form.reason,
           action: form.action,
+          photoUrl,
         },
       });
       queryClient.invalidateQueries({ queryKey: ["/api/watchlist"] });
       toast({ title: "Watchlist entry added", description: `${form.name} — ${form.action}` });
       setOpen(false);
       setForm({ name: "", company: "", reason: "", action: "flag" });
+      setPhoto(null);
     } catch {
       toast({ title: "Failed to add entry", variant: "destructive" });
     }
@@ -102,9 +117,14 @@ export default function Watchlist() {
                     </SelectContent>
                   </Select>
                 </div>
+                <div>
+                  <Label>Photo (optional)</Label>
+                  <p className="text-xs text-muted-foreground mb-1">Helps officers visually confirm a match at check-in.</p>
+                  <PhotoCapture photo={photo} onChange={setPhoto} />
+                </div>
                 <div className="flex gap-3 justify-end">
                   <Button type="button" variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
-                  <Button type="submit" variant="destructive" disabled={creating}>{creating ? "Saving..." : "Add to Watchlist"}</Button>
+                  <Button type="submit" variant="destructive" disabled={creating || uploadingPhoto}>{creating || uploadingPhoto ? "Saving..." : "Add to Watchlist"}</Button>
                 </div>
               </form>
             </DialogContent>
@@ -171,7 +191,18 @@ function WatchlistSection({ title, icon, entries, isLoading, onDelete, deleting,
           <tbody className="divide-y divide-border">
             {entries.map((e) => (
               <tr key={e.id} className="hover:bg-muted/30 transition-colors">
-                <td className="px-4 py-3 font-medium">{e.name}</td>
+                <td className="px-4 py-3 font-medium">
+                  <div className="flex items-center gap-2.5">
+                    {e.photoUrl ? (
+                      <img src={e.photoUrl} alt="" className="w-9 h-9 rounded object-cover shrink-0" data-testid={`img-watchlist-photo-${e.id}`} />
+                    ) : (
+                      <div className="w-9 h-9 rounded bg-muted flex items-center justify-center text-xs font-semibold text-muted-foreground shrink-0">
+                        {e.name.split(/\s+/).map((p) => p.charAt(0)).slice(0, 2).join("").toUpperCase()}
+                      </div>
+                    )}
+                    <span>{e.name}</span>
+                  </div>
+                </td>
                 <td className="px-4 py-3 text-muted-foreground">{e.company ?? "—"}</td>
                 <td className="px-4 py-3 text-muted-foreground">{e.reason}</td>
                 <td className="px-4 py-3 text-muted-foreground">{format(new Date(e.createdAt), "MMM d, yyyy")}</td>

@@ -18,6 +18,8 @@ export interface Guest {
   /** @nullable */
   email?: string | null;
   hostName: string;
+  /** @nullable */
+  hostEmail?: string | null;
   purposeOfVisit: string;
   /** Dallas/The Plex, Tustin, Nashville */
   site: string;

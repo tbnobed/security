@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Layout } from "@/components/layout";
 import {
   useListPreregistrations,
@@ -7,6 +7,8 @@ import {
   useConvertPreregistration,
   useUploadPhoto,
   useListKnownGuests,
+  lookupFastTrack,
+  ApiError,
   type Preregistration,
   type ListPreregistrationsRange,
 } from "@workspace/api-client-react";
@@ -25,12 +27,217 @@ import { PhotoCapture } from "@/components/photo-capture";
 import { VisitorBadge, type VisitorBadgeData } from "@/components/visitor-badge";
 import { printBadge } from "@/lib/print-badge";
 import { BadgeSizeControl } from "@/components/badge-size-control";
-import { AlertTriangle, CalendarClock, LogIn, Plus, Printer, Trash2, UserPlus } from "lucide-react";
+import { AlertTriangle, CalendarClock, LogIn, Plus, Printer, QrCode, Trash2, UserPlus } from "lucide-react";
 import { format } from "date-fns";
 
 type Preg = Preregistration;
 
 const todayStr = () => new Date().toISOString().slice(0, 10);
+
+/**
+ * Fast-track lookup dialog: the officer scans the guest's QR code (camera when
+ * the browser supports QR detection, or a USB scanner / manual typing into the
+ * autofocused input) and the matching pre-registration opens straight in the
+ * existing check-in convert dialog.
+ */
+function FastTrackDialog({
+  open,
+  onOpenChange,
+  onFound,
+}: {
+  open: boolean;
+  onOpenChange: (o: boolean) => void;
+  onFound: (preg: Preg) => void;
+}) {
+  const [code, setCode] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [cameraOn, setCameraOn] = useState(false);
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+  const streamRef = useRef<MediaStream | null>(null);
+  const busyRef = useRef(false);
+  const inputRef = useRef<HTMLInputElement | null>(null);
+
+  const canScan =
+    typeof window !== "undefined" &&
+    "BarcodeDetector" in window &&
+    typeof navigator !== "undefined" &&
+    !!navigator.mediaDevices?.getUserMedia;
+
+  const stopCamera = useCallback(() => {
+    streamRef.current?.getTracks().forEach((t) => t.stop());
+    streamRef.current = null;
+    setCameraOn(false);
+  }, []);
+
+  const submit = useCallback(
+    async (raw: string) => {
+      const trimmed = raw.trim();
+      if (!trimmed || busyRef.current) return;
+      busyRef.current = true;
+      setBusy(true);
+      setError(null);
+      try {
+        const preg = await lookupFastTrack(encodeURIComponent(trimmed));
+        stopCamera();
+        onFound(preg);
+      } catch (err) {
+        if (err instanceof ApiError && err.status === 409) {
+          const data = err.data as { error?: string } | undefined;
+          setError(data?.error ?? "This pre-registration is not cleared for check-in.");
+        } else if (err instanceof ApiError && err.status === 404) {
+          setError("No pending pre-registration matches that code.");
+        } else {
+          setError("Lookup failed. Check the connection and try again.");
+        }
+        inputRef.current?.focus();
+        inputRef.current?.select();
+      } finally {
+        busyRef.current = false;
+        setBusy(false);
+      }
+    },
+    [onFound, stopCamera],
+  );
+
+  // Camera QR scanning via the browser-native BarcodeDetector (when available).
+  useEffect(() => {
+    if (!open || !cameraOn || !canScan) return;
+    let cancelled = false;
+    let timer: ReturnType<typeof setTimeout> | null = null;
+
+    (async () => {
+      try {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const detector = new (window as any).BarcodeDetector({ formats: ["qr_code"] });
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: "environment" },
+          audio: false,
+        });
+        if (cancelled) {
+          stream.getTracks().forEach((t) => t.stop());
+          return;
+        }
+        streamRef.current = stream;
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream;
+          await videoRef.current.play().catch(() => {});
+        }
+        const tick = async () => {
+          if (cancelled || !videoRef.current) return;
+          try {
+            const codes = await detector.detect(videoRef.current);
+            const value = codes?.[0]?.rawValue as string | undefined;
+            if (value && !busyRef.current) {
+              setCode(value);
+              void submit(value);
+            }
+          } catch {
+            // Frame not ready yet — keep polling.
+          }
+          if (!cancelled) timer = setTimeout(tick, 250);
+        };
+        void tick();
+      } catch {
+        if (!cancelled) {
+          setCameraOn(false);
+          setError("Camera unavailable — type or scan the code into the box instead.");
+        }
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+      if (timer) clearTimeout(timer);
+      streamRef.current?.getTracks().forEach((t) => t.stop());
+      streamRef.current = null;
+    };
+  }, [open, cameraOn, canScan, submit]);
+
+  // Reset state whenever the dialog opens/closes.
+  useEffect(() => {
+    if (!open) {
+      stopCamera();
+      setCode("");
+      setError(null);
+      setBusy(false);
+    }
+  }, [open, stopCamera]);
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-md" data-testid="dialog-fast-track">
+        <DialogHeader>
+          <DialogTitle>Fast-Track Check-In</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-4 mt-2">
+          <p className="text-sm text-muted-foreground">
+            Scan the guest's QR code with a handheld scanner, type the code, or use the camera.
+          </p>
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              void submit(code);
+            }}
+            className="flex gap-2"
+          >
+            <Input
+              ref={inputRef}
+              autoFocus
+              value={code}
+              onChange={(e) => {
+                setCode(e.target.value);
+                setError(null);
+              }}
+              placeholder="FT-XXXXXXXX"
+              className="font-mono uppercase"
+              data-testid="input-fast-track-code"
+            />
+            <Button type="submit" disabled={busy || !code.trim()} data-testid="button-fast-track-lookup">
+              {busy ? "Looking up..." : "Look Up"}
+            </Button>
+          </form>
+          {error && (
+            <div
+              className="rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm text-destructive"
+              data-testid="text-fast-track-error"
+            >
+              {error}
+            </div>
+          )}
+          {canScan && !cameraOn && (
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full"
+              onClick={() => {
+                setError(null);
+                setCameraOn(true);
+              }}
+              data-testid="button-fast-track-camera"
+            >
+              <QrCode className="w-4 h-4 mr-2" /> Scan with camera
+            </Button>
+          )}
+          {cameraOn && (
+            <div className="space-y-2">
+              <video
+                ref={videoRef}
+                muted
+                playsInline
+                className="w-full rounded-md border border-border bg-black aspect-video object-cover"
+                data-testid="video-fast-track-camera"
+              />
+              <Button type="button" variant="outline" className="w-full" onClick={stopCamera}>
+                Stop camera
+              </Button>
+            </div>
+          )}
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
 
 export default function Preregistrations() {
   const { toast } = useToast();
@@ -39,6 +246,7 @@ export default function Preregistrations() {
   const [range, setRange] = useState<ListPreregistrationsRange>("day");
   const [open, setOpen] = useState(false);
   const [deleting, setDeleting] = useState<number | null>(null);
+  const [fastTrackOpen, setFastTrackOpen] = useState(false);
 
   // Convert-to-check-in dialog (photo capture + badge)
   const [convertTarget, setConvertTarget] = useState<Preg | null>(null);
@@ -67,7 +275,7 @@ export default function Preregistrations() {
 
   const [form, setForm] = useState({
     guestName: "", company: "", phone: "", email: "",
-    hostName: "", purposeOfVisit: "",
+    hostName: "", hostEmail: "", purposeOfVisit: "",
     expectedArrival: "", expectedDeparture: "",
   });
   const [studios, setStudios] = useState<string[]>([]);
@@ -97,6 +305,7 @@ export default function Preregistrations() {
           phone: form.phone || undefined,
           email: form.email || undefined,
           hostName: form.hostName,
+          hostEmail: form.hostEmail.trim() || undefined,
           purposeOfVisit: form.purposeOfVisit || undefined,
           site: SITE_NAME,
           expectedArrival: form.expectedArrival,
@@ -108,7 +317,7 @@ export default function Preregistrations() {
       queryClient.invalidateQueries({ queryKey: ["/api/dashboard/summary"] });
       toast({ title: "Pre-registration created" });
       setOpen(false);
-      setForm({ guestName: "", company: "", phone: "", email: "", hostName: "", purposeOfVisit: "", expectedArrival: "", expectedDeparture: "" });
+      setForm({ guestName: "", company: "", phone: "", email: "", hostName: "", hostEmail: "", purposeOfVisit: "", expectedArrival: "", expectedDeparture: "" });
       setStudios([]);
     } catch {
       toast({ title: "Failed to create pre-registration", variant: "destructive" });
@@ -196,6 +405,10 @@ export default function Preregistrations() {
             <h2 className="text-2xl font-bold tracking-tight">Pre-Registrations</h2>
             <p className="text-muted-foreground">Expected guests for a given day or week.</p>
           </div>
+          <div className="flex flex-wrap items-center gap-2">
+          <Button variant="outline" onClick={() => setFastTrackOpen(true)} data-testid="button-fast-track">
+            <QrCode className="w-4 h-4 mr-2" /> Fast-Track
+          </Button>
           <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
               <Button><Plus className="w-4 h-4 mr-2" /> Add Pre-Registration</Button>
@@ -217,6 +430,10 @@ export default function Preregistrations() {
                   <div>
                     <Label>Host Name *</Label>
                     <Input className="mt-1" value={form.hostName} onChange={(e) => setForm((f) => ({ ...f, hostName: e.target.value }))} placeholder="Employee name" required />
+                  </div>
+                  <div>
+                    <Label>Host Email</Label>
+                    <Input className="mt-1" type="email" value={form.hostEmail} onChange={(e) => setForm((f) => ({ ...f, hostEmail: e.target.value }))} placeholder="Notify host on arrival (optional)" data-testid="input-host-email" />
                   </div>
                   <div>
                     <Label>Phone</Label>
@@ -272,7 +489,17 @@ export default function Preregistrations() {
               </form>
             </DialogContent>
           </Dialog>
+          </div>
         </div>
+
+        <FastTrackDialog
+          open={fastTrackOpen}
+          onOpenChange={setFastTrackOpen}
+          onFound={(preg) => {
+            setFastTrackOpen(false);
+            openConvert(preg);
+          }}
+        />
 
         <div className="mb-4 flex flex-wrap items-center gap-3">
           <Label className="shrink-0">{range === "week" ? "Week starting" : "Date"}</Label>

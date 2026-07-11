@@ -2,6 +2,7 @@ import { randomUUID } from "crypto";
 import { and, eq, sql } from "drizzle-orm";
 import { db, appSettingsTable, preregistrationsTable, usersTable, auditTable } from "@workspace/db";
 import { isEmailConfigured, sendMail } from "./email";
+import { sendFastTrackEmail } from "./fast-track";
 import { logger } from "./logger";
 import { getPublicOrigin } from "./public-origin";
 
@@ -295,8 +296,15 @@ export async function applyDecision(opts: {
 
   if (result === "advanced") {
     void notifyStageApprover(updated, 2);
+  } else if (result === "approved") {
+    // The fast-track email doubles as the approval notice for the guest.
+    // Client-portal requesters (a different mailbox) still get the plain
+    // outcome notification.
+    const sendsFastTrack = Boolean(updated.email && updated.fastTrackCode);
+    if (sendsFastTrack) void sendFastTrackEmail(updated);
+    if (updated.clientUserId || !sendsFastTrack) void notifyRequester(updated, "approved");
   } else {
-    void notifyRequester(updated, result === "approved" ? "approved" : "denied");
+    void notifyRequester(updated, "denied");
   }
 
   return { result, updated };

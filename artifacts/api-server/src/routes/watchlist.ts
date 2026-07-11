@@ -20,6 +20,7 @@ function toWatchlistResponse(w: typeof watchlistTable.$inferSelect) {
     ...w,
     company: w.company ?? null,
     addedByClerkId: w.addedByClerkId ?? null,
+    photoUrl: w.photoUrl ?? null,
     createdAt: w.createdAt.toISOString(),
   };
 }
@@ -55,6 +56,7 @@ router.post("/watchlist", requireSupervisor, async (req, res): Promise<void> => 
       reason: parsed.data.reason,
       action: parsed.data.action ?? "flag",
       addedByClerkId: clerkId,
+      photoUrl: parsed.data.photoUrl ?? null,
     })
     .returning();
 

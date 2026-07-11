@@ -36,11 +36,20 @@ export function getFromEmail(): string | null {
   return fromEmail ?? null;
 }
 
+export interface MailAttachment {
+  content: string; // base64
+  filename: string;
+  type: string; // MIME type
+  disposition: "inline" | "attachment";
+  contentId?: string; // for inline cid: references
+}
+
 export interface SendMailOptions {
   to: string[];
   subject: string;
   text: string;
   html?: string;
+  attachments?: MailAttachment[];
 }
 
 /**
@@ -63,6 +72,21 @@ export async function sendMail(opts: SendMailOptions): Promise<boolean> {
       subject: opts.subject,
       text: opts.text,
       ...(opts.html ? { html: opts.html } : {}),
+      ...(opts.attachments && opts.attachments.length > 0
+        ? {
+            // SendGrid's v3 API expects snake_case `content_id`; the helper
+            // does not reliably convert camelCase, so send both.
+            attachments: opts.attachments.map((a) => ({
+              content: a.content,
+              filename: a.filename,
+              type: a.type,
+              disposition: a.disposition,
+              ...(a.contentId
+                ? ({ contentId: a.contentId, content_id: a.contentId } as object)
+                : {}),
+            })),
+          }
+        : {}),
     });
     return true;
   } catch (err) {

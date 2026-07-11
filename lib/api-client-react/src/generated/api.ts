@@ -1112,6 +1112,83 @@ export const useCreatePreregistration = <TError = ErrorType<unknown>,
       return useMutation(getCreatePreregistrationMutationOptions(options));
     }
 
+export const getLookupFastTrackUrl = (code: string,) => {
+
+
+
+
+  return `/api/preregistrations/fasttrack/${code}`
+}
+
+/**
+ * @summary Look up a pending pre-registration by its fast-track code
+ */
+export const lookupFastTrack = async (code: string, options?: RequestInit): Promise<Preregistration> => {
+
+  return customFetch<Preregistration>(getLookupFastTrackUrl(code),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getLookupFastTrackQueryKey = (code: string,) => {
+    return [
+    `/api/preregistrations/fasttrack/${code}`
+    ] as const;
+    }
+
+
+export const getLookupFastTrackQueryOptions = <TData = Awaited<ReturnType<typeof lookupFastTrack>>, TError = ErrorType<void>>(code: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof lookupFastTrack>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getLookupFastTrackQueryKey(code);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof lookupFastTrack>>> = ({ signal }) => lookupFastTrack(code, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: code !== null && code !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof lookupFastTrack>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type LookupFastTrackQueryResult = NonNullable<Awaited<ReturnType<typeof lookupFastTrack>>>
+export type LookupFastTrackQueryError = ErrorType<void>
+
+
+/**
+ * @summary Look up a pending pre-registration by its fast-track code
+ */
+
+export function useLookupFastTrack<TData = Awaited<ReturnType<typeof lookupFastTrack>>, TError = ErrorType<void>>(
+ code: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof lookupFastTrack>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getLookupFastTrackQueryOptions(code,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
 export const getDeletePreregistrationUrl = (id: number,) => {
 
 

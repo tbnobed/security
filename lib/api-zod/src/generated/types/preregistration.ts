@@ -18,6 +18,8 @@ export interface Preregistration {
   email?: string | null;
   hostName: string;
   /** @nullable */
+  hostEmail?: string | null;
+  /** @nullable */
   purposeOfVisit?: string | null;
   site: string;
   expectedArrival: Date;
@@ -37,4 +39,9 @@ export interface Preregistration {
   approvalStage?: number | null;
   /** Registered less than 4 hours before expected arrival */
   lateRegistration?: boolean;
+  /**
+     * Unique code embedded in the guest's fast-track QR email
+     * @nullable
+     */
+  fastTrackCode?: string | null;
 }

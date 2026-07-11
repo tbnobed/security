@@ -22,7 +22,9 @@ import {
   CalendarClock,
   Clapperboard,
   Printer,
+  Siren,
 } from "lucide-react";
+import { Link } from "wouter";
 import { format } from "date-fns";
 
 export default function Dashboard() {
@@ -101,7 +103,19 @@ export default function Dashboard() {
             <h2 className="text-2xl font-bold tracking-tight">Active Visitor Dashboard</h2>
             <p className="text-muted-foreground">Live overview of studio operations.</p>
           </div>
-          <BadgeSizeControl />
+          <div className="flex items-center gap-2">
+            <Link href="/evacuation">
+              <Button
+                variant="outline"
+                className="border-destructive/50 text-destructive hover:bg-destructive/10 hover:text-destructive"
+                data-testid="button-evacuation-roster"
+              >
+                <Siren className="w-4 h-4 mr-2" />
+                Evacuation Roster
+              </Button>
+            </Link>
+            <BadgeSizeControl />
+          </div>
         </div>
 
         <div className="grid grid-cols-2 md:grid-cols-5 gap-3 md:gap-4">

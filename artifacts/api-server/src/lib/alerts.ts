@@ -125,6 +125,38 @@ export async function sendClientCheckinNotification(
 }
 
 /**
+ * Notify the visit host directly that their guest has arrived. Sends to the
+ * hostEmail captured on the check-in / pre-registration. Fire-and-forget safe:
+ * never throws, no-ops when unconfigured or no host email present.
+ */
+export async function sendHostArrivalNotification(
+  hostEmail: string | null | undefined,
+  ctx: AlertContext,
+): Promise<boolean> {
+  try {
+    if (!isEmailConfigured()) return false;
+    const to = hostEmail?.trim();
+    if (!to) return false;
+
+    const { html } = buildBody("checkin", ctx);
+    const subject = `[FrontDesk] Your guest ${ctx.guestName} has arrived`;
+    const intro = `Hi${ctx.hostName ? ` ${ctx.hostName}` : ""}, your guest ${ctx.guestName} has just checked in at the security desk.`;
+    const text = [intro, "", `Guest: ${ctx.guestName}`, ctx.company ? `Company: ${ctx.company}` : null, ctx.badgeId ? `Badge ID: ${ctx.badgeId}` : null, ctx.checkinAt ? `Checked in: ${fmt(ctx.checkinAt)}` : null, "", "— FrontDesk Guest Management"]
+      .filter((l): l is string => l != null)
+      .join("\n");
+    const fullHtml = `<div style="font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;max-width:520px;"><p style="margin:0 0 12px;color:#0f172a;font-size:14px;">${escapeHtml(intro)}</p>${html}</div>`;
+    const ok = await sendMail({ to: [to], subject, text, html: fullHtml });
+    if (ok) {
+      logger.info("Sent host arrival notification");
+    }
+    return ok;
+  } catch (err) {
+    logger.error({ err }, "sendHostArrivalNotification failed");
+    return false;
+  }
+}
+
+/**
  * Send an alert email for a visitor event to every recipient configured for
  * that event type. Fire-and-forget safe: never throws, and no-ops when email
  * is unconfigured or no recipients exist for the event type.

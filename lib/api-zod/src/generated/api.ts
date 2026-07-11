@@ -36,6 +36,7 @@ export const ListGuestsResponseItem = zod.object({
   "phone": zod.string().nullish(),
   "email": zod.string().nullish(),
   "hostName": zod.string(),
+  "hostEmail": zod.string().nullish(),
   "purposeOfVisit": zod.string(),
   "site": zod.string().describe('Dallas\/The Plex, Tustin, Nashville'),
   "status": zod.enum(['active', 'checked_out']),
@@ -71,6 +72,7 @@ export const CreateGuestBody = zod.object({
   "phone": zod.string().optional(),
   "email": zod.string().optional(),
   "hostName": zod.string().min(1),
+  "hostEmail": zod.string().optional(),
   "purposeOfVisit": zod.string().min(1),
   "site": zod.string().min(1),
   "expectedDeparture": zod.coerce.date().optional(),
@@ -87,6 +89,7 @@ export const CreateGuestResponse = zod.object({
   "phone": zod.string().nullish(),
   "email": zod.string().nullish(),
   "hostName": zod.string(),
+  "hostEmail": zod.string().nullish(),
   "purposeOfVisit": zod.string(),
   "site": zod.string().describe('Dallas\/The Plex, Tustin, Nashville'),
   "status": zod.enum(['active', 'checked_out']),
@@ -120,6 +123,7 @@ export const GetGuestResponse = zod.object({
   "phone": zod.string().nullish(),
   "email": zod.string().nullish(),
   "hostName": zod.string(),
+  "hostEmail": zod.string().nullish(),
   "purposeOfVisit": zod.string(),
   "site": zod.string().describe('Dallas\/The Plex, Tustin, Nashville'),
   "status": zod.enum(['active', 'checked_out']),
@@ -165,6 +169,7 @@ export const UpdateGuestResponse = zod.object({
   "phone": zod.string().nullish(),
   "email": zod.string().nullish(),
   "hostName": zod.string(),
+  "hostEmail": zod.string().nullish(),
   "purposeOfVisit": zod.string(),
   "site": zod.string().describe('Dallas\/The Plex, Tustin, Nashville'),
   "status": zod.enum(['active', 'checked_out']),
@@ -198,6 +203,7 @@ export const CheckoutGuestResponse = zod.object({
   "phone": zod.string().nullish(),
   "email": zod.string().nullish(),
   "hostName": zod.string(),
+  "hostEmail": zod.string().nullish(),
   "purposeOfVisit": zod.string(),
   "site": zod.string().describe('Dallas\/The Plex, Tustin, Nashville'),
   "status": zod.enum(['active', 'checked_out']),
@@ -250,6 +256,7 @@ export const MarkBadgePrintedResponse = zod.object({
   "phone": zod.string().nullish(),
   "email": zod.string().nullish(),
   "hostName": zod.string(),
+  "hostEmail": zod.string().nullish(),
   "purposeOfVisit": zod.string(),
   "site": zod.string().describe('Dallas\/The Plex, Tustin, Nashville'),
   "status": zod.enum(['active', 'checked_out']),
@@ -283,6 +290,7 @@ export const SearchGuestsResponseItem = zod.object({
   "phone": zod.string().nullish(),
   "email": zod.string().nullish(),
   "hostName": zod.string(),
+  "hostEmail": zod.string().nullish(),
   "purposeOfVisit": zod.string(),
   "site": zod.string().describe('Dallas\/The Plex, Tustin, Nashville'),
   "status": zod.enum(['active', 'checked_out']),
@@ -336,6 +344,7 @@ export const ListGuestHistoryResponse = zod.object({
   "phone": zod.string().nullish(),
   "email": zod.string().nullish(),
   "hostName": zod.string(),
+  "hostEmail": zod.string().nullish(),
   "purposeOfVisit": zod.string(),
   "site": zod.string().describe('Dallas\/The Plex, Tustin, Nashville'),
   "status": zod.enum(['active', 'checked_out']),
@@ -369,6 +378,7 @@ export const ListOverdueGuestsResponseItem = zod.object({
   "phone": zod.string().nullish(),
   "email": zod.string().nullish(),
   "hostName": zod.string(),
+  "hostEmail": zod.string().nullish(),
   "purposeOfVisit": zod.string(),
   "site": zod.string().describe('Dallas\/The Plex, Tustin, Nashville'),
   "status": zod.enum(['active', 'checked_out']),
@@ -406,6 +416,7 @@ export const ListPreregistrationsResponseItem = zod.object({
   "phone": zod.string().nullish(),
   "email": zod.string().nullish(),
   "hostName": zod.string(),
+  "hostEmail": zod.string().nullish(),
   "purposeOfVisit": zod.string().nullish(),
   "site": zod.string(),
   "expectedArrival": zod.coerce.date(),
@@ -416,7 +427,8 @@ export const ListPreregistrationsResponseItem = zod.object({
   "studios": zod.array(zod.string()).optional(),
   "approvalStatus": zod.enum(['approved', 'pending', 'denied']).optional(),
   "approvalStage": zod.number().nullish().describe('1 or 2 while approvalStatus is pending'),
-  "lateRegistration": zod.boolean().optional().describe('Registered less than 4 hours before expected arrival')
+  "lateRegistration": zod.boolean().optional().describe('Registered less than 4 hours before expected arrival'),
+  "fastTrackCode": zod.string().nullish().describe('Unique code embedded in the guest\'s fast-track QR email')
 })
 export const ListPreregistrationsResponse = zod.array(ListPreregistrationsResponseItem)
 
@@ -435,6 +447,7 @@ export const CreatePreregistrationBody = zod.object({
   "phone": zod.string().optional(),
   "email": zod.string().optional(),
   "hostName": zod.string().min(1),
+  "hostEmail": zod.string().optional(),
   "purposeOfVisit": zod.string().optional(),
   "site": zod.string().min(1),
   "expectedArrival": zod.coerce.date(),
@@ -449,6 +462,7 @@ export const CreatePreregistrationResponse = zod.object({
   "phone": zod.string().nullish(),
   "email": zod.string().nullish(),
   "hostName": zod.string(),
+  "hostEmail": zod.string().nullish(),
   "purposeOfVisit": zod.string().nullish(),
   "site": zod.string(),
   "expectedArrival": zod.coerce.date(),
@@ -459,7 +473,41 @@ export const CreatePreregistrationResponse = zod.object({
   "studios": zod.array(zod.string()).optional(),
   "approvalStatus": zod.enum(['approved', 'pending', 'denied']).optional(),
   "approvalStage": zod.number().nullish().describe('1 or 2 while approvalStatus is pending'),
-  "lateRegistration": zod.boolean().optional().describe('Registered less than 4 hours before expected arrival')
+  "lateRegistration": zod.boolean().optional().describe('Registered less than 4 hours before expected arrival'),
+  "fastTrackCode": zod.string().nullish().describe('Unique code embedded in the guest\'s fast-track QR email')
+})
+
+
+/**
+ * @summary Look up a pending pre-registration by its fast-track code
+ */
+
+
+
+export const LookupFastTrackParams = zod.object({
+  "code": zod.coerce.string().min(1)
+})
+
+export const LookupFastTrackResponse = zod.object({
+  "id": zod.number(),
+  "guestName": zod.string(),
+  "company": zod.string(),
+  "phone": zod.string().nullish(),
+  "email": zod.string().nullish(),
+  "hostName": zod.string(),
+  "hostEmail": zod.string().nullish(),
+  "purposeOfVisit": zod.string().nullish(),
+  "site": zod.string(),
+  "expectedArrival": zod.coerce.date(),
+  "expectedDeparture": zod.coerce.date().nullish(),
+  "status": zod.enum(['pending', 'converted', 'cancelled']),
+  "createdByClerkId": zod.string().nullish(),
+  "convertedGuestId": zod.number().nullish(),
+  "studios": zod.array(zod.string()).optional(),
+  "approvalStatus": zod.enum(['approved', 'pending', 'denied']).optional(),
+  "approvalStage": zod.number().nullish().describe('1 or 2 while approvalStatus is pending'),
+  "lateRegistration": zod.boolean().optional().describe('Registered less than 4 hours before expected arrival'),
+  "fastTrackCode": zod.string().nullish().describe('Unique code embedded in the guest\'s fast-track QR email')
 })
 
 
@@ -492,6 +540,7 @@ export const ConvertPreregistrationResponse = zod.object({
   "phone": zod.string().nullish(),
   "email": zod.string().nullish(),
   "hostName": zod.string(),
+  "hostEmail": zod.string().nullish(),
   "purposeOfVisit": zod.string(),
   "site": zod.string().describe('Dallas\/The Plex, Tustin, Nashville'),
   "status": zod.enum(['active', 'checked_out']),
@@ -524,6 +573,7 @@ export const CreatePublicPreregistrationBody = zod.object({
   "phone": zod.string().optional(),
   "email": zod.string().optional(),
   "hostName": zod.string().min(1),
+  "hostEmail": zod.string().optional(),
   "purposeOfVisit": zod.string().optional(),
   "site": zod.string().min(1),
   "expectedArrival": zod.coerce.date(),
@@ -538,6 +588,7 @@ export const CreatePublicPreregistrationResponse = zod.object({
   "phone": zod.string().nullish(),
   "email": zod.string().nullish(),
   "hostName": zod.string(),
+  "hostEmail": zod.string().nullish(),
   "purposeOfVisit": zod.string().nullish(),
   "site": zod.string(),
   "expectedArrival": zod.coerce.date(),
@@ -548,7 +599,8 @@ export const CreatePublicPreregistrationResponse = zod.object({
   "studios": zod.array(zod.string()).optional(),
   "approvalStatus": zod.enum(['approved', 'pending', 'denied']).optional(),
   "approvalStage": zod.number().nullish().describe('1 or 2 while approvalStatus is pending'),
-  "lateRegistration": zod.boolean().optional().describe('Registered less than 4 hours before expected arrival')
+  "lateRegistration": zod.boolean().optional().describe('Registered less than 4 hours before expected arrival'),
+  "fastTrackCode": zod.string().nullish().describe('Unique code embedded in the guest\'s fast-track QR email')
 })
 
 
@@ -591,6 +643,7 @@ export const ListPendingApprovalsResponseItem = zod.object({
   "phone": zod.string().nullish(),
   "email": zod.string().nullish(),
   "hostName": zod.string(),
+  "hostEmail": zod.string().nullish(),
   "purposeOfVisit": zod.string().nullish(),
   "site": zod.string(),
   "expectedArrival": zod.coerce.date(),
@@ -601,7 +654,8 @@ export const ListPendingApprovalsResponseItem = zod.object({
   "studios": zod.array(zod.string()).optional(),
   "approvalStatus": zod.enum(['approved', 'pending', 'denied']).optional(),
   "approvalStage": zod.number().nullish().describe('1 or 2 while approvalStatus is pending'),
-  "lateRegistration": zod.boolean().optional().describe('Registered less than 4 hours before expected arrival')
+  "lateRegistration": zod.boolean().optional().describe('Registered less than 4 hours before expected arrival'),
+  "fastTrackCode": zod.string().nullish().describe('Unique code embedded in the guest\'s fast-track QR email')
 }).and(zod.object({
   "canDecide": zod.boolean().describe('True when the signed-in user is the current-stage approver'),
   "awaitingApproverName": zod.string().nullable().describe('Display name of the approver this request is currently waiting on')
@@ -619,6 +673,7 @@ export const ListDeniedApprovalsResponseItem = zod.object({
   "phone": zod.string().nullish(),
   "email": zod.string().nullish(),
   "hostName": zod.string(),
+  "hostEmail": zod.string().nullish(),
   "purposeOfVisit": zod.string().nullish(),
   "site": zod.string(),
   "expectedArrival": zod.coerce.date(),
@@ -629,7 +684,8 @@ export const ListDeniedApprovalsResponseItem = zod.object({
   "studios": zod.array(zod.string()).optional(),
   "approvalStatus": zod.enum(['approved', 'pending', 'denied']).optional(),
   "approvalStage": zod.number().nullish().describe('1 or 2 while approvalStatus is pending'),
-  "lateRegistration": zod.boolean().optional().describe('Registered less than 4 hours before expected arrival')
+  "lateRegistration": zod.boolean().optional().describe('Registered less than 4 hours before expected arrival'),
+  "fastTrackCode": zod.string().nullish().describe('Unique code embedded in the guest\'s fast-track QR email')
 }).and(zod.object({
   "deniedByName": zod.string().nullable().describe('Display name of the approver who denied the request'),
   "deniedAt": zod.coerce.date().nullable()
@@ -655,6 +711,7 @@ export const DecideApprovalResponse = zod.object({
   "phone": zod.string().nullish(),
   "email": zod.string().nullish(),
   "hostName": zod.string(),
+  "hostEmail": zod.string().nullish(),
   "purposeOfVisit": zod.string().nullish(),
   "site": zod.string(),
   "expectedArrival": zod.coerce.date(),
@@ -665,7 +722,8 @@ export const DecideApprovalResponse = zod.object({
   "studios": zod.array(zod.string()).optional(),
   "approvalStatus": zod.enum(['approved', 'pending', 'denied']).optional(),
   "approvalStage": zod.number().nullish().describe('1 or 2 while approvalStatus is pending'),
-  "lateRegistration": zod.boolean().optional().describe('Registered less than 4 hours before expected arrival')
+  "lateRegistration": zod.boolean().optional().describe('Registered less than 4 hours before expected arrival'),
+  "fastTrackCode": zod.string().nullish().describe('Unique code embedded in the guest\'s fast-track QR email')
 })
 
 
@@ -814,7 +872,8 @@ export const ListWatchlistResponseItem = zod.object({
   "reason": zod.string(),
   "action": zod.enum(['flag', 'block']).optional(),
   "createdAt": zod.coerce.date(),
-  "addedByClerkId": zod.string().nullish()
+  "addedByClerkId": zod.string().nullish(),
+  "photoUrl": zod.string().nullish()
 })
 export const ListWatchlistResponse = zod.array(ListWatchlistResponseItem)
 
@@ -830,7 +889,8 @@ export const CreateWatchlistEntryBody = zod.object({
   "name": zod.string().min(1),
   "company": zod.string().optional(),
   "reason": zod.string().min(1),
-  "action": zod.enum(['flag', 'block']).optional()
+  "action": zod.enum(['flag', 'block']).optional(),
+  "photoUrl": zod.string().optional()
 })
 
 export const CreateWatchlistEntryResponse = zod.object({
@@ -840,7 +900,8 @@ export const CreateWatchlistEntryResponse = zod.object({
   "reason": zod.string(),
   "action": zod.enum(['flag', 'block']).optional(),
   "createdAt": zod.coerce.date(),
-  "addedByClerkId": zod.string().nullish()
+  "addedByClerkId": zod.string().nullish(),
+  "photoUrl": zod.string().nullish()
 })
 
 
@@ -870,7 +931,8 @@ export const CheckWatchlistResponse = zod.object({
   "reason": zod.string(),
   "action": zod.enum(['flag', 'block']).optional(),
   "createdAt": zod.coerce.date(),
-  "addedByClerkId": zod.string().nullish()
+  "addedByClerkId": zod.string().nullish(),
+  "photoUrl": zod.string().nullish()
 })).optional()
 })
 
@@ -968,6 +1030,7 @@ export const ListKnownGuestVisitsResponseItem = zod.object({
   "phone": zod.string().nullish(),
   "email": zod.string().nullish(),
   "hostName": zod.string(),
+  "hostEmail": zod.string().nullish(),
   "purposeOfVisit": zod.string(),
   "site": zod.string().describe('Dallas\/The Plex, Tustin, Nashville'),
   "status": zod.enum(['active', 'checked_out']),
@@ -1024,6 +1087,7 @@ export const KioskCheckinResponse = zod.object({
   "phone": zod.string().nullish(),
   "email": zod.string().nullish(),
   "hostName": zod.string(),
+  "hostEmail": zod.string().nullish(),
   "purposeOfVisit": zod.string(),
   "site": zod.string().describe('Dallas\/The Plex, Tustin, Nashville'),
   "status": zod.enum(['active', 'checked_out']),
@@ -1201,6 +1265,7 @@ export const ClientBulkPreregisterResponse = zod.object({
   "phone": zod.string().nullish(),
   "email": zod.string().nullish(),
   "hostName": zod.string(),
+  "hostEmail": zod.string().nullish(),
   "purposeOfVisit": zod.string().nullish(),
   "site": zod.string(),
   "expectedArrival": zod.coerce.date(),
@@ -1211,7 +1276,8 @@ export const ClientBulkPreregisterResponse = zod.object({
   "studios": zod.array(zod.string()).optional(),
   "approvalStatus": zod.enum(['approved', 'pending', 'denied']).optional(),
   "approvalStage": zod.number().nullish().describe('1 or 2 while approvalStatus is pending'),
-  "lateRegistration": zod.boolean().optional().describe('Registered less than 4 hours before expected arrival')
+  "lateRegistration": zod.boolean().optional().describe('Registered less than 4 hours before expected arrival'),
+  "fastTrackCode": zod.string().nullish().describe('Unique code embedded in the guest\'s fast-track QR email')
 }))
 })
 

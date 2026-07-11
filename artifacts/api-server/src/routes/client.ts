@@ -25,6 +25,7 @@ import {
   ListClientVisitsTodayResponse,
 } from "@workspace/api-zod";
 import { requireClient } from "../lib/auth";
+import { sendFastTrackEmail, insertPreregsWithFastTrackCodes } from "../lib/fast-track";
 import { sendVisitorAlert } from "../lib/alerts";
 import { getWorkflowConfig, buildApprovalFields, notifyStageApprover } from "../lib/approvals";
 import type { AppUser, ClientCompany } from "@workspace/db";
@@ -424,37 +425,36 @@ router.post("/client/preregistrations/bulk", async (req, res): Promise<void> => 
 
   const workflow = await getWorkflowConfig();
 
-  const created = await db
-    .insert(preregistrationsTable)
-    .values(
-      uniqueIds.map((id) => {
-        const emp = byId.get(id)!;
-        return {
-          // Per-row: approval tokens must be unique per pre-registration.
-          ...buildApprovalFields(expectedArrival, workflow),
-          guestName: emp.name,
-          company: company.name,
-          phone: emp.phone ?? null,
-          email: emp.email ?? null,
-          hostName: parsed.data.hostName,
-          purposeOfVisit: parsed.data.purposeOfVisit ?? null,
-          site: parsed.data.site,
-          expectedArrival,
-          expectedDeparture,
-          studios: parsed.data.studios ?? [],
-          createdByClerkId: client.clerkId,
-          clientCompanyId: company.id,
-          clientUserId: client.clerkId,
-          clientEmployeeId: emp.id,
-          status: "pending" as const,
-        };
-      }),
-    )
-    .returning();
+  const created = await insertPreregsWithFastTrackCodes(
+    uniqueIds.map((id) => {
+      const emp = byId.get(id)!;
+      return {
+        // Per-row: approval tokens must be unique per pre-registration.
+        ...buildApprovalFields(expectedArrival, workflow),
+        guestName: emp.name,
+        company: company.name,
+        phone: emp.phone ?? null,
+        email: emp.email ?? null,
+        hostName: parsed.data.hostName,
+        purposeOfVisit: parsed.data.purposeOfVisit ?? null,
+        site: parsed.data.site,
+        expectedArrival,
+        expectedDeparture,
+        studios: parsed.data.studios ?? [],
+        createdByClerkId: client.clerkId,
+        clientCompanyId: company.id,
+        clientUserId: client.clerkId,
+        clientEmployeeId: emp.id,
+        status: "pending" as const,
+      };
+    }),
+  );
 
   for (const preg of created) {
     if (preg.approvalStatus === "pending") {
       void notifyStageApprover(preg, 1);
+    } else {
+      void sendFastTrackEmail(preg);
     }
   }
 

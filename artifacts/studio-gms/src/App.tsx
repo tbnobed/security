@@ -18,6 +18,7 @@ import AlertsPage from "@/pages/alerts";
 import BrandingPage from "@/pages/branding";
 import KnownGuestsPage from "@/pages/known-guests";
 import VisitLogPage from "@/pages/visit-log";
+import EvacuationPage from "@/pages/evacuation";
 import Preregister from "@/pages/preregister";
 import ApprovalsPage from "@/pages/approvals";
 import ApprovalDecisionPage from "@/pages/approval-decision";
@@ -96,6 +97,9 @@ function AppRoutes() {
         </Route>
         <Route path="/checkin">
           <ProtectedRoute component={CheckIn} />
+        </Route>
+        <Route path="/evacuation">
+          <ProtectedRoute component={EvacuationPage} />
         </Route>
         <Route path="/checkout">
           <ProtectedRoute component={CheckOut} />

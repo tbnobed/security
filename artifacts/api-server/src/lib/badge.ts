@@ -6,6 +6,10 @@ export function generateBadgeId(): string {
   return "GMS-" + randomBytes(3).toString("hex").toUpperCase();
 }
 
+export function generateFastTrackCode(): string {
+  return "FT-" + randomBytes(4).toString("hex").toUpperCase();
+}
+
 export function savePhoto(imageData: string): string {
   const workspaceRoot = process.cwd().endsWith(path.join("artifacts", "api-server"))
     ? path.resolve(process.cwd(), "../..")

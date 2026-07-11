@@ -358,6 +358,30 @@ paths:
               schema:
                 $ref: "#/components/schemas/Preregistration"
 
+  /preregistrations/fasttrack/{code}:
+    get:
+      operationId: lookupFastTrack
+      tags: [preregistrations]
+      summary: Look up a pending pre-registration by its fast-track code
+      parameters:
+        - name: code
+          in: path
+          required: true
+          schema:
+            type: string
+            minLength: 1
+      responses:
+        "200":
+          description: Matching pre-registration (pending + approved)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Preregistration"
+        "404":
+          description: Unknown code, or the pre-registration is not ready for check-in
+        "409":
+          description: Pre-registration exists but is pending approval or was denied
+
   /preregistrations/{id}:
     delete:
       operationId: deletePreregistration
@@ -1505,6 +1529,8 @@ components:
           type: ["string", "null"]
         hostName:
           type: string
+        hostEmail:
+          type: ["string", "null"]
         purposeOfVisit:
           type: string
         site:
@@ -1569,6 +1595,8 @@ components:
         hostName:
           type: string
           minLength: 1
+        hostEmail:
+          type: string
         purposeOfVisit:
           type: string
           minLength: 1
@@ -1662,6 +1690,8 @@ components:
           type: ["string", "null"]
         hostName:
           type: string
+        hostEmail:
+          type: ["string", "null"]
         purposeOfVisit:
           type: ["string", "null"]
         site:
@@ -1692,6 +1722,9 @@ components:
         lateRegistration:
           type: boolean
           description: Registered less than 4 hours before expected arrival
+        fastTrackCode:
+          type: ["string", "null"]
+          description: Unique code embedded in the guest's fast-track QR email
 
     PendingApproval:
       allOf:
@@ -1804,6 +1837,8 @@ components:
         hostName:
           type: string
           minLength: 1
+        hostEmail:
+          type: string
         purposeOfVisit:
           type: string
         site:
@@ -1935,6 +1970,8 @@ components:
           format: date-time
         addedByClerkId:
           type: ["string", "null"]
+        photoUrl:
+          type: ["string", "null"]
 
     WatchlistEntryInput:
       type: object
@@ -1953,6 +1990,8 @@ components:
         action:
           type: string
           enum: [flag, block]
+        photoUrl:
+          type: string
 
     WatchlistCheckResult:
       type: object
@@ -2531,6 +2570,8 @@ components:
         hostName:
           type: string
           minLength: 1
+        hostEmail:
+          type: string
         purposeOfVisit:
           type: string
         site:

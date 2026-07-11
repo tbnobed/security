@@ -14,6 +14,7 @@ export interface PublicPreregistrationInput {
   email?: string;
   /** @minLength 1 */
   hostName: string;
+  hostEmail?: string;
   purposeOfVisit?: string;
   /** @minLength 1 */
   site: string;

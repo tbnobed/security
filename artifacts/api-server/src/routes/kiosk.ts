@@ -15,7 +15,7 @@ import {
 } from "@workspace/api-zod";
 import { requireKioskAccess, getSessionUserId } from "../lib/auth";
 import { generateBadgeId } from "../lib/badge";
-import { sendVisitorAlert, sendClientCheckinNotification } from "../lib/alerts";
+import { sendVisitorAlert, sendClientCheckinNotification, sendHostArrivalNotification } from "../lib/alerts";
 import { upsertKnownGuest } from "../lib/known-guests";
 
 const router = Router();
@@ -144,6 +144,7 @@ router.post("/kiosk/checkin", requireKioskAccess, async (req, res): Promise<void
         phone: preg.phone ?? null,
         email: preg.email ?? null,
         hostName: preg.hostName,
+        hostEmail: preg.hostEmail ?? null,
         purposeOfVisit: preg.purposeOfVisit ?? "Pre-registered visit",
         site: preg.site,
         studios: preg.studios,
@@ -193,6 +194,17 @@ router.post("/kiosk/checkin", requireKioskAccess, async (req, res): Promise<void
     badgeId: guest.badgeId,
     operatorName: "Self check-in (kiosk)",
     expectedDeparture: guest.expectedDeparture?.toISOString() ?? null,
+    checkinAt: guest.checkinAt.toISOString(),
+  });
+
+  void sendHostArrivalNotification(guest.hostEmail, {
+    guestName: guest.name,
+    company: guest.company,
+    hostName: guest.hostName,
+    purposeOfVisit: guest.purposeOfVisit,
+    site: guest.site,
+    studios: guest.studios,
+    badgeId: guest.badgeId,
     checkinAt: guest.checkinAt.toISOString(),
   });
 

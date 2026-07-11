@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useLocation } from "wouter";
-import { LayoutDashboard, UserPlus, LogOut, FileText, ClipboardList, CheckSquare, ShieldAlert, Users, Building2, Bell, BookUser, History, ImageIcon, Menu, LogOut as LogOutIcon } from "lucide-react";
+import { LayoutDashboard, UserPlus, LogOut, FileText, ClipboardList, CheckSquare, ShieldAlert, Users, Building2, Bell, BookUser, History, ImageIcon, Menu, LogOut as LogOutIcon, Siren } from "lucide-react";
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { useAuth } from "@/lib/auth";
 
@@ -31,6 +31,7 @@ export function Layout({ children }: LayoutProps) {
     { href: "/approvals", label: "Approvals", icon: CheckSquare },
     { href: "/known-guests", label: "Known Guests", icon: BookUser },
     { href: "/visits", label: "Visit Log", icon: History },
+    { href: "/evacuation", label: "Evacuation", icon: Siren },
   ];
 
   // Supervisors get watchlist + audit log; admins get everything.
@@ -107,15 +108,15 @@ export function Layout({ children }: LayoutProps) {
   );
 
   return (
-    <div className="flex h-screen bg-background text-foreground overflow-hidden">
+    <div className="flex h-screen bg-background text-foreground overflow-hidden print:block print:h-auto print:overflow-visible">
       {/* Desktop sidebar */}
-      <aside className="hidden md:flex w-64 border-r border-border bg-card flex-col">
+      <aside className="hidden md:flex w-64 border-r border-border bg-card flex-col print:hidden">
         {sidebarContent}
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 flex flex-col overflow-hidden bg-background">
-        <header className="flex items-center justify-between md:justify-end px-4 md:px-6 py-3 border-b border-border shrink-0">
+      <main className="flex-1 flex flex-col overflow-hidden bg-background print:block print:overflow-visible">
+        <header className="flex items-center justify-between md:justify-end px-4 md:px-6 py-3 border-b border-border shrink-0 print:hidden">
           {/* Mobile hamburger */}
           <Sheet open={mobileNavOpen} onOpenChange={setMobileNavOpen}>
             <SheetTrigger asChild>
@@ -133,7 +134,7 @@ export function Layout({ children }: LayoutProps) {
           </Sheet>
           <img src={`${basePath}/frontdesk-wordmark.png`} alt="FrontDesk — Guest Management" className="h-7 md:h-8 w-auto" />
         </header>
-        <div className="flex-1 overflow-y-auto">
+        <div className="flex-1 overflow-y-auto print:overflow-visible">
           {children}
         </div>
       </main>

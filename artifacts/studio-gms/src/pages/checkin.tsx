@@ -26,7 +26,7 @@ export default function CheckIn() {
 
   const [form, setForm] = useState({
     name: "", company: "", phone: "", email: "",
-    hostName: "", purposeOfVisit: "",
+    hostName: "", hostEmail: "", purposeOfVisit: "",
     expectedDeparture: "",
   });
   const [studios, setStudios] = useState<string[]>([]);
@@ -34,7 +34,7 @@ export default function CheckIn() {
   const [photo, setPhoto] = useState<string | null>(null);
   const [photoUrl, setPhotoUrl] = useState<string | null>(null);
   const [badge, setBadge] = useState<VisitorBadgeData | null>(null);
-  const [watchlistWarning, setWatchlistWarning] = useState<string | null>(null);
+  const [watchlistWarning, setWatchlistWarning] = useState<{ kind: "block" | "flag"; text: string; photoUrl: string | null; name: string } | null>(null);
   const [nameCheckTimeout, setNameCheckTimeout] = useState<ReturnType<typeof setTimeout> | null>(null);
   const [suggestOpen, setSuggestOpen] = useState(false);
   const [scanOpen, setScanOpen] = useState(false);
@@ -107,9 +107,9 @@ export default function CheckIn() {
             const blocked = entries.filter((e) => e.action === "block");
             const flagged = entries.filter((e) => e.action === "flag");
             if (blocked.length > 0) {
-              setWatchlistWarning(`⛔ BLOCKED: ${blocked[0].reason}`);
+              setWatchlistWarning({ kind: "block", text: `⛔ BLOCKED: ${blocked[0].reason}`, photoUrl: blocked[0].photoUrl ?? null, name: blocked[0].name });
             } else if (flagged.length > 0) {
-              setWatchlistWarning(`⚠️ FLAGGED: ${flagged[0].reason}`);
+              setWatchlistWarning({ kind: "flag", text: `⚠️ FLAGGED: ${flagged[0].reason}`, photoUrl: flagged[0].photoUrl ?? null, name: flagged[0].name });
             }
           }
         } catch { /* silent */ }
@@ -150,6 +150,7 @@ export default function CheckIn() {
           phone: form.phone || undefined,
           email: form.email || undefined,
           hostName: form.hostName,
+          hostEmail: form.hostEmail.trim() || undefined,
           purposeOfVisit: purpose,
           site: SITE_NAME,
           studios,
@@ -171,7 +172,7 @@ export default function CheckIn() {
         expectedDeparture: guest.expectedDeparture ?? null,
         photo: photo ?? finalPhotoUrl ?? null,
       });
-      setForm({ name: "", company: "", phone: "", email: "", hostName: "", purposeOfVisit: "", expectedDeparture: "" });
+      setForm({ name: "", company: "", phone: "", email: "", hostName: "", hostEmail: "", purposeOfVisit: "", expectedDeparture: "" });
       setStudios([]);
       setPhoto(null);
       setPhotoUrl(null);
@@ -213,9 +214,23 @@ export default function CheckIn() {
           <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="md:col-span-2 space-y-4 bg-card border border-border rounded-md p-6">
               {watchlistWarning && (
-                <div className={`flex items-start gap-3 p-3 rounded-md border text-sm ${watchlistWarning.startsWith("⛔") ? "bg-destructive/10 border-destructive/40 text-destructive" : "bg-yellow-500/10 border-yellow-500/40 text-yellow-500"}`}>
-                  <AlertTriangle className="w-4 h-4 mt-0.5 shrink-0" />
-                  <span>{watchlistWarning}</span>
+                <div className={`flex items-start gap-3 p-3 rounded-md border text-sm ${watchlistWarning.kind === "block" ? "bg-destructive/10 border-destructive/40 text-destructive" : "bg-yellow-500/10 border-yellow-500/40 text-yellow-500"}`} data-testid="watchlist-warning">
+                  {watchlistWarning.photoUrl ? (
+                    <img
+                      src={watchlistWarning.photoUrl}
+                      alt={`Watchlist photo: ${watchlistWarning.name}`}
+                      className="w-16 h-16 rounded object-cover shrink-0 border border-current/30"
+                      data-testid="img-watchlist-warning-photo"
+                    />
+                  ) : (
+                    <AlertTriangle className="w-4 h-4 mt-0.5 shrink-0" />
+                  )}
+                  <div>
+                    <span>{watchlistWarning.text}</span>
+                    {watchlistWarning.photoUrl && (
+                      <p className="text-xs opacity-80 mt-1">Watchlist photo shown — visually confirm this is the same person.</p>
+                    )}
+                  </div>
                 </div>
               )}
 
@@ -286,6 +301,10 @@ export default function CheckIn() {
                 <div>
                   <Label htmlFor="host">Host Name *</Label>
                   <Input id="host" value={form.hostName} onChange={(e) => setForm((f) => ({ ...f, hostName: e.target.value }))} placeholder="Employee name" required className="mt-1" />
+                </div>
+                <div>
+                  <Label htmlFor="hostEmail">Host Email</Label>
+                  <Input id="hostEmail" type="email" value={form.hostEmail} onChange={(e) => setForm((f) => ({ ...f, hostEmail: e.target.value }))} placeholder="Notify host on arrival (optional)" className="mt-1" data-testid="input-host-email" />
                 </div>
                 <div>
                   <Label htmlFor="site">Site</Label>

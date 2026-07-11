@@ -23,7 +23,7 @@ import { requireOperator } from "../lib/auth";
 import { generateBadgeId } from "../lib/badge";
 import { getSessionUserId } from "../lib/auth";
 import { usersTable } from "@workspace/db";
-import { sendVisitorAlert } from "../lib/alerts";
+import { sendVisitorAlert, sendHostArrivalNotification } from "../lib/alerts";
 import { upsertKnownGuest } from "../lib/known-guests";
 
 const router = Router();
@@ -146,6 +146,7 @@ router.post("/guests", requireOperator, async (req, res): Promise<void> => {
       phone: parsed.data.phone ?? null,
       email: parsed.data.email ?? null,
       hostName: parsed.data.hostName,
+      hostEmail: parsed.data.hostEmail?.trim() || null,
       purposeOfVisit: parsed.data.purposeOfVisit,
       site: parsed.data.site,
       studios: parsed.data.studios ?? [],
@@ -192,6 +193,17 @@ router.post("/guests", requireOperator, async (req, res): Promise<void> => {
     badgeId: guest.badgeId,
     operatorName,
     expectedDeparture: guest.expectedDeparture?.toISOString() ?? null,
+    checkinAt: guest.checkinAt.toISOString(),
+  });
+
+  void sendHostArrivalNotification(guest.hostEmail, {
+    guestName: guest.name,
+    company: guest.company,
+    hostName: guest.hostName,
+    purposeOfVisit: guest.purposeOfVisit,
+    site: guest.site,
+    studios: guest.studios,
+    badgeId: guest.badgeId,
     checkinAt: guest.checkinAt.toISOString(),
   });
 
