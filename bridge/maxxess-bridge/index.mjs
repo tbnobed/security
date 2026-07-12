@@ -17,6 +17,18 @@
 //                          SQL Server database directly), or "efusion" (Web API
 //                          template)
 
+// Load .env from this folder if present (Docker's --env-file also works;
+// real environment variables always win over .env values).
+import { readFileSync } from "node:fs";
+try {
+  for (const line of readFileSync(new URL(".env", import.meta.url), "utf8").split("\n")) {
+    const m = line.match(/^\s*([A-Z0-9_]+)\s*=\s*(.*)\s*$/);
+    if (m && !(m[1] in process.env)) process.env[m[1]] = m[2];
+  }
+} catch {
+  // no .env — rely on exported env vars
+}
+
 const FRONTDESK_URL = (process.env.FRONTDESK_URL ?? "").replace(/\/+$/, "");
 const BRIDGE_TOKEN = process.env.BRIDGE_TOKEN ?? "";
 const POLL_INTERVAL_MS = Math.max(10, Number(process.env.POLL_INTERVAL_SECONDS) || 60) * 1000;
