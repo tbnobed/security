@@ -6,3 +6,15 @@ id = "7f98ubAa44GFvJ60B98-k"
 uri = "file://attached_assets/pdf417-aamva-test.png"
 type = "image"
 title = "AAMVA PDF417 test barcode (John Quincy Doe)"
+
+[[outputs]]
+id = "T_7cU2OqWxOuwcAXXe7KX"
+uri = "file://bridge/maxxess-bridge/SQL-SETUP.md"
+type = "text"
+title = "Step 1 — One-time SQL Server setup (on CONTEGO3)"
+
+[[outputs]]
+id = "908N0hFc7LJR8zHIW_bI0"
+uri = "file://bridge/maxxess-bridge/README.md"
+type = "text"
+title = "Step 2 — Running the bridge"
