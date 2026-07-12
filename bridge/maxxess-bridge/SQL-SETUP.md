@@ -4,7 +4,7 @@ Goal: a SQL Server login named `frontdesk_reader` that can ONLY read the
 eFusion database, reachable from the machine that runs the bridge.
 
 Do all of this on the eFusion server (the machine running the
-`SERVERNAME\MAXXESS` SQL instance). You need SQL Server Management Studio
+`CONTEGO3\MAXXESS` SQL instance). You need SQL Server Management Studio
 (SSMS) and the `sa` password (the eFusion install uses `sa`).
 
 ## Step 1 — Enable TCP/IP on the MAXXESS instance
@@ -41,7 +41,7 @@ SELECT name FROM sys.databases WHERE database_id > 4;
 ```
 
 (`database_id > 4` hides the system databases.) The eFusion database is
-usually named something like `SMS`. Note the exact name.
+named `AXxess` on this install. Note the exact name.
 
 ## Step 4 — Create the read-only login
 
@@ -53,9 +53,9 @@ USE [master];
 CREATE LOGIN frontdesk_reader
   WITH PASSWORD = 'PUT-A-STRONG-PASSWORD-HERE',
   CHECK_POLICY = ON,
-  DEFAULT_DATABASE = [SMS];
+  DEFAULT_DATABASE = [AXxess];
 
-USE [SMS];  -- exact eFusion database name from Step 3
+USE [AXxess];  -- exact eFusion database name from Step 3
 CREATE USER frontdesk_reader FOR LOGIN frontdesk_reader;
 ALTER ROLE db_datareader ADD MEMBER frontdesk_reader;
 ```
@@ -79,10 +79,10 @@ Never expose these ports beyond the LAN.
 From the machine that will run the bridge:
 
 ```
-sqlcmd -S SERVERNAME\MAXXESS -U frontdesk_reader -P '...' -d SMS -Q "SELECT TOP 5 name FROM sys.tables ORDER BY name"
+sqlcmd -S CONTEGO3\MAXXESS -U frontdesk_reader -P '...' -d AXxess -Q "SELECT TOP 5 name FROM sys.tables ORDER BY name"
 ```
 
-(or with a pinned port: `-S SERVERNAME,1433`). If you get five table names
+(or with a pinned port: `-S CONTEGO3,1433`). If you get five table names
 back, access works. If it can't connect: re-check Step 1 (TCP enabled +
 service restarted) and Step 5 (firewall scope).
 
@@ -108,7 +108,7 @@ ORDER BY TABLE_NAME, ORDINAL_POSITION;
 
 Four values, set in the bridge's `.env`:
 
-- server + instance/port (e.g. `SERVERNAME\MAXXESS` or `SERVERNAME,1433`)
-- database name (e.g. `SMS`)
+- server + instance/port (e.g. `CONTEGO3\MAXXESS` or `CONTEGO3,1433`)
+- database name: `AXxess`
 - login: `frontdesk_reader`
 - its password
