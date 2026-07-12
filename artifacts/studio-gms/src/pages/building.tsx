@@ -97,7 +97,7 @@ export default function BuildingPage() {
           </div>
         )}
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 max-w-6xl mx-auto w-full">
           <div className="lg:col-span-2 space-y-3">
             <div className="flex flex-wrap items-center gap-3">
               <Input
@@ -117,9 +117,9 @@ export default function BuildingPage() {
               </span>
             </div>
 
-            <div className="border border-border rounded-md overflow-x-auto">
+            <div className="border border-border rounded-md overflow-x-auto overflow-y-auto h-[32rem]">
               <table className="w-full text-sm" data-testid="table-occupancy">
-                <thead>
+                <thead className="sticky top-0 z-10 bg-card">
                   <tr className="bg-muted/50 text-left">
                     <th className="px-3 py-2 font-semibold">Name</th>
                     <th className="px-3 py-2 font-semibold">Department</th>
@@ -155,7 +155,7 @@ export default function BuildingPage() {
 
           <div className="space-y-3">
             <h3 className="font-semibold">Recent Door Activity</h3>
-            <div className="border border-border rounded-md divide-y divide-border max-h-[32rem] overflow-y-auto" data-testid="list-access-events">
+            <div className="border border-border rounded-md divide-y divide-border h-[32rem] overflow-y-auto" data-testid="list-access-events">
               {events.length === 0 ? (
                 <div className="p-6 text-center text-sm text-muted-foreground">
                   No door events received yet.
