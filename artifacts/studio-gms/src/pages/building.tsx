@@ -123,7 +123,7 @@ export default function BuildingPage() {
                   <tr className="bg-muted/50 text-left">
                     <th className="px-3 py-2 font-semibold">Name</th>
                     <th className="px-3 py-2 font-semibold">Department</th>
-                    <th className="px-3 py-2 font-semibold">Last Seen At</th>
+                    <th className="px-3 py-2 font-semibold">Last Door</th>
                     <th className="px-3 py-2 font-semibold">Since</th>
                     <th className="px-3 py-2 font-semibold">Card</th>
                   </tr>

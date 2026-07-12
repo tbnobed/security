@@ -150,14 +150,16 @@ async function getSqlPool() {
 // LastUse >= today is the practical who's-here list.
 // CardholderLocation has one row per badge CARD, so cardholders with multiple
 // cards appear multiple times — ROW_NUMBER keeps each person's latest use.
-// NULLIF hides placeholder area names like 'NONE'.
+// "location" = the last DOOR the badge was used at (from the transactions
+// view; area names are 'NONE' at sites without area config), falling back to
+// LastAreaName where it exists. NULLIF hides placeholder 'NONE' values.
 const DEFAULT_OCCUPANTS_QUERY = `
   WITH ranked AS (
     SELECT
       LTRIM(RTRIM(COALESCE([First], '') + ' ' + COALESCE([Last], ''))) AS fullName,
       [Badge] AS cardNumber,
       [Dept]  AS department,
-      NULLIF(NULLIF(LTRIM(RTRIM(COALESCE([LastAreaName], ''))), ''), 'NONE') AS location,
+      NULLIF(NULLIF(LTRIM(RTRIM(COALESCE([LastAreaName], ''))), ''), 'NONE') AS areaName,
       [LastUse] AS sinceAt,
       ROW_NUMBER() OVER (
         PARTITION BY LOWER(LTRIM(RTRIM(COALESCE([First], '') + ' ' + COALESCE([Last], ''))))
@@ -167,10 +169,21 @@ const DEFAULT_OCCUPANTS_QUERY = `
     WHERE [LastUse] >= CAST(GETDATE() AS date)
       AND LOWER(LTRIM(RTRIM(COALESCE([LastAreaName], '')))) NOT IN ('off site', 'offsite', 'outside', 'out')
   )
-  SELECT TOP 5000 fullName, cardNumber, department, location, sinceAt
-  FROM ranked
-  WHERE rn = 1
-  ORDER BY sinceAt DESC`;
+  SELECT TOP 5000
+    r.fullName,
+    r.cardNumber,
+    r.department,
+    COALESCE(NULLIF(LTRIM(RTRIM(COALESCE(t.door, ''))), ''), r.areaName) AS location,
+    r.sinceAt
+  FROM ranked r
+  OUTER APPLY (
+    SELECT TOP 1 [Location] AS door
+    FROM CardholderTransactions_V
+    WHERE [Badge] = r.cardNumber
+    ORDER BY [Id] DESC
+  ) t
+  WHERE r.rn = 1
+  ORDER BY r.sinceAt DESC`;
 
 // Events are fetched by Id watermark (oldest first) so a burst of >1000 events
 // is drained across successive polls instead of silently dropping older rows.

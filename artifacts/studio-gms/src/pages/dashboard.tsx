@@ -297,7 +297,7 @@ export default function Dashboard() {
                     <th className="px-4 py-3 font-medium">Name</th>
                     <th className="px-4 py-3 font-medium">Department</th>
                     <th className="px-4 py-3 font-medium">Badge Time</th>
-                    <th className="px-4 py-3 font-medium text-right">Last Seen At</th>
+                    <th className="px-4 py-3 font-medium text-right">Last Door</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
