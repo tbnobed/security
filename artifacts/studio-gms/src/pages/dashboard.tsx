@@ -5,6 +5,7 @@ import {
   useListGuests,
   useGetDashboardSummary,
   useGetProductions,
+  useGetOccupancy,
   useMarkBadgePrinted,
 } from "@workspace/api-client-react";
 import type { GetProductionsRange } from "@workspace/api-client-react";
@@ -23,6 +24,7 @@ import {
   Clapperboard,
   Printer,
   Siren,
+  DoorOpen,
 } from "lucide-react";
 import { Link } from "wouter";
 import { format } from "date-fns";
@@ -37,6 +39,9 @@ export default function Dashboard() {
     isLoading: loadingProductions,
     isError: productionsError,
   } = useGetProductions({ range: productionsRange });
+  const { data: occupancy } = useGetOccupancy({
+    query: { refetchInterval: 30000 } as any,
+  });
 
   const [printData, setPrintData] = useState<VisitorBadgeData | null>(null);
 
@@ -201,9 +206,9 @@ export default function Dashboard() {
               </span>
             </div>
           </div>
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto max-h-72 overflow-y-auto">
             <table className="w-full text-sm text-left">
-              <thead className="bg-muted/50 text-muted-foreground text-xs uppercase border-b border-border">
+              <thead className="sticky top-0 z-10 bg-muted/50 backdrop-blur supports-[backdrop-filter]:bg-muted/50 text-muted-foreground text-xs uppercase border-b border-border">
                 <tr>
                   <th className="px-4 py-3 font-medium">Production</th>
                   <th className="px-4 py-3 font-medium">Studio</th>
@@ -268,6 +273,57 @@ export default function Dashboard() {
             </table>
           </div>
         </div>
+
+        {occupancy?.lastSyncAt && (
+          <div className="bg-card border border-border rounded-md shadow-sm">
+            <div className="p-4 border-b border-border flex items-center justify-between gap-3 flex-wrap">
+              <div className="flex items-center gap-2">
+                <DoorOpen className="w-4 h-4 text-primary" />
+                <h3 className="font-medium">Staff & Cardholders</h3>
+              </div>
+              <div className="flex items-center gap-3">
+                <span className="text-xs text-muted-foreground">
+                  {occupancy.occupants.length} badged today
+                </span>
+                <Link href="/building" className="text-xs text-primary hover:underline">
+                  View all
+                </Link>
+              </div>
+            </div>
+            <div className="overflow-x-auto max-h-72 overflow-y-auto" data-testid="table-dashboard-cardholders">
+              <table className="w-full text-sm text-left">
+                <thead className="sticky top-0 z-10 bg-muted/50 backdrop-blur supports-[backdrop-filter]:bg-muted/50 text-muted-foreground text-xs uppercase border-b border-border">
+                  <tr>
+                    <th className="px-4 py-3 font-medium">Name</th>
+                    <th className="px-4 py-3 font-medium">Department</th>
+                    <th className="px-4 py-3 font-medium">Last Seen At</th>
+                    <th className="px-4 py-3 font-medium text-right">Badge Time</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border">
+                  {occupancy.occupants.length === 0 ? (
+                    <tr>
+                      <td colSpan={4} className="px-4 py-8 text-center text-muted-foreground">
+                        No badge activity yet today.
+                      </td>
+                    </tr>
+                  ) : (
+                    occupancy.occupants.map((o) => (
+                      <tr key={o.id} className="hover:bg-muted/30 transition-colors">
+                        <td className="px-4 py-2.5 font-medium">{o.cardholderName}</td>
+                        <td className="px-4 py-2.5 text-muted-foreground">{o.department ?? "—"}</td>
+                        <td className="px-4 py-2.5 text-muted-foreground">{o.location ?? "—"}</td>
+                        <td className="px-4 py-2.5 text-muted-foreground text-right whitespace-nowrap">
+                          {o.sinceAt ? format(new Date(o.sinceAt), "HH:mm") : "—"}
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
 
         <div className="bg-card border border-border rounded-md shadow-sm">
           <div className="p-4 border-b border-border flex items-center justify-between">
