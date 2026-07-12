@@ -1,0 +1,23 @@
+[Unit]
+Description=FrontDesk Maxxess occupancy bridge
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=obtv-admin
+WorkingDirectory=/home/obtv-admin/security/bridge/maxxess-bridge
+ExecStart=/usr/bin/node index.mjs
+Restart=always
+RestartSec=10
+# .env in WorkingDirectory is loaded by the bridge itself.
+# Uncomment to override or add environment variables here instead:
+# Environment=POLL_SECONDS=60
+
+# Hardening
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+
+[Install]
+WantedBy=multi-user.target

@@ -31,6 +31,29 @@ the **Emergency Evacuation** roster.
    test cardholders appear on FrontDesk's Building page), then switch to
    `SOURCE=efusion-sql`.
 
+## Run as a service (systemd)
+
+A ready-made unit file is included (`frontdesk-bridge.service`). It assumes
+the repo lives at `/home/obtv-admin/security` and runs as `obtv-admin` — edit
+`User=` and the paths if yours differ (`which node` shows your Node path).
+
+```sh
+sudo cp frontdesk-bridge.service /etc/systemd/system/
+sudo systemctl daemon-reload
+sudo systemctl enable --now frontdesk-bridge
+```
+
+The bridge loads `.env` from its working directory, so no extra env setup is
+needed. Useful commands:
+
+```sh
+systemctl status frontdesk-bridge          # is it running?
+journalctl -u frontdesk-bridge -f          # follow live logs
+sudo systemctl restart frontdesk-bridge    # after a git pull
+```
+
+It starts on boot and auto-restarts 10s after any crash.
+
 ## SOURCE=efusion-sql — direct database read (recommended for this site)
 
 This is the working adapter for the Trinity/CONTEGO3 install (eFusion 8.0,
