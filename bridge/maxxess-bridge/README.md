@@ -40,8 +40,10 @@ SQL login, TCP/IP, firewall — is in **SQL-SETUP.md**.
 It polls two views eFusion maintains itself:
 
 - `CardholderLocation` → the occupants snapshot. A cardholder counts as
-  "in the building" when `LastAreaName` is set (that's where anti-passback
-  last saw their badge) and isn't an obvious "off site" area name.
+  "in the building" when their badge was used **today** (`LastUse` since
+  midnight, SQL-server-local) and `LastAreaName` isn't an obvious "off site"
+  area name. Sites without badge-out readers never clear `LastAreaName`, so
+  the badged-today filter is what keeps this a real who's-here list.
 - `CardholderTransactions_V` → door events (badge transactions with a unique
   `Id`, used as the dedupe key; direction is inferred from the event text).
 

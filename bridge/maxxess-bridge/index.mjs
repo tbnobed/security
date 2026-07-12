@@ -145,6 +145,9 @@ async function getSqlPool() {
   return sqlPool;
 }
 
+// "In the building" = badge used since the start of today (server-local).
+// Sites without badge-out readers never clear LastAreaName, so filtering on
+// LastUse >= today is the practical who's-here list.
 const DEFAULT_OCCUPANTS_QUERY = `
   SELECT TOP 5000
     LTRIM(RTRIM(COALESCE([First], '') + ' ' + COALESCE([Last], ''))) AS fullName,
@@ -153,7 +156,8 @@ const DEFAULT_OCCUPANTS_QUERY = `
     [LastAreaName] AS location,
     [LastUse]      AS sinceAt
   FROM CardholderLocation
-  WHERE COALESCE([LastAreaName], '') <> ''
+  WHERE [LastUse] >= CAST(GETDATE() AS date)
+    AND COALESCE([LastAreaName], '') <> ''
     AND LOWER(LTRIM(RTRIM([LastAreaName]))) NOT IN ('off site', 'offsite', 'outside', 'out')
   ORDER BY [LastUse] DESC`;
 
