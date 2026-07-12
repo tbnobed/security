@@ -97,8 +97,8 @@ export default function BuildingPage() {
           </div>
         )}
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 max-w-6xl mx-auto w-full">
-          <div className="lg:col-span-2 space-y-3">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:h-[calc(100vh-12rem)]">
+          <div className="lg:col-span-2 flex flex-col gap-3 min-h-0">
             <div className="flex flex-wrap items-center gap-3">
               <Input
                 placeholder="Search name, department, or card…"
@@ -117,7 +117,7 @@ export default function BuildingPage() {
               </span>
             </div>
 
-            <div className="border border-border rounded-md overflow-x-auto overflow-y-auto h-[32rem]">
+            <div className="border border-border rounded-md overflow-x-auto overflow-y-auto h-[50vh] lg:h-auto lg:flex-1 lg:min-h-0">
               <table className="w-full text-sm" data-testid="table-occupancy">
                 <thead className="sticky top-0 z-10 bg-card">
                   <tr className="bg-muted/50 text-left">
@@ -153,9 +153,9 @@ export default function BuildingPage() {
             </div>
           </div>
 
-          <div className="space-y-3">
+          <div className="flex flex-col gap-3 min-h-0">
             <h3 className="font-semibold">Recent Door Activity</h3>
-            <div className="border border-border rounded-md divide-y divide-border h-[32rem] overflow-y-auto" data-testid="list-access-events">
+            <div className="border border-border rounded-md divide-y divide-border overflow-y-auto h-[50vh] lg:h-auto lg:flex-1 lg:min-h-0" data-testid="list-access-events">
               {events.length === 0 ? (
                 <div className="p-6 text-center text-sm text-muted-foreground">
                   No door events received yet.
