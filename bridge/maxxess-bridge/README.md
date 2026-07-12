@@ -43,6 +43,14 @@ the **Emergency Evacuation** roster.
 - **Occupancy source**: eFusion tracks "who is in" via anti-passback areas and
   its Muster Report (list of all cardholders currently inside defined areas).
   That muster/in-plant data is what this bridge's `occupants` snapshot maps to.
+- **This site's installed integrators** (verified from Service Manager, July
+  2026): Archive-Backup, CardStartStop, EfficientImage, eMobile,
+  ExecuteProcedure, Kentec, SIA, SIA_DC07, SMSWebInterface, Texacom Premier.
+  No Web API and no ExternalReaderOffline — the Web API module is NOT
+  installed here. SIA/SIA_DC07 receive alarms INTO eFusion (not an outbound
+  feed); SMSWebInterface just serves the MX+ web UI; ExecuteProcedure calls a
+  SQL stored procedure on transaction events (confirms SQL-level integration
+  is a supported pattern on this install).
 - **Database fallback**: eFusion stores everything in Microsoft SQL Server
   (instance typically `COMPUTERNAME\MAXXESS`). All access events land in the
   transaction log tables (event time, facility-card number, event type), and
