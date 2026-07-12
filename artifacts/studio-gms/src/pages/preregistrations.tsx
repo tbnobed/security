@@ -275,7 +275,7 @@ export default function Preregistrations() {
 
   const [form, setForm] = useState({
     guestName: "", company: "", phone: "", email: "",
-    hostName: "", hostEmail: "", purposeOfVisit: "",
+    hostName: "", hostEmail: "", hostPhone: "", purposeOfVisit: "",
     expectedArrival: "", expectedDeparture: "",
   });
   const [studios, setStudios] = useState<string[]>([]);
@@ -306,6 +306,7 @@ export default function Preregistrations() {
           email: form.email || undefined,
           hostName: form.hostName,
           hostEmail: form.hostEmail.trim() || undefined,
+          hostPhone: form.hostPhone.trim() || undefined,
           purposeOfVisit: form.purposeOfVisit || undefined,
           site: SITE_NAME,
           expectedArrival: form.expectedArrival,
@@ -317,7 +318,7 @@ export default function Preregistrations() {
       queryClient.invalidateQueries({ queryKey: ["/api/dashboard/summary"] });
       toast({ title: "Pre-registration created" });
       setOpen(false);
-      setForm({ guestName: "", company: "", phone: "", email: "", hostName: "", hostEmail: "", purposeOfVisit: "", expectedArrival: "", expectedDeparture: "" });
+      setForm({ guestName: "", company: "", phone: "", email: "", hostName: "", hostEmail: "", hostPhone: "", purposeOfVisit: "", expectedArrival: "", expectedDeparture: "" });
       setStudios([]);
     } catch {
       toast({ title: "Failed to create pre-registration", variant: "destructive" });
@@ -434,6 +435,10 @@ export default function Preregistrations() {
                   <div>
                     <Label>Host Email</Label>
                     <Input className="mt-1" type="email" value={form.hostEmail} onChange={(e) => setForm((f) => ({ ...f, hostEmail: e.target.value }))} placeholder="Notify host on arrival (optional)" data-testid="input-host-email" />
+                  </div>
+                  <div>
+                    <Label>Host Phone</Label>
+                    <Input className="mt-1" type="tel" value={form.hostPhone} onChange={(e) => setForm((f) => ({ ...f, hostPhone: e.target.value }))} placeholder="Host phone (optional)" data-testid="input-host-phone" />
                   </div>
                   <div>
                     <Label>Phone</Label>

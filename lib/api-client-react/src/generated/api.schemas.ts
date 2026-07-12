@@ -40,6 +40,8 @@ export interface Guest {
   hostName: string;
   /** @nullable */
   hostEmail?: string | null;
+  /** @nullable */
+  hostPhone?: string | null;
   purposeOfVisit: string;
   /** Dallas/The Plex, Tustin, Nashville */
   site: string;
@@ -80,6 +82,7 @@ export interface GuestInput {
   /** @minLength 1 */
   hostName: string;
   hostEmail?: string;
+  hostPhone?: string;
   /** @minLength 1 */
   purposeOfVisit: string;
   /** @minLength 1 */
@@ -143,6 +146,8 @@ export interface Preregistration {
   hostName: string;
   /** @nullable */
   hostEmail?: string | null;
+  /** @nullable */
+  hostPhone?: string | null;
   /** @nullable */
   purposeOfVisit?: string | null;
   site: string;
@@ -260,6 +265,7 @@ export interface PreregistrationInput {
   /** @minLength 1 */
   hostName: string;
   hostEmail?: string;
+  hostPhone?: string;
   purposeOfVisit?: string;
   /** @minLength 1 */
   site: string;
@@ -564,6 +570,7 @@ export interface ClientBulkPreregisterRequest {
   employeeIds: number[];
   /** @minLength 1 */
   hostName: string;
+  hostPhone?: string;
   purposeOfVisit?: string;
   expectedArrival: string;
   expectedDeparture?: string;
@@ -736,6 +743,7 @@ export interface PublicPreregistrationInput {
   /** @minLength 1 */
   hostName: string;
   hostEmail?: string;
+  hostPhone?: string;
   purposeOfVisit?: string;
   /** @minLength 1 */
   site: string;

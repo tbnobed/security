@@ -436,6 +436,7 @@ router.post("/client/preregistrations/bulk", async (req, res): Promise<void> => 
         phone: emp.phone ?? null,
         email: emp.email ?? null,
         hostName: parsed.data.hostName,
+        hostPhone: parsed.data.hostPhone?.trim() || null,
         purposeOfVisit: parsed.data.purposeOfVisit ?? null,
         site: parsed.data.site,
         expectedArrival,

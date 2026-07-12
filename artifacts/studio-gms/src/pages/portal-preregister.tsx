@@ -36,6 +36,7 @@ export default function PortalPreregisterPage() {
   const [search, setSearch] = useState("");
   const [selected, setSelected] = useState<Set<number>>(new Set());
   const [hostName, setHostName] = useState("");
+  const [hostPhone, setHostPhone] = useState("");
   const [purpose, setPurpose] = useState("");
   const [arrival, setArrival] = useState(defaultArrival());
   const [departure, setDeparture] = useState("");
@@ -101,6 +102,7 @@ export default function PortalPreregisterPage() {
         data: {
           employeeIds: [...selected],
           hostName: hostName.trim(),
+          hostPhone: hostPhone.trim() || undefined,
           purposeOfVisit: purpose.trim() || undefined,
           site: SITE_NAME,
           expectedArrival: new Date(arrival).toISOString(),
@@ -196,6 +198,17 @@ export default function PortalPreregisterPage() {
                 value={hostName}
                 onChange={(e) => setHostName(e.target.value)}
                 placeholder="Host name"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="hostPhone">Host phone</Label>
+              <Input
+                id="hostPhone"
+                type="tel"
+                value={hostPhone}
+                onChange={(e) => setHostPhone(e.target.value)}
+                placeholder="Host phone (optional)"
+                data-testid="input-host-phone"
               />
             </div>
             <div className="space-y-1.5">

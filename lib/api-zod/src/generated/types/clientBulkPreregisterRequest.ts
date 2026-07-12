@@ -16,6 +16,7 @@ export interface ClientBulkPreregisterRequest {
   employeeIds: number[];
   /** @minLength 1 */
   hostName: string;
+  hostPhone?: string;
   purposeOfVisit?: string;
   expectedArrival: Date;
   expectedDeparture?: Date;

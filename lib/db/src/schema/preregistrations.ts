@@ -11,6 +11,7 @@ export const preregistrationsTable = pgTable("preregistrations", {
   email: text("email"),
   hostName: text("host_name").notNull(),
   hostEmail: text("host_email"),
+  hostPhone: text("host_phone"),
   purposeOfVisit: text("purpose_of_visit"),
   site: text("site").notNull(),
   expectedArrival: timestamp("expected_arrival", { withTimezone: true }).notNull(),

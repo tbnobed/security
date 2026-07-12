@@ -16,6 +16,7 @@ export interface GuestInput {
   /** @minLength 1 */
   hostName: string;
   hostEmail?: string;
+  hostPhone?: string;
   /** @minLength 1 */
   purposeOfVisit: string;
   /** @minLength 1 */

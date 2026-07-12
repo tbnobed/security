@@ -147,6 +147,7 @@ router.post("/guests", requireOperator, async (req, res): Promise<void> => {
       email: parsed.data.email ?? null,
       hostName: parsed.data.hostName,
       hostEmail: parsed.data.hostEmail?.trim() || null,
+      hostPhone: parsed.data.hostPhone?.trim() || null,
       purposeOfVisit: parsed.data.purposeOfVisit,
       site: parsed.data.site,
       studios: parsed.data.studios ?? [],

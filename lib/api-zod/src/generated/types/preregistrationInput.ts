@@ -15,6 +15,7 @@ export interface PreregistrationInput {
   /** @minLength 1 */
   hostName: string;
   hostEmail?: string;
+  hostPhone?: string;
   purposeOfVisit?: string;
   /** @minLength 1 */
   site: string;

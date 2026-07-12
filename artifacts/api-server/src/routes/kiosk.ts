@@ -145,6 +145,7 @@ router.post("/kiosk/checkin", requireKioskAccess, async (req, res): Promise<void
         email: preg.email ?? null,
         hostName: preg.hostName,
         hostEmail: preg.hostEmail ?? null,
+        hostPhone: preg.hostPhone ?? null,
         purposeOfVisit: preg.purposeOfVisit ?? "Pre-registered visit",
         site: preg.site,
         studios: preg.studios,

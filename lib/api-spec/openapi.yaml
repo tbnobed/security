@@ -1592,6 +1592,8 @@ components:
           type: string
         hostEmail:
           type: ["string", "null"]
+        hostPhone:
+          type: ["string", "null"]
         purposeOfVisit:
           type: string
         site:
@@ -1657,6 +1659,8 @@ components:
           type: string
           minLength: 1
         hostEmail:
+          type: string
+        hostPhone:
           type: string
         purposeOfVisit:
           type: string
@@ -1752,6 +1756,8 @@ components:
         hostName:
           type: string
         hostEmail:
+          type: ["string", "null"]
+        hostPhone:
           type: ["string", "null"]
         purposeOfVisit:
           type: ["string", "null"]
@@ -1899,6 +1905,8 @@ components:
           type: string
           minLength: 1
         hostEmail:
+          type: string
+        hostPhone:
           type: string
         purposeOfVisit:
           type: string
@@ -2313,6 +2321,8 @@ components:
         hostName:
           type: string
           minLength: 1
+        hostPhone:
+          type: string
         purposeOfVisit:
           type: string
         expectedArrival:
@@ -2632,6 +2642,8 @@ components:
           type: string
           minLength: 1
         hostEmail:
+          type: string
+        hostPhone:
           type: string
         purposeOfVisit:
           type: string

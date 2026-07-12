@@ -20,6 +20,8 @@ export interface Preregistration {
   /** @nullable */
   hostEmail?: string | null;
   /** @nullable */
+  hostPhone?: string | null;
+  /** @nullable */
   purposeOfVisit?: string | null;
   site: string;
   expectedArrival: Date;
