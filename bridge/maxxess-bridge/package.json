@@ -8,7 +8,8 @@
     "node": ">=18"
   },
   "scripts": {
-    "start": "node index.mjs"
+    "start": "node index.mjs",
+    "test-sql": "node test-sql.mjs"
   },
   "dependencies": {
     "mssql": "^11.0.1"

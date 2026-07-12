@@ -76,15 +76,27 @@ Never expose these ports beyond the LAN.
 
 ## Step 6 — Test from the bridge machine
 
-From the machine that will run the bridge:
+Easiest way (works anywhere Node 18+ is installed — no extra tools needed):
+in the bridge folder, fill in the `EFUSION_SQL_*` values in `.env`, then
+
+```sh
+npm install
+npm run test-sql
+```
+
+It connects with the same settings the bridge will use and prints the
+cardholder/event counts on success, or a checklist of things to fix on
+failure.
+
+Alternative, if you have Microsoft's `sqlcmd` installed (it's on the SQL
+Server machine itself; on Linux it needs the `mssql-tools` package):
 
 ```
 sqlcmd -S CONTEGO3\MAXXESS -U frontdesk_reader -P '...' -d AXxess -Q "SELECT TOP 5 name FROM sys.tables ORDER BY name"
 ```
 
-(or with a pinned port: `-S CONTEGO3,1433`). If you get five table names
-back, access works. If it can't connect: re-check Step 1 (TCP enabled +
-service restarted) and Step 5 (firewall scope).
+(or with a pinned port: `-S CONTEGO3,1433`). If it can't connect: re-check
+Step 1 (TCP enabled + service restarted) and Step 5 (firewall scope).
 
 ## Step 7 — Discovery queries for the adapter
 
