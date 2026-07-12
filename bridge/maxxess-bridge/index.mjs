@@ -179,7 +179,8 @@ const DEFAULT_OCCUPANTS_QUERY = `
   OUTER APPLY (
     SELECT TOP 1 [Location] AS door
     FROM CardholderTransactions_V
-    WHERE [Badge] = r.cardNumber
+    WHERE [EventTime] >= CAST(GETDATE() AS date)
+      AND LOWER(LTRIM(RTRIM(COALESCE([CardholderFirst], '') + ' ' + COALESCE([CardholderLast], '')))) = LOWER(r.fullName)
     ORDER BY [Id] DESC
   ) t
   WHERE r.rn = 1

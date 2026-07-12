@@ -13,6 +13,10 @@ RestartSec=10
 # .env in WorkingDirectory is loaded by the bridge itself.
 # Uncomment to override or add environment variables here instead:
 # Environment=POLL_SECONDS=60
+# eFusion stores local wall time — the bridge must run in the SQL Server's
+# timezone. Prefer setting the whole machine (timedatectl set-timezone …),
+# or set it just for this service:
+# Environment=TZ=America/Los_Angeles
 
 # Hardening
 NoNewPrivileges=true
