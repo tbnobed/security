@@ -1,0 +1,43 @@
+	Audrey Uhler	Operations	NONE	Jul 11, 2:35 PM	
+2	Ayman Zakhary	Al Horreya	NONE	Jul 11, 4:32 AM	
+3	Ayman Zakhary	Al Horreya	NONE	Jul 11, 4:32 AM	
+4	Ayman Zakhary	Al Horreya	NONE	Jul 11, 4:32 AM	
+5	Ayman Zakhary	Al Horreya	NONE	Jul 11, 4:32 AM	
+6	Bonny Serrano	DigitalGlue	NONE	Jul 11, 3:00 PM	
+7	Bradley Plausse	Operations	NONE	Jul 11, 3:58 PM	
+8	Chuck Thompson	Security	NONE	Jul 11, 2:59 PM	
+9	Dr. Ikram Anwar	Al Horreya	NONE	Jul 11, 4:43 AM	
+10	Dr. Ikram Anwar	Al Horreya	NONE	Jul 11, 4:43 AM	
+11	Dr. Ikram Anwar	Al Horreya	NONE	Jul 11, 4:43 AM	
+12	Dr. Ikram Anwar	Al Horreya	NONE	Jul 11, 4:43 AM	
+13	Isidro Alvarez	Maintenance	NONE	Jul 11, 6:11 AM	
+14	Isidro Alvarez	Maintenance	NONE	Jul 11, 6:11 AM	
+15	Isidro Alvarez	Maintenance	NONE	Jul 11, 6:11 AM	
+16	Joseph Ibrahim	Operations	NONE	Jul 11, 2:19 PM	
+17	Joseph Ibrahim	Operations	NONE	Jul 11, 2:19 PM	
+18	Joseph Ibrahim	Operations	NONE	Jul 11, 2:19 PM	
+19	Matthew Doherty	Operations	NONE	Jul 11, 1:00 PM	
+20	Matthew Doherty	Operations	NONE	Jul 11, 1:00 PM	
+21	Oscar Arroyo	Operations	NONE	Jul 11, 4:38 AM	
+22	Peter Yossef	Al Horreya	NONE	Jul 11, 4:29 AM	
+23	Peter Yossef	Al Horreya	NONE	Jul 11, 4:29 AM	
+24	Peter Yossef	Al Horreya	NONE	Jul 11, 4:29 AM	
+25	Peter Yossef	Al Horreya	NONE	Jul 11, 4:29 AM	
+26	Peter Yossef	Al Horreya	NONE	Jul 11, 4:29 AM	
+27	Peter Yossef	Al Horreya	NONE	Jul 11, 4:29 AM	
+28	Peter Yossef	Al Horreya	NONE	Jul 11, 4:29 AM	
+29	Peter Yossef	Al Horreya	NONE	Jul 11, 4:29 AM	
+30	Raafat Girgis	Al Horreya	NONE	Jul 11, 4:14 AM	
+31	Ryan Ruvalcaba	Contractor	NONE	Jul 11, 2:41 AM	
+32	Sandy Acevedo	Human Resources	NONE	Jul 11, 5:31 AM	
+33	Sandy Acevedo	Human Resources	NONE	Jul 11, 5:31 AM	
+34	Sandy Acevedo	Human Resources	NONE	Jul 11, 5:31 AM	
+35	Sandy Acevedo	Human Resources	NONE	Jul 11, 5:31 AM	
+36	Spencer Sule	Operations	NONE	Jul 11, 10:31 AM	
+37	Spurgeon Beshara	Al Horreya	NONE	Jul 11, 4:41 AM	
+38	Spurgeon Beshara	Al Horreya	NONE	Jul 11, 4:41 AM	
+39	Steve Newell	Vanguard Elec.	NONE	Jul 11, 3:40 AM	
+40	Steve Newell	Vanguard Elec.	NONE	Jul 11, 3:40 AM	
+41	Steve Newell	Vanguard Elec.	NONE	Jul 11, 3:40 AM	
+42	Tim Maltby	DigitalGlue	NONE	Jul 11, 3:36 PM	
+43	Zachariah Taylor	DigitalGlue	NONE	Jul 11, 8:14 AM	
