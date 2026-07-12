@@ -296,8 +296,8 @@ export default function Dashboard() {
                   <tr>
                     <th className="px-4 py-3 font-medium">Name</th>
                     <th className="px-4 py-3 font-medium">Department</th>
-                    <th className="px-4 py-3 font-medium">Last Seen At</th>
-                    <th className="px-4 py-3 font-medium text-right">Badge Time</th>
+                    <th className="px-4 py-3 font-medium">Badge Time</th>
+                    <th className="px-4 py-3 font-medium text-right">Last Seen At</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
@@ -312,10 +312,10 @@ export default function Dashboard() {
                       <tr key={o.id} className="hover:bg-muted/30 transition-colors">
                         <td className="px-4 py-2.5 font-medium">{o.cardholderName}</td>
                         <td className="px-4 py-2.5 text-muted-foreground">{o.department ?? "—"}</td>
-                        <td className="px-4 py-2.5 text-muted-foreground">{o.location ?? "—"}</td>
-                        <td className="px-4 py-2.5 text-muted-foreground text-right whitespace-nowrap">
+                        <td className="px-4 py-2.5 text-muted-foreground whitespace-nowrap">
                           {o.sinceAt ? format(new Date(o.sinceAt), "HH:mm") : "—"}
                         </td>
+                        <td className="px-4 py-2.5 text-muted-foreground text-right">{o.location ?? "—"}</td>
                       </tr>
                     ))
                   )}
