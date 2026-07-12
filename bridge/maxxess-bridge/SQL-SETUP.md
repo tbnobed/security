@@ -106,9 +106,14 @@ ORDER BY TABLE_NAME, ORDINAL_POSITION;
 
 ## What the bridge needs at the end
 
-Four values, set in the bridge's `.env`:
+Set these in the bridge's `.env` (see `.env.example`), then `npm install`
+in the bridge folder and start with `SOURCE=efusion-sql`:
 
-- server + instance/port (e.g. `CONTEGO3\MAXXESS` or `CONTEGO3,1433`)
-- database name: `AXxess`
-- login: `frontdesk_reader`
-- its password
+```
+SOURCE=efusion-sql
+EFUSION_SQL_SERVER=CONTEGO3
+EFUSION_SQL_PORT=1433          # or EFUSION_SQL_INSTANCE=MAXXESS if no fixed port
+EFUSION_SQL_DATABASE=AXxess
+EFUSION_SQL_USER=frontdesk_reader
+EFUSION_SQL_PASSWORD=...
+```

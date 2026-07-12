@@ -6,13 +6,16 @@
 // HTTPS to the FrontDesk server. Maxxess never needs to be reachable from
 // the internet.
 //
-// Zero dependencies — requires Node 18+ (built-in fetch).
+// Requires Node 18+ (built-in fetch). SOURCE=mock needs no dependencies;
+// SOURCE=efusion-sql needs `npm install` (the mssql package).
 //
 // Config (env vars, see .env.example):
 //   FRONTDESK_URL          e.g. https://sec.obtv.io
 //   BRIDGE_TOKEN           must match MAXXESS_BRIDGE_TOKEN on the FrontDesk server
 //   POLL_INTERVAL_SECONDS  default 60
-//   SOURCE                 "mock" (test data) or "efusion" (adapt the adapter below)
+//   SOURCE                 "mock" (test data), "efusion-sql" (read the eFusion
+//                          SQL Server database directly), or "efusion" (Web API
+//                          template)
 
 const FRONTDESK_URL = (process.env.FRONTDESK_URL ?? "").replace(/\/+$/, "");
 const BRIDGE_TOKEN = process.env.BRIDGE_TOKEN ?? "";
@@ -60,7 +63,166 @@ async function readMock() {
 }
 
 /**
- * Maxxess eFusion adapter — TEMPLATE.
+ * Maxxess eFusion adapter — direct SQL Server read (SOURCE=efusion-sql).
+ *
+ * Reads the eFusion database (verified against eFusion 8.0 / database
+ * "AXxess") using a read-only login — see SQL-SETUP.md. Uses two built-in
+ * eFusion views:
+ *   CardholderLocation       -> occupants snapshot (LastAreaName = where
+ *                               anti-passback last saw the cardholder)
+ *   CardholderTransactions_V -> door events (unique Id used for dedupe)
+ *
+ * Env:
+ *   EFUSION_SQL_SERVER     hostname, e.g. CONTEGO3
+ *   EFUSION_SQL_PORT       fixed TCP port (recommended, e.g. 1433) — OR —
+ *   EFUSION_SQL_INSTANCE   named instance, e.g. MAXXESS (needs SQL Browser/UDP 1434)
+ *   EFUSION_SQL_DATABASE   default AXxess
+ *   EFUSION_SQL_USER       e.g. frontdesk_reader
+ *   EFUSION_SQL_PASSWORD   its password
+ *   EFUSION_SQL_ENCRYPT    "true" to require TLS (default false for LAN)
+ *   EFUSION_SQL_USE_UTC    "true" only if the DB stores UTC datetimes; default
+ *                          false = local wall time (run the bridge in the same
+ *                          timezone as the SQL Server machine)
+ *   EFUSION_SQL_OCCUPANTS_QUERY / EFUSION_SQL_EVENTS_QUERY
+ *                          optional full SQL overrides (must keep the same
+ *                          column aliases as the defaults below; the events
+ *                          query must filter on @sinceId and ORDER BY Id ASC)
+ */
+let sqlPool = null;
+let lastEventId = null; // watermark on CardholderTransactions_V.Id; seeded on first poll
+
+async function getSqlPool() {
+  if (sqlPool) return sqlPool;
+  let mssql;
+  try {
+    mssql = (await import("mssql")).default;
+  } catch {
+    throw new Error("SOURCE=efusion-sql needs the mssql package — run `npm install` in the bridge folder.");
+  }
+  const server = process.env.EFUSION_SQL_SERVER;
+  const user = process.env.EFUSION_SQL_USER;
+  const password = process.env.EFUSION_SQL_PASSWORD;
+  if (!server || !user || !password) {
+    throw new Error("EFUSION_SQL_SERVER, EFUSION_SQL_USER and EFUSION_SQL_PASSWORD are required for SOURCE=efusion-sql.");
+  }
+  const port = process.env.EFUSION_SQL_PORT ? Number(process.env.EFUSION_SQL_PORT) : undefined;
+  sqlPool = await mssql.connect({
+    server,
+    ...(port ? { port } : {}),
+    database: process.env.EFUSION_SQL_DATABASE || "AXxess",
+    user,
+    password,
+    options: {
+      ...(port ? {} : { instanceName: process.env.EFUSION_SQL_INSTANCE || "MAXXESS" }),
+      encrypt: process.env.EFUSION_SQL_ENCRYPT === "true",
+      trustServerCertificate: true,
+      readOnlyIntent: true,
+      // eFusion stores datetimes as local wall time (no timezone). useUTC=false
+      // makes the driver interpret them in THIS process's timezone — so run the
+      // bridge with TZ matching the SQL Server machine (they're usually the same
+      // box/LAN). Set EFUSION_SQL_USE_UTC=true only if your DB stores UTC.
+      useUTC: process.env.EFUSION_SQL_USE_UTC === "true",
+    },
+    pool: { max: 2, min: 0 },
+  });
+  const pool = sqlPool;
+  pool.on("error", () => {
+    if (sqlPool === pool) sqlPool = null; // reconnect on next poll
+    pool.close().catch(() => {});
+  });
+  return sqlPool;
+}
+
+const DEFAULT_OCCUPANTS_QUERY = `
+  SELECT TOP 5000
+    LTRIM(RTRIM(COALESCE([First], '') + ' ' + COALESCE([Last], ''))) AS fullName,
+    [Badge]        AS cardNumber,
+    [Dept]         AS department,
+    [LastAreaName] AS location,
+    [LastUse]      AS sinceAt
+  FROM CardholderLocation
+  WHERE COALESCE([LastAreaName], '') <> ''
+    AND LOWER(LTRIM(RTRIM([LastAreaName]))) NOT IN ('off site', 'offsite', 'outside', 'out')
+  ORDER BY [LastUse] DESC`;
+
+// Events are fetched by Id watermark (oldest first) so a burst of >1000 events
+// is drained across successive polls instead of silently dropping older rows.
+const DEFAULT_EVENTS_QUERY = `
+  SELECT TOP 1000
+    [Id]        AS id,
+    [EventTime] AS occurredAt,
+    [Event]     AS eventName,
+    [Location]  AS door,
+    [Badge]     AS cardNumber,
+    LTRIM(RTRIM(COALESCE([CardholderFirst], '') + ' ' + COALESCE([CardholderLast], ''))) AS fullName
+  FROM CardholderTransactions_V
+  WHERE [Id] > @sinceId
+    AND COALESCE([Badge], '') <> ''
+  ORDER BY [Id] ASC`;
+
+// First poll only: start the watermark just before the oldest event of the
+// last 24h, so we backfill a day of history and then stream forward.
+const SEED_WATERMARK_QUERY = `
+  SELECT COALESCE(MIN([Id]), (SELECT COALESCE(MAX([Id]), 0) FROM CardholderTransactions_V)) - 1 AS seedId
+  FROM CardholderTransactions_V
+  WHERE [EventTime] >= @since`;
+
+function directionFromEvent(eventName) {
+  const e = String(eventName ?? "").toLowerCase();
+  if (/\bexit\b|\bout\b|egress/.test(e)) return "out";
+  if (/\bentry\b|\bin\b|\benter\b|admit|grant/.test(e)) return "in";
+  return "unknown";
+}
+
+async function readEfusionSql() {
+  const pool = await getSqlPool();
+  const mssql = (await import("mssql")).default;
+
+  const occupantsQuery = process.env.EFUSION_SQL_OCCUPANTS_QUERY || DEFAULT_OCCUPANTS_QUERY;
+  const eventsQuery = process.env.EFUSION_SQL_EVENTS_QUERY || DEFAULT_EVENTS_QUERY;
+
+  if (lastEventId === null) {
+    const since = new Date(Date.now() - 24 * 3600_000);
+    const seedRes = await pool.request().input("since", mssql.DateTime, since).query(SEED_WATERMARK_QUERY);
+    lastEventId = Number(seedRes.recordset[0]?.seedId ?? 0);
+  }
+
+  const [occRes, evRes] = await Promise.all([
+    pool.request().query(occupantsQuery),
+    pool.request().input("sinceId", mssql.BigInt, lastEventId).query(eventsQuery),
+  ]);
+
+  const occupants = occRes.recordset
+    .filter((r) => (r.fullName ?? "").trim() !== "")
+    .map((r) => ({
+      cardholderName: r.fullName.trim(),
+      cardNumber: r.cardNumber ? String(r.cardNumber) : undefined,
+      department: r.department ? String(r.department).trim() : undefined,
+      location: r.location ? String(r.location).trim() : undefined,
+      sinceAt: r.sinceAt ? new Date(r.sinceAt).toISOString() : undefined,
+    }));
+
+  const events = evRes.recordset
+    .filter((r) => (r.fullName ?? "").trim() !== "" && r.occurredAt)
+    .map((r) => ({
+      externalId: `ax-${r.id}`,
+      cardholderName: r.fullName.trim(),
+      cardNumber: r.cardNumber ? String(r.cardNumber) : undefined,
+      door: r.door ? String(r.door).trim() : "Unknown door",
+      direction: directionFromEvent(r.eventName),
+      occurredAt: new Date(r.occurredAt).toISOString(),
+    }));
+
+  for (const r of evRes.recordset) {
+    const id = Number(r.id);
+    if (Number.isFinite(id) && id > lastEventId) lastEventId = id;
+  }
+
+  return { occupants, events };
+}
+
+/**
+ * Maxxess eFusion Web API adapter — TEMPLATE.
  *
  * eFusion's integration surface varies by install (licensed API/SDK module,
  * Ambit, or direct SQL Server views). Fill in the two functions below for
@@ -91,7 +253,7 @@ async function readEfusion() {
   );
 }
 
-const sources = { mock: readMock, efusion: readEfusion };
+const sources = { mock: readMock, "efusion-sql": readEfusionSql, efusion: readEfusion };
 const readSource = sources[SOURCE];
 if (!readSource) {
   console.error(`Unknown SOURCE "${SOURCE}" (expected: ${Object.keys(sources).join(", ")})`);

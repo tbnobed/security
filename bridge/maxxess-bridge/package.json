@@ -1,0 +1,16 @@
+{
+  "name": "frontdesk-maxxess-bridge",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Pushes Maxxess eFusion occupancy + door events to FrontDesk",
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "start": "node index.mjs"
+  },
+  "dependencies": {
+    "mssql": "^11.0.1"
+  }
+}

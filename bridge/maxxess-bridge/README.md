@@ -16,7 +16,8 @@ the **Emergency Evacuation** roster.
 
    ```sh
    cp .env.example .env    # fill in FRONTDESK_URL + BRIDGE_TOKEN
-   node index.mjs          # requires Node 18+, no npm install needed
+   npm install             # only needed for SOURCE=efusion-sql (mssql driver)
+   node index.mjs          # requires Node 18+
    ```
 
    Or with Docker:
@@ -28,7 +29,39 @@ the **Emergency Evacuation** roster.
 
 3. Start with `SOURCE=mock` to verify the connection end-to-end (you'll see
    test cardholders appear on FrontDesk's Building page), then switch to
-   `SOURCE=efusion`.
+   `SOURCE=efusion-sql`.
+
+## SOURCE=efusion-sql — direct database read (recommended for this site)
+
+This is the working adapter for the Trinity/CONTEGO3 install (eFusion 8.0,
+database `AXxess`, no Web API license). One-time server setup — read-only
+SQL login, TCP/IP, firewall — is in **SQL-SETUP.md**.
+
+It polls two views eFusion maintains itself:
+
+- `CardholderLocation` → the occupants snapshot. A cardholder counts as
+  "in the building" when `LastAreaName` is set (that's where anti-passback
+  last saw their badge) and isn't an obvious "off site" area name.
+- `CardholderTransactions_V` → door events (badge transactions with a unique
+  `Id`, used as the dedupe key; direction is inferred from the event text).
+
+Events are streamed by an `Id` watermark (oldest first, 1000 per poll), so a
+burst of activity is drained across polls rather than dropped; on first start
+the bridge backfills the last 24 hours. Timestamps: eFusion stores local wall
+time, so run the bridge in the same timezone as the SQL Server machine (set
+`EFUSION_SQL_USE_UTC=true` only if your DB stores UTC).
+
+If either default query needs site-specific tuning (e.g. your area names for
+"outside", or filtering certain event types), you can override them wholesale
+via `EFUSION_SQL_OCCUPANTS_QUERY` / `EFUSION_SQL_EVENTS_QUERY` — keep the same
+column aliases as the defaults in `index.mjs`; the events override must filter
+on `@sinceId` and `ORDER BY Id ASC`.
+
+Note on occupancy accuracy: `LastAreaName` only clears/changes when badges are
+used on readers configured as area entry/exit (anti-passback). If your site
+doesn't badge OUT, the occupant list will show "last seen inside" rather than
+a strict who's-in list — the Building page's timestamps make that visible. The
+door-event feed is accurate regardless.
 
 ## What we know about eFusion's integration surface (researched July 2026)
 
