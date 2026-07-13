@@ -550,6 +550,7 @@ export default function Preregistrations() {
                     <th className="px-4 py-3 text-left font-medium">Company</th>
                     <th className="px-4 py-3 text-left font-medium">Host</th>
                     <th className="px-4 py-3 text-left font-medium">Studios</th>
+                    <th className="px-4 py-3 text-left font-medium">Registered By</th>
                     <th className="px-4 py-3 text-left font-medium">Arrival</th>
                     <th className="px-4 py-3 text-right font-medium">Actions</th>
                   </tr>
@@ -578,6 +579,9 @@ export default function Preregistrations() {
                       <td className="px-4 py-3 text-muted-foreground">{p.company}</td>
                       <td className="px-4 py-3">{p.hostName}</td>
                       <td className="px-4 py-3 text-muted-foreground">{p.studios?.length ? p.studios.join(", ") : "—"}</td>
+                      <td className="px-4 py-3 text-muted-foreground" data-testid={`text-registered-by-${p.id}`}>
+                        {p.createdByName ?? (p.createdByClerkId ? "Staff" : "Self-registration")}
+                      </td>
                       <td className="px-4 py-3 text-muted-foreground">
                         {format(new Date(p.expectedArrival), range === "week" ? "EEE MMM d, HH:mm" : "HH:mm")}
                       </td>

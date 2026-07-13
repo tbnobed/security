@@ -18,6 +18,9 @@ export const preregistrationsTable = pgTable("preregistrations", {
   expectedDeparture: timestamp("expected_departure", { withTimezone: true }),
   status: text("status").notNull().default("pending"),
   createdByClerkId: text("created_by_clerk_id"),
+  // Display name of whoever created the pre-registration (staff user, client
+  // portal account, or the self-registering visitor's "your name" input).
+  createdByName: text("created_by_name"),
   // Set when a client-portal account created this pre-registration.
   // clientCompanyId is the visit-scoping key (shared across all logins of the
   // company); clientUserId records which login created it (attribution +

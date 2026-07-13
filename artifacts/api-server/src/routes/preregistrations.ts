@@ -83,6 +83,7 @@ router.post("/preregistrations", requireOperator, async (req, res): Promise<void
   }
 
   const clerkId = getSessionUserId(req) ?? "unknown";
+  const operatorName = await getOperatorName(clerkId);
 
   const expectedArrival = new Date(parsed.data.expectedArrival);
   const workflow = await getWorkflowConfig();
@@ -103,6 +104,7 @@ router.post("/preregistrations", requireOperator, async (req, res): Promise<void
       : null,
     studios: parsed.data.studios ?? [],
     createdByClerkId: clerkId,
+    createdByName: operatorName,
     status: "pending",
     ...buildApprovalFields(expectedArrival, workflow),
   });
@@ -113,7 +115,6 @@ router.post("/preregistrations", requireOperator, async (req, res): Promise<void
     void sendFastTrackEmail(preg);
   }
 
-  const operatorName = await getOperatorName(clerkId);
   await db.insert(auditTable).values({
     eventType: "preregistration",
     guestId: null,
@@ -350,6 +351,7 @@ router.post("/public/preregistrations", async (req, res): Promise<void> => {
       : null,
     studios: parsed.data.studios ?? [],
     createdByClerkId: null,
+    createdByName: parsed.data.registeredBy?.trim() || null,
     status: "pending",
     ...buildApprovalFields(expectedArrival, workflow),
   });

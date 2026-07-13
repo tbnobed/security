@@ -46,4 +46,9 @@ export interface Preregistration {
      * @nullable
      */
   fastTrackCode?: string | null;
+  /**
+     * Display name of whoever created the pre-registration
+     * @nullable
+     */
+  createdByName?: string | null;
 }

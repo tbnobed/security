@@ -1792,6 +1792,9 @@ components:
         fastTrackCode:
           type: ["string", "null"]
           description: Unique code embedded in the guest's fast-track QR email
+        createdByName:
+          type: ["string", "null"]
+          description: Display name of whoever created the pre-registration
 
     PendingApproval:
       allOf:
@@ -2660,6 +2663,10 @@ components:
           type: array
           items:
             type: string
+        registeredBy:
+          type: string
+          maxLength: 120
+          description: Name of the person completing the form (self or on someone's behalf)
 
     ScanSession:
       type: object

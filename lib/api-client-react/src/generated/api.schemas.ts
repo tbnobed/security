@@ -173,6 +173,11 @@ export interface Preregistration {
      * @nullable
      */
   fastTrackCode?: string | null;
+  /**
+     * Display name of whoever created the pre-registration
+     * @nullable
+     */
+  createdByName?: string | null;
 }
 
 export type PendingApproval = Preregistration & ({
@@ -750,6 +755,11 @@ export interface PublicPreregistrationInput {
   expectedArrival: string;
   expectedDeparture?: string;
   studios?: string[];
+  /**
+     * Name of the person completing the form (self or on someone's behalf)
+     * @maxLength 120
+     */
+  registeredBy?: string;
 }
 
 export interface ScanSession {

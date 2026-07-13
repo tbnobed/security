@@ -439,7 +439,8 @@ export const ListPreregistrationsResponseItem = zod.object({
   "approvalStatus": zod.enum(['approved', 'pending', 'denied']).optional(),
   "approvalStage": zod.number().nullish().describe('1 or 2 while approvalStatus is pending'),
   "lateRegistration": zod.boolean().optional().describe('Registered less than 4 hours before expected arrival'),
-  "fastTrackCode": zod.string().nullish().describe('Unique code embedded in the guest\'s fast-track QR email')
+  "fastTrackCode": zod.string().nullish().describe('Unique code embedded in the guest\'s fast-track QR email'),
+  "createdByName": zod.string().nullish().describe('Display name of whoever created the pre-registration')
 })
 export const ListPreregistrationsResponse = zod.array(ListPreregistrationsResponseItem)
 
@@ -487,7 +488,8 @@ export const CreatePreregistrationResponse = zod.object({
   "approvalStatus": zod.enum(['approved', 'pending', 'denied']).optional(),
   "approvalStage": zod.number().nullish().describe('1 or 2 while approvalStatus is pending'),
   "lateRegistration": zod.boolean().optional().describe('Registered less than 4 hours before expected arrival'),
-  "fastTrackCode": zod.string().nullish().describe('Unique code embedded in the guest\'s fast-track QR email')
+  "fastTrackCode": zod.string().nullish().describe('Unique code embedded in the guest\'s fast-track QR email'),
+  "createdByName": zod.string().nullish().describe('Display name of whoever created the pre-registration')
 })
 
 
@@ -521,7 +523,8 @@ export const LookupFastTrackResponse = zod.object({
   "approvalStatus": zod.enum(['approved', 'pending', 'denied']).optional(),
   "approvalStage": zod.number().nullish().describe('1 or 2 while approvalStatus is pending'),
   "lateRegistration": zod.boolean().optional().describe('Registered less than 4 hours before expected arrival'),
-  "fastTrackCode": zod.string().nullish().describe('Unique code embedded in the guest\'s fast-track QR email')
+  "fastTrackCode": zod.string().nullish().describe('Unique code embedded in the guest\'s fast-track QR email'),
+  "createdByName": zod.string().nullish().describe('Display name of whoever created the pre-registration')
 })
 
 
@@ -580,6 +583,8 @@ export const ConvertPreregistrationResponse = zod.object({
 
 
 
+export const createPublicPreregistrationBodyRegisteredByMax = 120;
+
 
 
 export const CreatePublicPreregistrationBody = zod.object({
@@ -594,7 +599,8 @@ export const CreatePublicPreregistrationBody = zod.object({
   "site": zod.string().min(1),
   "expectedArrival": zod.coerce.date(),
   "expectedDeparture": zod.coerce.date().optional(),
-  "studios": zod.array(zod.string()).optional()
+  "studios": zod.array(zod.string()).optional(),
+  "registeredBy": zod.string().max(createPublicPreregistrationBodyRegisteredByMax).optional().describe('Name of the person completing the form (self or on someone\'s behalf)')
 })
 
 export const CreatePublicPreregistrationResponse = zod.object({
@@ -617,7 +623,8 @@ export const CreatePublicPreregistrationResponse = zod.object({
   "approvalStatus": zod.enum(['approved', 'pending', 'denied']).optional(),
   "approvalStage": zod.number().nullish().describe('1 or 2 while approvalStatus is pending'),
   "lateRegistration": zod.boolean().optional().describe('Registered less than 4 hours before expected arrival'),
-  "fastTrackCode": zod.string().nullish().describe('Unique code embedded in the guest\'s fast-track QR email')
+  "fastTrackCode": zod.string().nullish().describe('Unique code embedded in the guest\'s fast-track QR email'),
+  "createdByName": zod.string().nullish().describe('Display name of whoever created the pre-registration')
 })
 
 
@@ -673,7 +680,8 @@ export const ListPendingApprovalsResponseItem = zod.object({
   "approvalStatus": zod.enum(['approved', 'pending', 'denied']).optional(),
   "approvalStage": zod.number().nullish().describe('1 or 2 while approvalStatus is pending'),
   "lateRegistration": zod.boolean().optional().describe('Registered less than 4 hours before expected arrival'),
-  "fastTrackCode": zod.string().nullish().describe('Unique code embedded in the guest\'s fast-track QR email')
+  "fastTrackCode": zod.string().nullish().describe('Unique code embedded in the guest\'s fast-track QR email'),
+  "createdByName": zod.string().nullish().describe('Display name of whoever created the pre-registration')
 }).and(zod.object({
   "canDecide": zod.boolean().describe('True when the signed-in user is the current-stage approver'),
   "awaitingApproverName": zod.string().nullable().describe('Display name of the approver this request is currently waiting on')
@@ -704,7 +712,8 @@ export const ListDeniedApprovalsResponseItem = zod.object({
   "approvalStatus": zod.enum(['approved', 'pending', 'denied']).optional(),
   "approvalStage": zod.number().nullish().describe('1 or 2 while approvalStatus is pending'),
   "lateRegistration": zod.boolean().optional().describe('Registered less than 4 hours before expected arrival'),
-  "fastTrackCode": zod.string().nullish().describe('Unique code embedded in the guest\'s fast-track QR email')
+  "fastTrackCode": zod.string().nullish().describe('Unique code embedded in the guest\'s fast-track QR email'),
+  "createdByName": zod.string().nullish().describe('Display name of whoever created the pre-registration')
 }).and(zod.object({
   "deniedByName": zod.string().nullable().describe('Display name of the approver who denied the request'),
   "deniedAt": zod.coerce.date().nullable()
@@ -743,7 +752,8 @@ export const DecideApprovalResponse = zod.object({
   "approvalStatus": zod.enum(['approved', 'pending', 'denied']).optional(),
   "approvalStage": zod.number().nullish().describe('1 or 2 while approvalStatus is pending'),
   "lateRegistration": zod.boolean().optional().describe('Registered less than 4 hours before expected arrival'),
-  "fastTrackCode": zod.string().nullish().describe('Unique code embedded in the guest\'s fast-track QR email')
+  "fastTrackCode": zod.string().nullish().describe('Unique code embedded in the guest\'s fast-track QR email'),
+  "createdByName": zod.string().nullish().describe('Display name of whoever created the pre-registration')
 })
 
 
@@ -1301,7 +1311,8 @@ export const ClientBulkPreregisterResponse = zod.object({
   "approvalStatus": zod.enum(['approved', 'pending', 'denied']).optional(),
   "approvalStage": zod.number().nullish().describe('1 or 2 while approvalStatus is pending'),
   "lateRegistration": zod.boolean().optional().describe('Registered less than 4 hours before expected arrival'),
-  "fastTrackCode": zod.string().nullish().describe('Unique code embedded in the guest\'s fast-track QR email')
+  "fastTrackCode": zod.string().nullish().describe('Unique code embedded in the guest\'s fast-track QR email'),
+  "createdByName": zod.string().nullish().describe('Display name of whoever created the pre-registration')
 }))
 })
 

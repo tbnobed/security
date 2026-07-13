@@ -22,4 +22,9 @@ export interface PublicPreregistrationInput {
   expectedArrival: Date;
   expectedDeparture?: Date;
   studios?: string[];
+  /**
+     * Name of the person completing the form (self or on someone's behalf)
+     * @maxLength 120
+     */
+  registeredBy?: string;
 }

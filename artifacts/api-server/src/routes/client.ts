@@ -443,6 +443,7 @@ router.post("/client/preregistrations/bulk", async (req, res): Promise<void> => 
         expectedDeparture,
         studios: parsed.data.studios ?? [],
         createdByClerkId: client.clerkId,
+        createdByName: operatorName,
         clientCompanyId: company.id,
         clientUserId: client.clerkId,
         clientEmployeeId: emp.id,
