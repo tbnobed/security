@@ -21,7 +21,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
-import { Users, UserPlus, Upload, Pencil, Trash2, History, Loader2, Search } from "lucide-react";
+import { Users, UserPlus, Upload, Download, Pencil, Trash2, History, Loader2, Search } from "lucide-react";
 import { format } from "date-fns";
 
 interface EmployeeForm {
@@ -152,6 +152,23 @@ export default function PortalRosterPage() {
   const [deleteTarget, setDeleteTarget] = useState<{ id: number; name: string } | null>(null);
 
   // CSV import
+  const downloadTemplate = () => {
+    const csv = [
+      "name,title,phone,email",
+      'Jane Doe,Production Manager,(555) 123-4567,jane.doe@example.com',
+      'John Smith,Camera Operator,(555) 987-6543,john.smith@example.com',
+    ].join("\r\n") + "\r\n";
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "employee-roster-template.csv";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  };
+
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [csvRows, setCsvRows] = useState<PreviewRow[] | null>(null);
   const [csvInvalid, setCsvInvalid] = useState<RowIssue[]>([]);
@@ -317,6 +334,10 @@ export default function PortalRosterPage() {
                 e.target.value = "";
               }}
             />
+            <Button variant="outline" onClick={downloadTemplate} data-testid="button-download-template">
+              <Download className="w-4 h-4 mr-2" />
+              CSV Template
+            </Button>
             <Button variant="outline" onClick={() => fileInputRef.current?.click()}>
               <Upload className="w-4 h-4 mr-2" />
               Import CSV
