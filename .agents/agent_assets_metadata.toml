@@ -18,3 +18,9 @@ id = "908N0hFc7LJR8zHIW_bI0"
 uri = "file://bridge/maxxess-bridge/README.md"
 type = "text"
 title = "Step 2 — Running the bridge"
+
+[[outputs]]
+id = "T7WZNlig9fYtVx-6fBZSo"
+uri = "file://exports/employee-roster-import.csv"
+type = "table"
+title = "Employee Roster Import — Crew List"
