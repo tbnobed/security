@@ -8,8 +8,19 @@ import {
   GetBrandingSettingsResponse,
   UpdateBadgeLogoBody,
   UpdateBadgeLogoResponse,
+  GetAutoCheckoutSettingsResponse,
+  UpdateAutoCheckoutSettingsBody,
+  UpdateAutoCheckoutSettingsResponse,
 } from "@workspace/api-zod";
 import { requireAuth, requireAdmin, getSessionUserId } from "../lib/auth";
+import {
+  AUTO_CHECKOUT_TIME_KEY,
+  AUTO_CHECKOUT_LAST_RUN_KEY,
+  TIME_RE,
+  setSetting,
+  localDateStr,
+  localTimeStr,
+} from "../lib/auto-checkout";
 
 const router = Router();
 
@@ -136,6 +147,53 @@ router.delete("/settings/badge-logo", requireAdmin, async (req, res): Promise<vo
   });
 
   res.status(204).end();
+});
+
+router.get("/settings/auto-checkout", requireAdmin, async (_req, res): Promise<void> => {
+  const [row] = await db
+    .select()
+    .from(appSettingsTable)
+    .where(eq(appSettingsTable.key, AUTO_CHECKOUT_TIME_KEY));
+  const value = row?.value ?? null;
+  res.json(
+    GetAutoCheckoutSettingsResponse.parse({ time: value && TIME_RE.test(value) ? value : null }),
+  );
+});
+
+router.put("/settings/auto-checkout", requireAdmin, async (req, res): Promise<void> => {
+  const parsed = UpdateAutoCheckoutSettingsBody.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: "Time must be in HH:MM (24-hour) format, or null to disable" });
+    return;
+  }
+  const time = parsed.data.time;
+
+  if (time === null) {
+    await db.delete(appSettingsTable).where(eq(appSettingsTable.key, AUTO_CHECKOUT_TIME_KEY));
+    await db.delete(appSettingsTable).where(eq(appSettingsTable.key, AUTO_CHECKOUT_LAST_RUN_KEY));
+  } else {
+    await setSetting(AUTO_CHECKOUT_TIME_KEY, time);
+    if (localTimeStr() >= time) {
+      // The chosen time has already passed today — don't retroactively sweep
+      // tonight's guests the moment the setting is saved; start tomorrow.
+      await setSetting(AUTO_CHECKOUT_LAST_RUN_KEY, localDateStr());
+    } else {
+      // A future time today should run tonight even if an earlier config
+      // change (or a completed run) stamped today as already-run.
+      await db.delete(appSettingsTable).where(eq(appSettingsTable.key, AUTO_CHECKOUT_LAST_RUN_KEY));
+    }
+  }
+
+  const userId = getSessionUserId(req) ?? "unknown";
+  await db.insert(auditTable).values({
+    eventType: "auto_checkout_updated",
+    guestName: "—",
+    operatorClerkId: userId,
+    operatorName: userId,
+    metadata: JSON.stringify({ time }),
+  });
+
+  res.json(UpdateAutoCheckoutSettingsResponse.parse({ time }));
 });
 
 export default router;

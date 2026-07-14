@@ -1,6 +1,7 @@
 import app from "./app";
 import { logger } from "./lib/logger";
 import { startOverdueScheduler } from "./lib/overdue-scheduler";
+import { startAutoCheckoutScheduler } from "./lib/auto-checkout";
 import { loadPublicOrigin } from "./lib/public-origin";
 
 const rawPort = process.env["PORT"];
@@ -25,5 +26,6 @@ app.listen(port, (err) => {
 
   logger.info({ port }, "Server listening");
   startOverdueScheduler();
+  startAutoCheckoutScheduler();
   void loadPublicOrigin();
 });

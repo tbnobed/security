@@ -33,6 +33,7 @@ import type {
   ApprovalWorkflow,
   ApprovalWorkflowInput,
   AuditEntry,
+  AutoCheckoutSettings,
   BadgeData,
   BrandingSettings,
   CheckWatchlistParams,
@@ -4986,6 +4987,153 @@ export const useDeleteBadgeLogo = <TError = ErrorType<unknown>,
         TContext
       > => {
       return useMutation(getDeleteBadgeLogoMutationOptions(options));
+    }
+
+export const getGetAutoCheckoutSettingsUrl = () => {
+
+
+
+
+  return `/api/settings/auto-checkout`
+}
+
+/**
+ * @summary Get the nightly auto check-out time (admin only)
+ */
+export const getAutoCheckoutSettings = async ( options?: RequestInit): Promise<AutoCheckoutSettings> => {
+
+  return customFetch<AutoCheckoutSettings>(getGetAutoCheckoutSettingsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetAutoCheckoutSettingsQueryKey = () => {
+    return [
+    `/api/settings/auto-checkout`
+    ] as const;
+    }
+
+
+export const getGetAutoCheckoutSettingsQueryOptions = <TData = Awaited<ReturnType<typeof getAutoCheckoutSettings>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getAutoCheckoutSettings>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetAutoCheckoutSettingsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getAutoCheckoutSettings>>> = ({ signal }) => getAutoCheckoutSettings({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getAutoCheckoutSettings>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetAutoCheckoutSettingsQueryResult = NonNullable<Awaited<ReturnType<typeof getAutoCheckoutSettings>>>
+export type GetAutoCheckoutSettingsQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Get the nightly auto check-out time (admin only)
+ */
+
+export function useGetAutoCheckoutSettings<TData = Awaited<ReturnType<typeof getAutoCheckoutSettings>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getAutoCheckoutSettings>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetAutoCheckoutSettingsQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getUpdateAutoCheckoutSettingsUrl = () => {
+
+
+
+
+  return `/api/settings/auto-checkout`
+}
+
+/**
+ * @summary Set or disable the nightly auto check-out time (admin only)
+ */
+export const updateAutoCheckoutSettings = async (autoCheckoutSettings: AutoCheckoutSettings, options?: RequestInit): Promise<AutoCheckoutSettings> => {
+
+  return customFetch<AutoCheckoutSettings>(getUpdateAutoCheckoutSettingsUrl(),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(autoCheckoutSettings)
+  }
+);}
+
+
+
+
+export const getUpdateAutoCheckoutSettingsMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateAutoCheckoutSettings>>, TError,{data: BodyType<AutoCheckoutSettings>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateAutoCheckoutSettings>>, TError,{data: BodyType<AutoCheckoutSettings>}, TContext> => {
+
+const mutationKey = ['updateAutoCheckoutSettings'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateAutoCheckoutSettings>>, {data: BodyType<AutoCheckoutSettings>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  updateAutoCheckoutSettings(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateAutoCheckoutSettingsMutationResult = NonNullable<Awaited<ReturnType<typeof updateAutoCheckoutSettings>>>
+    export type UpdateAutoCheckoutSettingsMutationBody = BodyType<AutoCheckoutSettings>
+    export type UpdateAutoCheckoutSettingsMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Set or disable the nightly auto check-out time (admin only)
+ */
+export const useUpdateAutoCheckoutSettings = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateAutoCheckoutSettings>>, TError,{data: BodyType<AutoCheckoutSettings>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updateAutoCheckoutSettings>>,
+        TError,
+        {data: BodyType<AutoCheckoutSettings>},
+        TContext
+      > => {
+      return useMutation(getUpdateAutoCheckoutSettingsMutationOptions(options));
     }
 
 export const getCreateScanSessionUrl = () => {

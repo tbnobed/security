@@ -1355,7 +1355,7 @@ export const ListAuditLogQueryParams = zod.object({
 
 export const ListAuditLogResponseItem = zod.object({
   "id": zod.number(),
-  "eventType": zod.enum(['checkin', 'checkout', 'preregistration', 'watchlist_flag', 'watchlist_block', 'user_created', 'role_changed', 'password_reset', 'known_guest_vip', 'known_guest_edited', 'known_guest_deleted', 'client_employee_added', 'client_employee_edited', 'client_employee_deleted', 'client_employees_imported', 'badge_logo_updated', 'badge_logo_removed', 'prereg_approved', 'prereg_denied', 'approval_workflow_updated']),
+  "eventType": zod.enum(['checkin', 'checkout', 'auto_checkout', 'preregistration', 'watchlist_flag', 'watchlist_block', 'user_created', 'role_changed', 'password_reset', 'known_guest_vip', 'known_guest_edited', 'known_guest_deleted', 'client_employee_added', 'client_employee_edited', 'client_employee_deleted', 'client_employees_imported', 'badge_logo_updated', 'badge_logo_removed', 'prereg_approved', 'prereg_denied', 'approval_workflow_updated', 'auto_checkout_updated']),
   "guestId": zod.number().nullable(),
   "guestName": zod.string(),
   "operatorClerkId": zod.string(),
@@ -1619,6 +1619,35 @@ export const UpdateBadgeLogoResponse = zod.object({
  * @summary Remove the uploaded badge logo (admin only)
  */
 export const DeleteBadgeLogoResponse = zod.void()
+
+
+/**
+ * @summary Get the nightly auto check-out time (admin only)
+ */
+export const getAutoCheckoutSettingsResponseTimeRegExp = new RegExp('^([01][0-9]|2[0-3]):[0-5][0-9]$');
+
+
+export const GetAutoCheckoutSettingsResponse = zod.object({
+  "time": zod.string().regex(getAutoCheckoutSettingsResponseTimeRegExp).nullable().describe('Server-local time of day (HH:MM, 24h) when all active guests are automatically checked out. Null disables auto check-out.')
+})
+
+
+/**
+ * @summary Set or disable the nightly auto check-out time (admin only)
+ */
+export const updateAutoCheckoutSettingsBodyTimeRegExp = new RegExp('^([01][0-9]|2[0-3]):[0-5][0-9]$');
+
+
+export const UpdateAutoCheckoutSettingsBody = zod.object({
+  "time": zod.string().regex(updateAutoCheckoutSettingsBodyTimeRegExp).nullable().describe('Server-local time of day (HH:MM, 24h) when all active guests are automatically checked out. Null disables auto check-out.')
+})
+
+export const updateAutoCheckoutSettingsResponseTimeRegExp = new RegExp('^([01][0-9]|2[0-3]):[0-5][0-9]$');
+
+
+export const UpdateAutoCheckoutSettingsResponse = zod.object({
+  "time": zod.string().regex(updateAutoCheckoutSettingsResponseTimeRegExp).nullable().describe('Server-local time of day (HH:MM, 24h) when all active guests are automatically checked out. Null disables auto check-out.')
+})
 
 
 /**

@@ -29,6 +29,7 @@ export * from './appUserRole';
 export * from './appUserUpdate';
 export * from './auditEntry';
 export * from './auditEntryEventType';
+export * from './autoCheckoutSettings';
 export * from './badgeData';
 export * from './brandingSettings';
 export * from './checkWatchlistParams';

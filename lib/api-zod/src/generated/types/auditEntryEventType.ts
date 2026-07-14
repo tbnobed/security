@@ -12,6 +12,7 @@ export type AuditEntryEventType = typeof AuditEntryEventType[keyof typeof AuditE
 export const AuditEntryEventType = {
   checkin: 'checkin',
   checkout: 'checkout',
+  auto_checkout: 'auto_checkout',
   preregistration: 'preregistration',
   watchlist_flag: 'watchlist_flag',
   watchlist_block: 'watchlist_block',
@@ -30,4 +31,5 @@ export const AuditEntryEventType = {
   prereg_approved: 'prereg_approved',
   prereg_denied: 'prereg_denied',
   approval_workflow_updated: 'approval_workflow_updated',
+  auto_checkout_updated: 'auto_checkout_updated',
 } as const;

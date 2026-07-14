@@ -383,6 +383,7 @@ export type AuditEntryEventType = typeof AuditEntryEventType[keyof typeof AuditE
 export const AuditEntryEventType = {
   checkin: 'checkin',
   checkout: 'checkout',
+  auto_checkout: 'auto_checkout',
   preregistration: 'preregistration',
   watchlist_flag: 'watchlist_flag',
   watchlist_block: 'watchlist_block',
@@ -401,6 +402,7 @@ export const AuditEntryEventType = {
   prereg_approved: 'prereg_approved',
   prereg_denied: 'prereg_denied',
   approval_workflow_updated: 'approval_workflow_updated',
+  auto_checkout_updated: 'auto_checkout_updated',
 } as const;
 
 export interface AuditEntry {
@@ -698,6 +700,15 @@ export interface BrandingSettings {
      * @nullable
      */
   badgeLogoUrl: string | null;
+}
+
+export interface AutoCheckoutSettings {
+  /**
+     * Server-local time of day (HH:MM, 24h) when all active guests are automatically checked out. Null disables auto check-out.
+     * @nullable
+     * @pattern ^([01][0-9]|2[0-3]):[0-5][0-9]$
+     */
+  time: string | null;
 }
 
 export interface Studio {
